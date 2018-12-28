@@ -1,4 +1,4 @@
-# Work with Python 3.6
+#!/usr/bin/env python3.7
 import discord
 import asyncio
 import sqlite3
