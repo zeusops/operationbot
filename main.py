@@ -7,7 +7,7 @@ from discord.ext import commands
 
 TOKEN = 'NTAyNTEwMzYwMzY5MTY4Mzk0.DqthbA.Z-X8-pCU7KrpvELqt6FlHkM-tuQ'
 
-initial_extensions = ['createEvent', "addrole"]
+initial_extensions = ['commandListener','event', "role"]
 
 bot = commands.Bot(command_prefix=('!'))
 bot.pm_help = True
