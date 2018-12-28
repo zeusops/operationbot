@@ -18,7 +18,7 @@ class CommandListener:
 
         # Exit if not enough info
         if (len(info) < 2):
-            ctx.send("No date specified")
+            await ctx.send("No date specified")
             return
 
         # Get event data
