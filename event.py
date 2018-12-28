@@ -46,9 +46,9 @@ class Event:
         eventEmbed = discord.Embed(title=("Operation"), description="(" + str(date) + ")", colour=0xFF4500)
 
         enter = "\n"
-        platoonRoles = str(normalEmojis["HQ"]) + enter + str(normalEmojis["RTO"]) + enter + str(normalEmojis["FAC"])
-        alphaRoles = str(normalEmojis["ASL"]) + enter + str(normalEmojis["A1"]) + enter + str(normalEmojis["A2"])
-        bravoRoles = str(normalEmojis["BSL"]) + enter + str(normalEmojis["B1"]) + enter + str(normalEmojis["B2"])
+        platoonRoles = str(self.normalEmojis["HQ"]) + enter + str(self.normalEmojis["RTO"]) + enter + str(self.normalEmojis["FAC"])
+        alphaRoles = str(self.normalEmojis["ASL"]) + enter + str(self.normalEmojis["A1"]) + enter + str(self.normalEmojis["A2"])
+        bravoRoles = str(self.normalEmojis["BSL"]) + enter + str(self.normalEmojis["B1"]) + enter + str(self.normalEmojis["B2"])
 
         eventEmbed.add_field(name="Platoon Roles", value=platoonRoles, inline=True)
         eventEmbed.add_field(name="Alpha Leading Roles", value=alphaRoles, inline=True)
