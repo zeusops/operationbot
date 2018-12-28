@@ -28,18 +28,19 @@ class CommandListener:
         eventchannel = self.bot.get_channel(502824760036818964)
         thing = (ctx.guild.emojis[46])
 
+
         # Create event
-        event = event.Event(title, date, color, ctx.guild.emojis)
-        eventEmbed = event.createEmbed()
-        eventMessage = await eventchannel.send(embed=eventEmbed)
+        newEvent = event.Event(title, date, color, ctx.guild.emojis)
+        newEventEmbed = newEvent.createEmbed(date)
+        newEventMessage = await eventchannel.send(embed=newEventEmbed)
         
         # Put message ID in footer
-        eventEmbed = eventMessage.embeds[0]
-        eventEmbed.set_footer(text="Message ID: " + str(eventMessage.id))
-        await eventMessage.edit(embed=eventEmbed)
+        newEventEmbed = newEventMessage.embeds[0]
+        newEventEmbed.set_footer(text="Message ID: " + str(newEventMessage.id))
+        await newEventMessage.edit(embed=newEventEmbed)
 
         # Add reactions
-        await eventMessage.add_reaction(thing)
+        await newEventMessage.add_reaction(thing)
 
     # Add additional role to event command
     @commands.command(pass_context=True, name="addrole", brief="")
@@ -79,7 +80,7 @@ class CommandListener:
         await ctx.send(number)
 
         eventEmbed.add_field(name="Additional Roles", value=additionalRoles)
-        await eventMessage.edit(embed=em)
+        await eventMessage.edit(embed=eventEmbed)
 
 def setup(bot):
     bot.add_cog(CommandListener(bot))

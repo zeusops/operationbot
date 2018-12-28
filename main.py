@@ -4,9 +4,8 @@ import asyncio
 import sqlite3
 
 from discord.ext import commands
-import config as cfg
 
-initial_extensions = ['commandListener','event', "role"]
+initial_extensions = ['commandListener']
 
 bot = commands.Bot(command_prefix=('!'))
 bot.pm_help = True
@@ -29,4 +28,4 @@ async def on_ready():
     print(bot.user.id)
     await bot.change_presence(activity=discord.Game(name="Terry Big Gay", type=2))
 
-bot.run(cfg.TOKEN)
+bot.run('NTAyNTEwMzYwMzY5MTY4Mzk0.DqthbA.Z-X8-pCU7KrpvELqt6FlHkM-tuQ')

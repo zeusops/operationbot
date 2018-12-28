@@ -10,7 +10,6 @@ class Event:
         self.title = title
         self.date = date
         self.color = color
-        self.normalEmojis = getNormalEmojis(guildEmojis)
         self.additionalRoles = []
 
         self.ADDITIONAL_ROLE_EMOTES = [
@@ -39,9 +38,11 @@ class Event:
             "B1",
             "B2"
         ]
+
+        self.normalEmojis = self.getNormalEmojis(guildEmojis)
     
     # Return an embed for the event
-    def createEmbed():
+    def createEmbed(self, date):
         eventEmbed = discord.Embed(title=("Operation"), description="(" + str(date) + ")", colour=0xFF4500)
 
         platoonRoles = "HQ1PLT: \nRTO: \nFAC: " #str(normalEmojis[2]) + 
@@ -55,21 +56,21 @@ class Event:
         return eventEmbed
 
     # Add an additional role to the event
-    def addRole(name):
+    def addRole(self, name):
         # Find next emote for additional role
-        emote = ADDITIONAL_ROLE_EMOTES[len(additionalRoles)]
+        emote = self.ADDITIONAL_ROLE_EMOTES[len(self.additionalRoles)]
 
         newRole = role.Role(name, emote)
 
         self.additionalRoles.append(newRole)
 
     # Get emojis for normal roles
-    def getNormalEmojis(guildEmojis):
+    def getNormalEmojis(self, guildEmojis):
         normalEmojis = []
 
-        for emoteName in NORMAL_ROLE_EMOTE_NAMES
+        for emoteName in self.NORMAL_ROLE_EMOTE_NAMES:
             for emoji in guildEmojis:
-                if (emoji.name == emoteName)
+                if (emoji.name == emoteName):
                     normalEmojis.append(emoji)
                     break
             
