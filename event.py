@@ -45,11 +45,12 @@ class Event:
     def createEmbed(self, date):
         eventEmbed = discord.Embed(title=("Operation"), description="(" + str(date) + ")", colour=0xFF4500)
 
-        platoonRoles = "HQ1PLT: \nRTO: \nFAC: " #str(normalEmojis[2]) + 
-        alphaRoles = "ASL: \nA1: \nA2 "
-        bravoRoles = "BSL: \nB1: \nB2: "
+        enter = "\n"
+        platoonRoles = str(normalEmojis["HQ"]) + enter + str(normalEmojis["RTO"]) + enter + str(normalEmojis["FAC"])
+        alphaRoles = str(normalEmojis["ASL"]) + enter + str(normalEmojis["A1"]) + enter + str(normalEmojis["A2"])
+        bravoRoles = str(normalEmojis["BSL"]) + enter + str(normalEmojis["B1"]) + enter + str(normalEmojis["B2"])
 
-        eventEmbed.add_field(name="Platoon Roles", value=platoonRoles, inline=True) #TODO: Add role specific emotes to fields
+        eventEmbed.add_field(name="Platoon Roles", value=platoonRoles, inline=True)
         eventEmbed.add_field(name="Alpha Leading Roles", value=alphaRoles, inline=True)
         eventEmbed.add_field(name="Bravo Leading Roles", value=bravoRoles, inline=True)
 
@@ -66,12 +67,12 @@ class Event:
 
     # Get emojis for normal roles
     def getNormalEmojis(self, guildEmojis):
-        normalEmojis = []
+        normalEmojis = {}
 
         for emoteName in self.NORMAL_ROLE_EMOTE_NAMES:
             for emoji in guildEmojis:
                 if (emoji.name == emoteName):
-                    normalEmojis.append(emoji)
+                    normalEmojis[emoteName] = emoji
                     break
             
         return normalEmojis
