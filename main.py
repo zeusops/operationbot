@@ -6,7 +6,7 @@ import sqlite3
 from discord.ext import commands
 import config as cfg
 
-initial_extensions = ['createEvent', "addrole"]
+initial_extensions = ['commandListener','event', "role"]
 
 bot = commands.Bot(command_prefix=('!'))
 bot.pm_help = True
