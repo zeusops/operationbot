@@ -6,11 +6,13 @@ import sqlite3
 from discord.ext import commands
 import config as cfg
 
+CONFIG_VERSION = 1
+if cfg.VERSION != CONFIG_VERSION:
+    raise Exception("Outdated config file, expecting version {}, found version {}".format(CONFIG_VERSION, cfg.VERSION))
+
 initial_extensions = ['commandListener']
 
-bot = commands.Bot(command_prefix=('!'))
-bot.pm_help = True
-bot.owner_ID = ('102170338942517248')
+bot = commands.Bot(command_prefix=(cfg.COMMAND_CHAR))
 
 bot.remove_command("help")
 
