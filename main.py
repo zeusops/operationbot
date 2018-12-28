@@ -4,8 +4,7 @@ import asyncio
 import sqlite3
 
 from discord.ext import commands
-
-TOKEN = 'NTAyNTEwMzYwMzY5MTY4Mzk0.DqthbA.Z-X8-pCU7KrpvELqt6FlHkM-tuQ'
+import config as cfg
 
 initial_extensions = ['commandListener','event', "role"]
 
@@ -30,4 +29,4 @@ async def on_ready():
     print(bot.user.id)
     await bot.change_presence(activity=discord.Game(name="Terry Big Gay", type=2))
 
-bot.run(TOKEN)
+bot.run(cfg.TOKEN)
