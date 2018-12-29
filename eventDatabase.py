@@ -31,5 +31,4 @@ class EventDatabase:
         if messageID in self.events:
             return self.events[messageID]
         else:
-            print("MessageID:", messageID, type(messageID))
-            print(self.events)
+            raise Exception

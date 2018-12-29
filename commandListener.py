@@ -37,9 +37,15 @@ class CommandListener:
         info = ctx.message.content
         info = info.split(" ")
 
+        # Get eventchannel
+        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
+
         # Get data
-        messageID = int(info[1])
-        eventchannel = self.bot.get_channel(cfg.BOT_CHANNEL)
+        try:
+            messageID = int(info[1])
+        except Exception:
+            await ctx.send("Invalid message ID, needs to be an integer")
+            return
 
         # Get roleName
         roleName = ""
@@ -50,13 +56,14 @@ class CommandListener:
         try:
             eventMessage = await eventchannel.get_message(messageID)
         except Exception:
-            await ctx.send("That event does not exist.")
+            await ctx.send("No message found with that message ID")
             return
         
-        # Find event from messageID
-        event = self.eventDatabase.findEvent(messageID)
-        if event is None:
-            await ctx.send("Can't find event in database")
+        # Find event with messageID
+        try:
+            event = self.eventDatabase.findEvent(messageID)
+        except Exception:
+            await ctx.send("No event found with that message ID")
             return
 
         # Update event
