@@ -1,8 +1,6 @@
 import discord
-import sqlite3
 import role
-
-from discord.ext import commands
+import config as cfg
 
 class Event:
 
@@ -10,69 +8,58 @@ class Event:
         self.title = title
         self.date = date
         self.color = color
-        self.additionalRoles = []
-
-        self.ADDITIONAL_ROLE_EMOTES = [
-            ":one:",
-            ":two:",
-            ":three:",
-            ":four:",
-            ":five:",
-            ":six:",
-            ":seven:",
-            ":eight:",
-            ":nine:",
-            ":zero:"
-        ]
-
-        self.NORMAL_ROLE_EMOTE_NAMES = [
-            "ZEUS",
-            "MOD",
-            "HQ",
-            "RTO",
-            "FAC",
-            "ASL",
-            "A1",
-            "A2",
-            "BSL",
-            "B1",
-            "B2"
-        ]
-
+        self.roles = {}
+        self.additionalRoleCount = 0
         self.normalEmojis = self.getNormalEmojis(guildEmojis)
-    
+        self.addDefaultRoles()
+
     # Return an embed for the event
     def createEmbed(self, date):
-        eventEmbed = discord.Embed(title=("Operation"), description="(" + str(date) + ")", colour=0xFF4500)
-
+        eventEmbed = discord.Embed(title=self.title, description=self.date, colour=self.color)
         enter = "\n"
-        platoonRoles = str(self.normalEmojis["HQ"]) + enter + str(self.normalEmojis["RTO"]) + enter + str(self.normalEmojis["FAC"])
-        alphaRoles = str(self.normalEmojis["ASL"]) + enter + str(self.normalEmojis["A1"]) + enter + str(self.normalEmojis["A2"])
-        bravoRoles = str(self.normalEmojis["BSL"]) + enter + str(self.normalEmojis["B1"]) + enter + str(self.normalEmojis["B2"])
+        platoonRoles = ""
+        additionalRoles = ""
 
+        # Fill groups
+        for role, group in self.roles.items():
+            if group == "platoon":
+                platoonRoles += str(role.emote) + enter
+                
+            if group == "additional":
+                additionalRoles += str(role.emote) + role.name + enter
+
+        # Create embed fields
         eventEmbed.add_field(name="Platoon Roles", value=platoonRoles, inline=True)
-        eventEmbed.add_field(name="Alpha Leading Roles", value=alphaRoles, inline=True)
-        eventEmbed.add_field(name="Bravo Leading Roles", value=bravoRoles, inline=True)
+        if len(additionalRoles) > 0:
+            eventEmbed.add_field(name="Additional Roles", value=additionalRoles, inline=True)
 
         return eventEmbed
 
-    # Add an additional role to the event
-    def addRole(self, name):
-        # Find next emote for additional role
-        emote = self.ADDITIONAL_ROLE_EMOTES[len(self.additionalRoles)]
+    # Add default
+    def addDefaultRoles(self):
+        for emoteName, emote in self.normalEmojis.items():
+            newRole = role.Role(emoteName, emote)
+            self.roles[newRole] = "platoon"
 
+
+    # Add an additional role to the event
+    def addAdditionalRole(self, name):
+        # Find next emote for additional role
+        emote = cfg.ADDITIONAL_ROLE_EMOTES[self.additionalRoleCount]
+
+        # Create role
         newRole = role.Role(name, emote)
 
-        self.additionalRoles.append(newRole)
+        # Add role to roles
+        self.roles[newRole] = "additional"
+        self.additionalRoleCount += 1
 
     # Get emojis for normal roles
     def getNormalEmojis(self, guildEmojis):
         normalEmojis = {}
 
-        for emoteName in self.NORMAL_ROLE_EMOTE_NAMES:
-            for emoji in guildEmojis:
-                if (emoji.name == emoteName):
-                    normalEmojis[emoteName] = emoji
-                    break
-            
+        for emoji in guildEmojis:
+            if emoji.name in cfg.NORMAL_ROLE_EMOTE_NAMES:
+                normalEmojis[emoji.name] = emoji
+        
         return normalEmojis
