@@ -1,5 +1,5 @@
 ## Setting up
-Copy `config.py.example` to `config.py` and add your bot token.
+Copy `secret.py.example` to `secret.py` and add your bot token.
 
 Create a virtual environment:
 

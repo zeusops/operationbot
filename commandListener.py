@@ -1,9 +1,8 @@
-import discord
-import sqlite3
 import event
 
 from discord.ext import commands
 import config as cfg
+
 
 class CommandListener:
 
@@ -29,12 +28,11 @@ class CommandListener:
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
         thing = (ctx.guild.emojis[46])
 
-
         # Create event
         newEvent = event.Event(title, date, color, ctx.guild.emojis)
         newEventEmbed = newEvent.createEmbed(date)
         newEventMessage = await eventchannel.send(embed=newEventEmbed)
-        
+
         # Put message ID in footer
         newEventEmbed = newEventMessage.embeds[0]
         newEventEmbed.set_footer(text="Message ID: " + str(newEventMessage.id))
@@ -52,7 +50,7 @@ class CommandListener:
 
         # Get data
         eventID = info[1]
-        roleList = info[2:]
+        # roleList = info[2:]
         role = ""
         for word in info:
             role += word + " "
@@ -61,7 +59,7 @@ class CommandListener:
 
         try:
             eventMessage = await eventchannel.get_message(int(eventID))
-        except:
+        except Exception:
             await ctx.send("That event does not exist.")
             return
 
@@ -73,7 +71,7 @@ class CommandListener:
                 additionalRoles = field.value + " \n" + str(role)
                 eventEmbed.remove_field(3)
             else:
-                additionalRoles =  ":one: " + role
+                additionalRoles = ":one: " + role
                 await eventMessage.add_reaction(emoji=":one:")
 
         otherRoles = additionalRoles.split("\n")
@@ -82,6 +80,7 @@ class CommandListener:
 
         eventEmbed.add_field(name="Additional Roles", value=additionalRoles)
         await eventMessage.edit(embed=eventEmbed)
+
 
 def setup(bot):
     bot.add_cog(CommandListener(bot))
