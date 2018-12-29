@@ -3,6 +3,7 @@ import discord
 import asyncio
 from discord.ext import commands
 import config as cfg
+from secret import TOKEN
 
 CONFIG_VERSION = 3
 if cfg.VERSION != CONFIG_VERSION:
@@ -29,4 +30,4 @@ async def on_ready():
     print(bot.user.id)
     await bot.change_presence(activity=discord.Game(name=cfg.GAME, type=2))
 
-bot.run(cfg.TOKEN)
+bot.run(TOKEN)
