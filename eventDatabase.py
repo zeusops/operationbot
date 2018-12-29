@@ -42,7 +42,7 @@ class EventDatabase:
                 return
 
         # Store event
-        self.events[eventMessage.id] = event
+        self.events[eventMessage.id] = updatedEvent
 
     # Find an event with it's message ID
     def findEvent(self, messageID):

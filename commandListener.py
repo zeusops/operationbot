@@ -61,14 +61,15 @@ class CommandListener:
         
         # Find event with messageID
         try:
-            event = self.eventDatabase.findEvent(messageID)
+            eventToUpdate = self.eventDatabase.findEvent(messageID)
+            print(eventToUpdate)
         except Exception:
             await ctx.send("No event found with that message ID")
             return
 
         # Update event
-        event.addAdditionalRole(roleName)
-        await self.eventDatabase.updateEvent(eventMessage, event)
+        eventToUpdate.addAdditionalRole(roleName)
+        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
 def setup(bot):
     importlib.reload(event)

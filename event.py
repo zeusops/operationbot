@@ -22,7 +22,7 @@ class Event:
         eventEmbed = discord.Embed(title=self.title, description=self.date, colour=self.color)
 
         # Add field to embed for every rolegroup
-        for groupName, group in self.roleGroups.items():
+        for group in self.roleGroups.values():
             if len(group.roles) > 0:
                 eventEmbed.add_field(name=group.name, value=group.toString(), inline=True)
 
