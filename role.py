@@ -9,7 +9,7 @@ class Role:
     def setUser(self, user):
         self.user = user
 
-    def toString(self):
+    def __str__(self):
         roleString = str(self.emoji)
 
         # Add name after emote if it should display

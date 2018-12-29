@@ -25,7 +25,7 @@ class Event:
         # Add field to embed for every rolegroup
         for group in self.roleGroups.values():
             if len(group.roles) > 0:
-                eventEmbed.add_field(name=group.name, value=group.toString(),
+                eventEmbed.add_field(name=group.name, value=str(group),
                                      inline=True)
 
         return eventEmbed

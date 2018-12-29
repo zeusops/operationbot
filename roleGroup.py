@@ -7,10 +7,11 @@ class RoleGroup:
     def addRole(self, role):
         self.roles.append(role)
 
-    def toString(self):
+    def __str__(self):
+        # TODO: use __str__
         roleGroupString = ""
 
         for role in self.roles:
-            roleGroupString += role.toString()
+            roleGroupString += str(role)
 
         return roleGroupString
