@@ -3,6 +3,7 @@ import role
 import roleGroup
 import config as cfg
 
+
 class Event:
 
     def __init__(self, title, date, color, guildEmojis):
@@ -67,5 +68,5 @@ class Event:
         for emoji in guildEmojis:
             if emoji.name in cfg.DEFAULT_ROLES:
                 normalEmojis[emoji.name] = emoji
-        
+
         return normalEmojis
