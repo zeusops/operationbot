@@ -1,8 +1,8 @@
 class Role:
 
-    def __init__(self, name, emote):
+    def __init__(self, name, emoji):
         self.name = name
-        self.emote = emote
+        self.emoji = emoji
         self.user = ""
 
     def setUser(self, user):

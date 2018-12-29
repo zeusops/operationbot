@@ -3,7 +3,7 @@ COMMAND_CHAR = '.'
 EVENT_CHANNEL = 502824760036818964
 BOT_CHANNEL = 502824760036818964
 GAME = 'with code'
-ADDITIONAL_ROLE_EMOTES = [
+ADDITIONAL_ROLE_EMOJIS = [
     ":one:",
     ":two:",
     ":three:",
@@ -15,16 +15,16 @@ ADDITIONAL_ROLE_EMOTES = [
     ":nine:",
     ":zero:"
 ]
-NORMAL_ROLE_EMOTE_NAMES = [
-    "ZEUS",
-    "MOD",
-    "HQ",
-    "RTO",
-    "FAC",
-    "ASL",
-    "A1",
-    "A2",
-    "BSL",
-    "B1",
-    "B2"
-]
+DEFAULT_ROLES = { #NOTE: role name equals emote name
+    "ZEUS":"Company",
+    "MOD":"Company",
+    "HQ":"Platoon",
+    "RTO":"Platoon",
+    "FAC":"Platoon",
+    "ASL":"Alpha",
+    "A1":"Alpha",
+    "A2":"Alpha",
+    "BSL":"Bravo",
+    "B1":"Bravo",
+    "B2":"Bravo"
+}
