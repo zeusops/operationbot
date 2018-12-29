@@ -10,7 +10,7 @@ if cfg.VERSION != CONFIG_VERSION:
         "Outdated config file, expecting version {}, found version {}"
         .format(CONFIG_VERSION, cfg.VERSION))
 
-initial_extensions = ['commandListener']
+initial_extensions = ['commandListener', 'eventListener']
 
 bot = commands.Bot(command_prefix=COMMAND_CHAR)
 bot.remove_command("help")
