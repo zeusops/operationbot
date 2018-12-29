@@ -85,4 +85,5 @@ class CommandListener:
 
 def setup(bot):
     importlib.reload(event)
+    importlib.reload(cfg)
     bot.add_cog(CommandListener(bot))
