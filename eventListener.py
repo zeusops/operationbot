@@ -26,7 +26,13 @@ class EventListener:
                 print("No event found with that message ID")
                 return
 
-            role = reaction.emoji.name
+            role = reaction.emoji
+            if not type(reaction.emoji) is str:
+                # This is a custom Emoji object
+                role = role.name
+            else:
+                pass
+                # NOTE: This is an additional role
 
             print("event", reactedEvent)
             print("user", user.name, "role", role)
