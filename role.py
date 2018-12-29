@@ -10,5 +10,5 @@ class Role:
         self.emote = emote
         self.user = ""
 
-    def setUser(user):
+    def setUser(self, user):
         self.user = user
