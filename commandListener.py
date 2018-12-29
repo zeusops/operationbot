@@ -1,7 +1,7 @@
+import importlib
+from discord.ext import commands
 import event
 import eventDatabase
-
-from discord.ext import commands
 import config as cfg
 
 
@@ -64,4 +64,6 @@ class CommandListener:
         await self.eventDatabase.updateEvent(eventMessage, event)
 
 def setup(bot):
+    importlib.reload(event)
+    importlib.reload(cfg)
     bot.add_cog(CommandListener(bot))
