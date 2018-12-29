@@ -24,12 +24,12 @@ class CommandListener:
         # Get event data
         title = "Operation"
         date = info[1]
-        color = 0xFF4500
+        colour = 0xFF4500
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
         thing = (ctx.guild.emojis[46])
 
         # Create event
-        newEvent = event.Event(title, date, color, ctx.guild.emojis)
+        newEvent = event.Event(title, date, colour, ctx.guild.emojis)
         newEventEmbed = newEvent.createEmbed(date)
         newEventMessage = await eventchannel.send(embed=newEventEmbed)
 
