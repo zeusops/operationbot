@@ -14,8 +14,8 @@ class Role:
 
         # Add name after emote if it should display
         if self.displayName:
-            roleString += self.name
+            roleString += self.name + ":"
 
-        roleString += "\n"
+        roleString += " " + self.user + "\n" #TODO: Check if a space before the username is necessary (depends on input function)
         
         return roleString

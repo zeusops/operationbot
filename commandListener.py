@@ -50,7 +50,7 @@ class CommandListener:
         # Get roleName
         roleName = ""
         for word in info[2:]:
-            roleName += word + " "
+            roleName += " " + word
 
         # Get message, return if not found
         try:
