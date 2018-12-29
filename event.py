@@ -84,3 +84,6 @@ class Event:
                 reactions.append(role_.emoji)
 
         return reactions
+
+    def __str__(self):
+        return "{} at {}".format(self.title, self.date)

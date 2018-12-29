@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.7
 import discord
 from discord.ext import commands
+import eventDatabase
 import config as cfg
 from secret import TOKEN, COMMAND_CHAR
 
@@ -14,6 +15,8 @@ initial_extensions = ['commandListener', 'eventListener']
 
 bot = commands.Bot(command_prefix=COMMAND_CHAR)
 bot.remove_command("help")
+
+eventDatabase = eventDatabase.EventDatabase()
 
 
 @bot.event
