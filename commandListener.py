@@ -1,6 +1,7 @@
-import event
-
+import importlib
 from discord.ext import commands
+
+import event
 import config as cfg
 
 
@@ -83,4 +84,5 @@ class CommandListener:
 
 
 def setup(bot):
+    importlib.reload(event)
     bot.add_cog(CommandListener(bot))

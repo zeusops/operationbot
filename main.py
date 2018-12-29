@@ -24,7 +24,9 @@ async def on_ready():
     print(bot.user.id)
     await bot.change_presence(activity=discord.Game(name=cfg.GAME, type=2))
 
+
 if __name__ == '__main__':
+    bot.load_extension('reload')
     for extension in initial_extensions:
         # try:
             bot.load_extension(extension)
