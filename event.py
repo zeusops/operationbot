@@ -19,12 +19,14 @@ class Event:
 
     # Return an embed for the event
     def createEmbed(self):
-        eventEmbed = discord.Embed(title=self.title, description=self.date, colour=self.color)
+        eventEmbed = discord.Embed(title=self.title, description=self.date,
+                                   colour=self.color)
 
         # Add field to embed for every rolegroup
         for group in self.roleGroups.values():
             if len(group.roles) > 0:
-                eventEmbed.add_field(name=group.name, value=group.toString(), inline=True)
+                eventEmbed.add_field(name=group.name, value=group.toString(),
+                                     inline=True)
 
         return eventEmbed
 
@@ -77,8 +79,8 @@ class Event:
     def getReactions(self):
         reactions = []
 
-        for roleGroup in self.roleGroups.values():
-            for role in roleGroup.roles:
-                reactions.append(role.emoji)
+        for roleGroup_ in self.roleGroups.values():
+            for role_ in roleGroup_.roles:
+                reactions.append(role_.emoji)
 
         return reactions

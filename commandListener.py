@@ -28,7 +28,8 @@ class CommandListener:
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
 
         # Create event
-        await self.eventDatabase.createEvent(date, ctx.guild.emojis, eventchannel)
+        await self.eventDatabase.createEvent(date, ctx.guild.emojis,
+                                             eventchannel)
 
     # Add additional role to event command
     @commands.command(pass_context=True, name="addrole", brief="")
@@ -58,7 +59,7 @@ class CommandListener:
         except Exception:
             await ctx.send("No message found with that message ID")
             return
-        
+
         # Find event with messageID
         try:
             eventToUpdate = self.eventDatabase.findEvent(messageID)
@@ -70,6 +71,7 @@ class CommandListener:
         reaction = eventToUpdate.addAdditionalRole(roleName)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
         await self.eventDatabase.addReaction(eventMessage, reaction)
+
 
 def setup(bot):
     importlib.reload(event)

@@ -17,8 +17,8 @@ class Reload:
             for extension in initial_extensions:
                 self.bot.load_extension(extension)
         except Exception:
-            await ctx.send("An error occured while reloading: ```{}```".format(
-                           traceback.format_exc()))
+            await ctx.send("An error occured while reloading: ```{}```"
+                           .format(traceback.format_exc()))
         await ctx.send(
             "Reloaded following extensions: {}".format(initial_extensions))
 
