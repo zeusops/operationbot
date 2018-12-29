@@ -3,16 +3,16 @@ EVENT_CHANNEL = 502824760036818964
 BOT_CHANNEL = 502824760036818964
 GAME = 'with code'
 ADDITIONAL_ROLE_EMOJIS = [
-    "1⃣",
-    "2⃣",
-    "3⃣",
-    "4⃣",
-    "5⃣",
-    "6⃣",
-    "7⃣",
-    "8⃣",
-    "9⃣",
-    "0️⃣",
+    "\u0031\u20E3",
+    "\u0032\u20E3",
+    "\u0033\u20E3",
+    "\u0034\u20E3",
+    "\u0035\u20E3",
+    "\u0036\u20E3",
+    "\u0037\u20E3",
+    "\u0038\u20E3",
+    "\u0039\u20E3",
+    "\u0030\u20E3",
 ]
 DEFAULT_ROLES = {  # NOTE: role name equals emote name
     "ZEUS": "Company",

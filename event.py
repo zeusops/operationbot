@@ -61,6 +61,8 @@ class Event:
         self.roleGroups["Additional"].addRole(newRole)
         self.additionalRoleCount += 1
 
+        return emoji
+
     # Get emojis for normal roles
     def getNormalEmojis(self, guildEmojis):
         normalEmojis = {}

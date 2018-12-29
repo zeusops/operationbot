@@ -21,7 +21,7 @@ class EventDatabase:
         # Add reactions
         reactions = newEvent.getReactions() #TODO: merge
         for reaction in reactions:
-            await newEventMessage.add_reaction(reaction)
+            await self.addReaction(newEventMessage, reaction)
 
         # Store event
         self.events[newEventMessage.id] = newEvent
@@ -31,15 +31,6 @@ class EventDatabase:
         newEventEmbed = updatedEvent.createEmbed()
         newEventEmbed.set_footer(text="Message ID: " + str(eventMessage.id))
         await eventMessage.edit(embed=newEventEmbed)
-        
-        # Add reactions
-        reactions = updatedEvent.getReactions()
-        for reaction in reactions:
-            try:
-                await eventMessage.add_reaction(reaction) #TODO: execute all these calls concurrently
-            except Exception:
-                print("Emote " + str(reaction) + " is unknown", type(reaction))
-                return
 
         # Store event
         self.events[eventMessage.id] = updatedEvent
@@ -50,3 +41,11 @@ class EventDatabase:
             return self.events[messageID]
         else:
             raise Exception
+
+    # Add given reaction to given message
+    async def addReaction(self, eventMessage, reaction):
+        try:
+            await eventMessage.add_reaction(reaction)
+        except Exception:
+           print("Emote " + str(reaction) + " is unknown", type(reaction))
+           return
