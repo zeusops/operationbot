@@ -26,6 +26,10 @@ class EventListener:
                 print("No event found with that message ID")
                 return
 
+            if reactedEvent.findSignup(user.display_name) is not None:
+                await reaction.message.remove_reaction(reaction, user)
+                return
+
             # Get emoji string
             emoji = reaction.emoji
 
@@ -35,27 +39,15 @@ class EventListener:
                 print("No role found with that emoji")
                 return
 
-            # Undo previous signup
-            reactedEvent.undoSignup(user.display_name)
-
             # Update event
             reactedEvent.signup(role_, user.display_name)
             await self.eventDatabase.updateEvent(reaction.message,
                                                  reactedEvent)
 
-            # Remove other emotes
-            for reaction_ in reaction.message.reactions:
-                if reaction_ != reaction:
-                    users = await reaction_.users().flatten()
-                    if user in users:
-                        await reaction_.message.remove_reaction(reaction_,
-                                                                user)
-
         @self.bot.event
         async def on_reaction_remove(reaction, user):
-            # Exit if reaction is from bot or not in event channel
-            if user == self.bot.user \
-                    or reaction.message.channel.id != cfg.EVENT_CHANNEL:
+            # Exit if reaction is not in event channel
+            if reaction.message.channel.id != cfg.EVENT_CHANNEL:
                 return
 
             # Get event from database with message ID
@@ -69,6 +61,11 @@ class EventListener:
             # Get emoji string
             emoji = reaction.emoji
 
+            # Exit if emoji is of a role the user has not signed up for
+            # This happens when bot removes the user reaction
+            if emoji != reactedEvent.findSignup(user.display_name).emoji:
+                return
+
             # Get role with the emoji
             role_ = reactedEvent.findRole(emoji)
             if role_ is None:
@@ -76,6 +73,7 @@ class EventListener:
                 return
 
             # Undo signup
+            # TODO: only if reaction is the emoji of the existing signup
             reactedEvent.undoSignup(user.display_name)
 
             # Update event

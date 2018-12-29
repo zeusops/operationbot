@@ -108,5 +108,13 @@ class Event:
                     return role_.emoji
         return None
 
+    # Returns if given user is already signed up
+    def findSignup(self, username):
+        for roleGroup_ in self.roleGroups.values():
+            for role_ in roleGroup_.roles:
+                if role_.user == username:
+                    return role_
+        return None
+
     def __str__(self):
         return "{} at {}".format(self.title, self.date)
