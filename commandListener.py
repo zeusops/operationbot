@@ -3,6 +3,7 @@ import sqlite3
 import event
 
 from discord.ext import commands
+import config as cfg
 
 class CommandListener:
 
@@ -25,7 +26,7 @@ class CommandListener:
         title = "Operation"
         date = info[1]
         color = 0xFF4500
-        eventchannel = self.bot.get_channel(502824760036818964)
+        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
         thing = (ctx.guild.emojis[46])
 
 
@@ -56,7 +57,7 @@ class CommandListener:
         for word in info:
             role += word + " "
 
-        eventchannel = self.bot.get_channel(502824760036818964)
+        eventchannel = self.bot.get_channel(cfg.BOT_CHANNEL)
 
         try:
             eventMessage = await eventchannel.get_message(int(eventID))

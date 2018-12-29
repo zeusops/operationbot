@@ -6,7 +6,7 @@ import sqlite3
 from discord.ext import commands
 import config as cfg
 
-CONFIG_VERSION = 1
+CONFIG_VERSION = 2
 if cfg.VERSION != CONFIG_VERSION:
     raise Exception("Outdated config file, expecting version {}, found version {}".format(CONFIG_VERSION, cfg.VERSION))
 
