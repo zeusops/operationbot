@@ -12,18 +12,18 @@ ADDITIONAL_ROLE_EMOJIS = [
     ":seven:",
     ":eight:",
     ":nine:",
-    ":zero:"
+    ":zero:",
 ]
-DEFAULT_ROLES = { #NOTE: role name equals emote name
-    "ZEUS":"Company",
-    "MOD":"Company",
-    "HQ":"Platoon",
-    "RTO":"Platoon",
-    "FAC":"Platoon",
-    "ASL":"Alpha",
-    "A1":"Alpha",
-    "A2":"Alpha",
-    "BSL":"Bravo",
-    "B1":"Bravo",
-    "B2":"Bravo"
+DEFAULT_ROLES = {  # NOTE: role name equals emote name
+    "ZEUS": "Company",
+    "MOD": "Company",
+    "HQ": "Platoon",
+    "RTO": "Platoon",
+    "FAC": "Platoon",
+    "ASL": "Alpha",
+    "A1": "Alpha",
+    "A2": "Alpha",
+    "BSL": "Bravo",
+    "B1": "Bravo",
+    "B2": "Bravo",
 }
