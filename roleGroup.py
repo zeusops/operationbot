@@ -9,9 +9,8 @@ class RoleGroup:
 
     def toString(self):
         roleGroupString = ""
-        enter = "\n"
 
         for role in self.roles:
-            roleGroupString += str(role.emoji) + enter
+            roleGroupString += role.toString()
 
         return roleGroupString

@@ -6,10 +6,10 @@ import config as cfg
 
 class Event:
 
-    def __init__(self, title, date, color, guildEmojis):
-        self.title = title
+    def __init__(self, date, guildEmojis):
+        self.title = "Operation"
         self.date = date
-        self.color = color
+        self.color = 0xFF4500
         self.roleGroups = {}
         self.additionalRoleCount = 0
 
@@ -18,7 +18,7 @@ class Event:
         self.addDefaultRoles()
 
     # Return an embed for the event
-    def createEmbed(self, date):
+    def createEmbed(self):
         eventEmbed = discord.Embed(title=self.title, description=self.date, colour=self.color)
 
         # Add field to embed for every rolegroup
@@ -46,7 +46,7 @@ class Event:
             # Only add role if the group exists
             if groupName in self.roleGroups.keys():
                 emoji = self.normalEmojis[name]
-                newRole = role.Role(name, emoji)
+                newRole = role.Role(name, emoji, False)
                 self.roleGroups[groupName].addRole(newRole)
 
     # Add an additional role to the event
@@ -55,7 +55,7 @@ class Event:
         emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additionalRoleCount]
 
         # Create role
-        newRole = role.Role(name, emoji)
+        newRole = role.Role(name, emoji, True)
 
         # Add role to roles
         self.roleGroups["Additional"].addRole(newRole)
