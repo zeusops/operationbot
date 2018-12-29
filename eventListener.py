@@ -9,9 +9,19 @@ class EventListener:
         self.bot = bot
 
         # Create event command
-        @bot.event
+        @self.bot.event
         async def on_reaction_add(reaction, user):
+            if user == self.bot.user:
+                return
+
             print("beepboop")
+
+        @self.bot.event
+        async def on_reaction_remove(reaction, user):
+            if user == self.bot.user:
+                return
+
+            print("boopbeep")
 
 
 def setup(bot):
