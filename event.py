@@ -85,5 +85,17 @@ class Event:
 
         return reactions
 
+    def findRole(self, emoji):
+        for roleGroup_ in self.roleGroups.values():
+            for role_ in roleGroup_.roles:
+                if role_.emoji == emoji:
+                    return role_
+
+    def setRole(self, roleToSet, username):
+        for roleGroup_ in self.roleGroups.values():
+            for role_ in roleGroup_.roles:
+                if role_ == roleToSet:
+                    role_.user = username
+
     def __str__(self):
         return "{} at {}".format(self.title, self.date)

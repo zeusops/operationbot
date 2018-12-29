@@ -13,12 +13,11 @@ class EventListener:
         # Create event command
         @self.bot.event
         async def on_reaction_add(reaction, user):
-            if user == self.bot.user:
+            # Exit if reaction is from bot or not in event channel
+            if user == self.bot.user or reaction.message.channel == cfg.EVENT_CHANNEL:
                 return
 
-            print("me", reaction.me)
-
-            print("beepboop")
+            # Get event from database with message ID
             try:
                 reactedEvent = self.eventDatabase \
                                .findEvent(reaction.message.id)
@@ -26,20 +25,18 @@ class EventListener:
                 print("No event found with that message ID")
                 return
 
-            role = reaction.emoji
-            if not type(reaction.emoji) is str:
-                # This is a custom Emoji object
-                role = role.name
-            else:
-                pass
-                # NOTE: This is an additional role
+            # Get emoji string
+            emoji = reaction.emoji
 
-            print("event", reactedEvent)
-            print("user", user.name, "role", role)
-            channel = reaction.message.channel
-            # TODO: Actually edit the event instead of just printing
-            await channel.send("{} signed up for a role {} on an event {}"
-                               .format(user.name, role, reactedEvent))
+            # Get role with the emoji
+            role_ = reactedEvent.findRole(emoji)
+            if role_ is None:
+                print("No role found with that emoji")
+                return
+
+            # Update event
+            reactedEvent.setRole(role_, user.display_name)
+            await self.eventDatabase.updateEvent(reaction.message, reactedEvent)
 
         @self.bot.event
         async def on_reaction_remove(reaction, user):

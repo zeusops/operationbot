@@ -8,7 +8,6 @@ class RoleGroup:
         self.roles.append(role)
 
     def __str__(self):
-        # TODO: use __str__
         roleGroupString = ""
 
         for role in self.roles:
