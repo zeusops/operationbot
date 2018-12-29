@@ -36,14 +36,20 @@ class EventListener:
                 return
 
             # Undo previous signup
-            reactionToRemove = reactedEvent.undoSignup(user.display_name)
-            if reactionToRemove is not None:
-                await reaction.message.remove_reaction(reactionToRemove, user)
+            reactedEvent.undoSignup(user.display_name)
 
             # Update event
             reactedEvent.signup(role_, user.display_name)
             await self.eventDatabase.updateEvent(reaction.message,
                                                  reactedEvent)
+
+            # Remove other emotes
+            for reaction_ in reaction.message.reactions:
+                if reaction_ != reaction:
+                    users = await reaction_.users().flatten()
+                    if user in users:
+                        await reaction_.message.remove_reaction(reaction_,
+                                                                user)
 
         @self.bot.event
         async def on_reaction_remove(reaction, user):
@@ -71,6 +77,11 @@ class EventListener:
 
             # Undo signup
             reactedEvent.undoSignup(user.display_name)
+
+            # Update event
+            await self.eventDatabase.updateEvent(reaction.message,
+                                                 reactedEvent)
+
 
 def setup(bot):
     importlib.reload(event)
