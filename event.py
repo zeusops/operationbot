@@ -85,17 +85,28 @@ class Event:
 
         return reactions
 
+    # Find role with emoji
     def findRole(self, emoji):
         for roleGroup_ in self.roleGroups.values():
             for role_ in roleGroup_.roles:
                 if role_.emoji == emoji:
                     return role_
 
-    def setRole(self, roleToSet, username):
+    # Add username to role
+    def signup(self, roleToSet, username):
         for roleGroup_ in self.roleGroups.values():
             for role_ in roleGroup_.roles:
                 if role_ == roleToSet:
                     role_.user = username
+
+    # Remove username from any signups
+    def undoSignup(self, username):
+        for roleGroup_ in self.roleGroups.values():
+            for role_ in roleGroup_.roles:
+                if role_.user == username:
+                    role_.user = ""
+                    return role_.emoji
+        return None
 
     def __str__(self):
         return "{} at {}".format(self.title, self.date)
