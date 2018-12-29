@@ -70,3 +70,13 @@ class Event:
                 normalEmojis[emoji.name] = emoji
 
         return normalEmojis
+
+    # Returns reactions of all roles
+    def getReactions(self):
+        reactions = []
+
+        for roleGroup in self.roleGroups.values():
+            for role in roleGroup.roles:
+                reactions.append(role.emoji)
+
+        return reactions
