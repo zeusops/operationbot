@@ -2,9 +2,9 @@
 import discord
 from discord.ext import commands
 import config as cfg
-from secret import TOKEN
+from secret import TOKEN, COMMAND_CHAR
 
-CONFIG_VERSION = 3
+CONFIG_VERSION = 4
 if cfg.VERSION != CONFIG_VERSION:
     raise Exception(
         "Outdated config file, expecting version {}, found version {}"
@@ -12,7 +12,7 @@ if cfg.VERSION != CONFIG_VERSION:
 
 initial_extensions = ['commandListener']
 
-bot = commands.Bot(command_prefix=cfg.COMMAND_CHAR)
+bot = commands.Bot(command_prefix=COMMAND_CHAR)
 bot.remove_command("help")
 
 
