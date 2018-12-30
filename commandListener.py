@@ -50,7 +50,7 @@ class CommandListener:
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
         await self.eventDatabase.addReaction(eventMessage, reaction)
 
-    # Add additional role to event command
+    # Remove additional role from event command
     @commands.command(pass_context=True, name="removerole", brief="")
     async def removeRole(self, ctx):
         # Get info from context
@@ -72,7 +72,7 @@ class CommandListener:
         for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
             await self.eventDatabase.addReaction(eventMessage, reaction)
 
-    # Add additional role to event command
+    # Set title of event command
     @commands.command(pass_context=True, name="settitle", brief="")
     async def setTitle(self, ctx):
         # Get info from context
@@ -90,7 +90,7 @@ class CommandListener:
         eventToUpdate.setTitle(newTitle)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
-    # Add additional role to event command
+    # Set date of event command
     @commands.command(pass_context=True, name="setdate", brief="")
     async def setDate(self, ctx):
         # Get info from context
@@ -108,7 +108,7 @@ class CommandListener:
         eventToUpdate.setDate(newDate)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
-    # Add additional role to event command
+    # Set time of event command
     @commands.command(pass_context=True, name="settime", brief="")
     async def setTime(self, ctx):
         # Get info from context
@@ -126,7 +126,7 @@ class CommandListener:
         eventToUpdate.setTime(newTime)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
-    # Add additional role to event command
+    # Set terrain of event command
     @commands.command(pass_context=True, name="setterrain", brief="")
     async def setTerrain(self, ctx):
         # Get info from context
@@ -144,7 +144,7 @@ class CommandListener:
         eventToUpdate.setTerrain(newTerrain)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
-    # Add additional role to event command
+    # Set faction of event command
     @commands.command(pass_context=True, name="setfaction", brief="")
     async def setFaction(self, ctx):
         # Get info from context
@@ -162,7 +162,7 @@ class CommandListener:
         eventToUpdate.setFaction(newFaction)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
-    # Add additional role to event command
+    # Sign user up to event command
     @commands.command(pass_context=True, name="signup", brief="")
     async def signup(self, ctx):
         # Get info from context
@@ -187,7 +187,7 @@ class CommandListener:
         eventToUpdate.signup(role_, user_.display_name)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
-    # Add additional role to event command
+    # Undo signup on event of user command
     @commands.command(pass_context=True, name="undosignup", brief="")
     async def undoSignup(self, ctx):
         # Get info from context
@@ -201,7 +201,7 @@ class CommandListener:
         eventToUpdate.undoSignup(user_.display_name)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
-    # Add additional role to event command
+    # Archive event command
     @commands.command(pass_context=True, name="archive", brief="")
     async def archive(self, ctx):
         # Get info from context
@@ -289,6 +289,7 @@ class CommandListener:
             await ctx.send("No event found with that message ID")
             return
 
+    # Returns user from given string or gives an error
     async def getUser(self, string, ctx):
         # Get userID
         try:
