@@ -162,6 +162,32 @@ class CommandListener:
         eventToUpdate.setFaction(newFaction)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
+    # Add additional role to event command
+    @commands.command(pass_context=True, name="signup", brief="")
+    async def signup(self, ctx):
+        # Get info from context
+        info = ctx.message.content
+        info = info.split(" ")
+        eventMessage = await self.getMessage(info[1], ctx)
+        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        user_ = await self.getUser(info[2], ctx)
+
+        # Get roleName
+        roleName = ""
+        for word in info[3:]:
+            roleName += " " + word
+
+        # Find role
+        role_ = eventToUpdate.findRoleWithName(roleName)
+        print(user_.display_name, role_)
+        if role_ is None:
+            await ctx.send("No role found with that name")
+            return
+
+        # Sign user up, update event
+        eventToUpdate.signup(role_, user_.display_name)
+        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+
     # Returns message from given string or gives an error
     async def getMessage(self, string, ctx):
         # Get messageID
@@ -186,6 +212,21 @@ class CommandListener:
         except Exception:
             await ctx.send("No event found with that message ID")
             return
+
+    async def getUser(self, string, ctx):
+        # Get userID
+        try:
+            userID = int(string)
+        except Exception:
+            await ctx.send("Invalid user ID, needs to be an integer")
+            return
+
+        # Get user
+        for member in ctx.guild.members:
+            if member.id == userID:
+                return member
+        await ctx.send("No user found with that user ID")
+        return
 
 
 def setup(bot):

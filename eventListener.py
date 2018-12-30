@@ -41,7 +41,7 @@ class EventListener:
             # if user is signed up, and he selects a different role, do nothing
             if signup is None:
                 # Get role with the emoji
-                role_ = reactedEvent.findRole(emoji)
+                role_ = reactedEvent.findRoleWithEmoji(emoji)
                 if role_ is None:
                     print("No role found with that emoji")
                     return

@@ -55,7 +55,7 @@ class Event:
             # Only add role if the group exists
             if groupName in self.roleGroups.keys():
                 emoji = self.normalEmojis[name]
-                newRole = role.Role(name, emoji, False)
+                newRole = role.Role(" " + name, emoji, False)
                 self.roleGroups[groupName].addRole(newRole)
 
     # Add an additional role to the event
@@ -134,11 +134,22 @@ class Event:
         return reactions
 
     # Find role with emoji
-    def findRole(self, emoji):
+    def findRoleWithEmoji(self, emoji):
         for roleGroup_ in self.roleGroups.values():
             for role_ in roleGroup_.roles:
                 if role_.emoji == emoji:
                     return role_
+        return None
+
+    # Find role with name
+    def findRoleWithName(self, roleName):
+        for roleGroup_ in self.roleGroups.values():
+            for role_ in roleGroup_.roles:
+                print(role_.name)
+                if role_.name == roleName:
+                    return role_
+        print(roleName)
+        return None
 
     # Add username to role
     def signup(self, roleToSet, username):
