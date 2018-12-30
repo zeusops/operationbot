@@ -67,10 +67,56 @@ class CommandListener:
             await ctx.send("No event found with that message ID")
             return
 
-        # Update event
+        # Add role
         reaction = eventToUpdate.addAdditionalRole(roleName)
+
+        # Update event
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+
+        # Add reaction for role
         await self.eventDatabase.addReaction(eventMessage, reaction)
+
+    # Add additional role to event command
+    @commands.command(pass_context=True, name="settitle", brief="")
+    async def setTitle(self, ctx):
+        # Get info from context
+        info = ctx.message.content
+        info = info.split(" ")
+
+        # Get eventchannel
+        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
+
+        # Get data
+        try:
+            messageID = int(info[1])
+        except Exception:
+            await ctx.send("Invalid message ID, needs to be an integer")
+            return
+
+        # Get newTitle
+        newTitle = ""
+        for word in info[2:]:
+            newTitle += " " + word
+
+        # Get message, return if not found
+        try:
+            eventMessage = await eventchannel.get_message(messageID)
+        except Exception:
+            await ctx.send("No message found with that message ID")
+            return
+
+        # Find event with messageID
+        try:
+            eventToUpdate = self.eventDatabase.findEvent(messageID)
+        except Exception:
+            await ctx.send("No event found with that message ID")
+            return
+
+        # Change title
+        eventToUpdate.setTitle(newTitle)
+
+        # Update event
+        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
 
 def setup(bot):

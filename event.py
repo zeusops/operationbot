@@ -65,6 +65,9 @@ class Event:
 
         return emoji
 
+    def setTitle(self, newTitle):
+        self.title = newTitle
+
     # Get emojis for normal roles
     def getNormalEmojis(self, guildEmojis):
         normalEmojis = {}
