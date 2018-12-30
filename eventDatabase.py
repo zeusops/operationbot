@@ -40,10 +40,7 @@ class EventDatabase:
     async def archiveEvent(self, eventmessage, event_, eventchannel,
                            eventarchivechannel):
         # Remove event from events
-        del self.events[eventmessage.id]
-
-        # Remove old message
-        await eventmessage.delete()
+        await self.removeEvent(eventmessage)
 
         # Create new message
         newEventMessage = await self.createEventMessage(event_,
@@ -61,12 +58,26 @@ class EventDatabase:
         # Store event
         self.events[eventMessage.id] = updatedEvent
 
+    # Remove event
+    async def removeEvent(self, eventmessage):
+        if eventmessage.id in self.events.keys():
+            del self.events[eventmessage.id]
+            await eventmessage.delete()
+
+    # Remove event from archive
+    async def removeEventFromArchive(self, eventmessage):
+        if eventmessage.id in self.eventsArchive.keys():
+            del self.eventsArchive[eventmessage.id]
+            await eventmessage.delete()
+
     # Find an event with it's message ID
     def findEvent(self, messageID):
         if messageID in self.events:
             return self.events[messageID]
-        else:
-            raise Exception
+
+    def findEventInArchive(self, messageID):
+        if messageID in self.eventsArchive:
+            return self.eventsArchive[messageID]
 
     # Add given reaction to given message
     async def addReaction(self, eventMessage, reaction):

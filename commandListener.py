@@ -217,23 +217,70 @@ class CommandListener:
                                               eventchannel,
                                               eventarchivechannel)
 
+    # Delete event command
+    @commands.command(pass_context=True, name="delete", brief="")
+    async def delete(self, ctx):
+        # Get info from context
+        info = ctx.message.content
+        info = info.split(" ")
+
+        # Get message ID
+        eventMessageID = await self.getMessageID(info[1], ctx)
+
+        # Delete event
+        event = self.eventDatabase.findEvent(eventMessageID)
+        if event is not None:
+            eventMessage = await self.getMessage(eventMessageID, ctx)
+            await self.eventDatabase.removeEvent(eventMessage)
+            await ctx.send("Removed event from events")
+        else:
+            event = self.eventDatabase.findEventInArchive(eventMessageID)
+            if event is not None:
+                eventMessage = await self.getMessageFromArchive(eventMessageID,
+                                                                ctx)
+                await self.eventDatabase.removeEventFromArchive(eventMessage)
+                await ctx.send("Removed event from events archive")
+            else:
+                await ctx.send("No event found with that message ID")
+
     # Returns message from given string or gives an error
     async def getMessage(self, string, ctx):
         # Get messageID
+        messageID = await self.getMessageID(string, ctx)
+
+        # Get channels
+        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
+
+        # Get message
         try:
-            messageID = int(string)
+            return await eventchannel.get_message(messageID)
+        except Exception:
+            await ctx.send("No message found with that message ID")
+
+    # Returns message from archive from given string or gives an error
+    async def getMessageFromArchive(self, string, ctx):
+        # Get messageID
+        messageID = await self.getMessageID(string, ctx)
+
+        # Get channels
+        eventarchivechannel = self.bot.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
+
+        # Get message
+        try:
+            return await eventarchivechannel.get_message(messageID)
+        except Exception:
+            await ctx.send("No message found in archive with that message ID")
+
+    # Returns integer from given string or gives an error
+    async def getMessageID(self, string, ctx):
+        # Get messageID
+        try:
+            return int(string)
         except Exception:
             await ctx.send("Invalid message ID, needs to be an integer")
             return
 
-        # Get message
-        try:
-            eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
-            return await eventchannel.get_message(messageID)
-        except Exception:
-            await ctx.send("No message found with that message ID")
-            return
-
+    # Returns event from given message id or gives an error
     async def getEvent(self, messageID, ctx):
         # Find event with messageID
         try:
