@@ -18,37 +18,8 @@ class EventListener:
                     or reaction.message.channel.id != cfg.EVENT_CHANNEL:
                 return
 
-            # Get event from database with message ID
-            try:
-                reactedEvent = self.eventDatabase \
-                               .findEvent(reaction.message.id)
-            except Exception:
-                print("No event found with that message ID")
-                return
-
-            if reactedEvent.findSignup(user.display_name) is not None:
-                await reaction.message.remove_reaction(reaction, user)
-                return
-
-            # Get emoji string
-            emoji = reaction.emoji
-
-            # Get role with the emoji
-            role_ = reactedEvent.findRole(emoji)
-            if role_ is None:
-                print("No role found with that emoji")
-                return
-
-            # Update event
-            reactedEvent.signup(role_, user.display_name)
-            await self.eventDatabase.updateEvent(reaction.message,
-                                                 reactedEvent)
-
-        @self.bot.event
-        async def on_reaction_remove(reaction, user):
-            # Exit if reaction is not in event channel
-            if reaction.message.channel.id != cfg.EVENT_CHANNEL:
-                return
+            # Remove the reaction
+            await reaction.message.remove_reaction(reaction, user)
 
             # Get event from database with message ID
             try:
@@ -61,24 +32,38 @@ class EventListener:
             # Get emoji string
             emoji = reaction.emoji
 
-            # Exit if emoji is of a role the user has not signed up for
-            # This happens when bot removes the user reaction
-            if emoji != reactedEvent.findSignup(user.display_name).emoji:
-                return
+            # Find signup of user
+            signup = reactedEvent.findSignup(user.display_name)
 
-            # Get role with the emoji
-            role_ = reactedEvent.findRole(emoji)
-            if role_ is None:
-                print("No role found with that emoji")
-                return
+            # if user is not signed up, and the role is free, signup
+            # if user is not signed up, and the role is not free, do nothing
+            # if user is signed up, and he selects the same role, signoff
+            # if user is signed up, and he selects a different role, do nothing
+            if signup is None:
+                # Get role with the emoji
+                role_ = reactedEvent.findRole(emoji)
+                if role_ is None:
+                    print("No role found with that emoji")
+                    return
 
-            # Undo signup
-            # TODO: only if reaction is the emoji of the existing signup
-            reactedEvent.undoSignup(user.display_name)
+                # Sign up if role is free
+                if role_.user == "":
+                    # signup
+                    reactedEvent.signup(role_, user.display_name)
 
-            # Update event
-            await self.eventDatabase.updateEvent(reaction.message,
-                                                 reactedEvent)
+                    # Update event
+                    await self.eventDatabase.updateEvent(reaction.message,
+                                                         reactedEvent)
+            elif signup.emoji == emoji:
+                # undo signup
+                reactedEvent.undoSignup(user.display_name)
+
+                # Update event
+                await self.eventDatabase.updateEvent(reaction.message,
+                                                     reactedEvent)
+
+        # @self.bot.event
+        # async def on_reaction_remove(reaction, user):
 
 
 def setup(bot):
