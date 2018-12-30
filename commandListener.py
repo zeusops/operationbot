@@ -201,6 +201,22 @@ class CommandListener:
         eventToUpdate.undoSignup(user_.display_name)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
+    # Add additional role to event command
+    @commands.command(pass_context=True, name="archive", brief="")
+    async def archive(self, ctx):
+        # Get info from context
+        info = ctx.message.content
+        info = info.split(" ")
+        eventMessage = await self.getMessage(info[1], ctx)
+        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
+        eventarchivechannel = self.bot.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
+
+        # Archive event
+        await self.eventDatabase.archiveEvent(eventMessage, eventToUpdate,
+                                              eventchannel,
+                                              eventarchivechannel)
+
     # Returns message from given string or gives an error
     async def getMessage(self, string, ctx):
         # Get messageID
