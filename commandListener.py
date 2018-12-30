@@ -206,10 +206,11 @@ class CommandListener:
         # Sign user up, update event
         eventToUpdate.signup(role_, user_.display_name)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await ctx.send("User signed up")
 
-    # Undo signup on event of user command
-    @commands.command(pass_context=True, name="undosignup", brief="")
-    async def undoSignup(self, ctx):
+    # Remove signup on event of user command
+    @commands.command(pass_context=True, name="removesignup", brief="")
+    async def removeSignup(self, ctx):
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
@@ -217,9 +218,10 @@ class CommandListener:
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         user_ = await self.getUser(info[2], ctx)
 
-        # Sign user up, update event
+        # Remove signup, update event
         eventToUpdate.undoSignup(user_.display_name)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await ctx.send("User signup removed")
 
     # Archive event command
     @commands.command(pass_context=True, name="archive", brief="")
@@ -236,6 +238,7 @@ class CommandListener:
         await self.eventDatabase.archiveEvent(eventMessage, eventToUpdate,
                                               eventchannel,
                                               eventarchivechannel)
+        await ctx.send("Event archived")
 
     # Delete event command
     @commands.command(pass_context=True, name="delete", brief="")
