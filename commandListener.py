@@ -30,6 +30,7 @@ class CommandListener:
         # Create event
         await self.eventDatabase.createEvent(date, ctx,
                                              eventchannel)
+        await ctx.send("Event created")
 
     # Add additional role to event command
     @commands.command(pass_context=True, name="addrole", brief="")
@@ -49,6 +50,7 @@ class CommandListener:
         reaction = eventToUpdate.addAdditionalRole(roleName)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
         await self.eventDatabase.addReaction(eventMessage, reaction)
+        await ctx.send("Role added")
 
     # Remove additional role from event command
     @commands.command(pass_context=True, name="removerole", brief="")
@@ -71,6 +73,7 @@ class CommandListener:
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
         for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
             await self.eventDatabase.addReaction(eventMessage, reaction)
+        await ctx.send("Role removed")
 
     # Set title of event command
     @commands.command(pass_context=True, name="settitle", brief="")
