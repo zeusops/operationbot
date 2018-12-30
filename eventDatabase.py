@@ -8,9 +8,13 @@ class EventDatabase:
         self.eventsArchive = {}
 
     # Create a new event and store it
-    async def createEvent(self, date, guildEmojis, eventchannel):
+    async def createEvent(self, date, ctx, eventchannel):
         # Create event
-        newEvent = event.Event(date, guildEmojis)
+        try:
+            newEvent = event.Event(date, ctx.guild.emojis)
+        except Exception:
+            await ctx.send("Date not properly formatted")
+            return
 
         # Create message
         newEventMessage = await self.createEventMessage(newEvent, eventchannel)

@@ -1,3 +1,4 @@
+import datetime
 import discord
 import role
 import roleGroup
@@ -8,8 +9,8 @@ class Event:
 
     def __init__(self, date, guildEmojis):
         self.title = "Operation"
-        self.date = date
-        self.time = "18:45"
+        self.date = datetime.datetime.strptime(date + " 18:45",
+                                               "%Y-%m-%d %H:%M")
         self.terrain = " unknown"
         self.faction = " unknown"
         self.color = 0xFF4500
@@ -22,10 +23,11 @@ class Event:
 
     # Return an embed for the event
     def createEmbed(self):
-        eventEmbed = discord.Embed(title=self.title + " (" + self.date + " - "
-                                   + self.time + ")", description="Terrain:"
-                                   + self.terrain + " - Faction:"
-                                   + self.faction, colour=self.color)
+        eventEmbed = discord.Embed(title=self.title + " (" +
+                                   self.date.strftime("%Y-%m-%d - %H:%M") +
+                                   ")", description="Terrain:" + self.terrain +
+                                   " - Faction:" + self.faction,
+                                   colour=self.color)
 
         # Add field to embed for every rolegroup
         for group in self.roleGroups.values():
@@ -89,12 +91,15 @@ class Event:
         self.title = newTitle
 
     # Date setter
-    def setDate(self, newDate):
-        self.date = newDate
+    def setDate(self, newDateString):
+        newDate = datetime.datetime.strptime(newDateString, "%Y-%m-%d")
+        self.date = self.date.replace(year=newDate.year, month=newDate.month,
+                                      day=newDate.day)
 
     # Time setter
-    def setTime(self, newTime):
-        self.time = newTime
+    def setTime(self, newTimeString):
+        newTime = datetime.datetime.strptime(newTimeString, "%H:%M")
+        self.date = self.date.replace(hour=newTime.hour, minute=newTime.minute)
 
     # Terrain setter
     def setTerrain(self, newTerrain):

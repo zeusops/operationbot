@@ -28,7 +28,7 @@ class CommandListener:
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
 
         # Create event
-        await self.eventDatabase.createEvent(date, ctx.guild.emojis,
+        await self.eventDatabase.createEvent(date, ctx,
                                              eventchannel)
 
     # Add additional role to event command
@@ -89,6 +89,7 @@ class CommandListener:
         # Change title, update event
         eventToUpdate.setTitle(newTitle)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await ctx.send("Title set")
 
     # Set date of event command
     @commands.command(pass_context=True, name="setdate", brief="")
@@ -99,14 +100,21 @@ class CommandListener:
         eventMessage = await self.getMessage(info[1], ctx)
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
 
-        # Get newDate
-        newDate = ""
+        # Get newDateString
+        newDateString = ""
         for word in info[2:]:
-            newDate += word
+            newDateString += word
 
-        # Change date, update event
-        eventToUpdate.setDate(newDate)
+        # Change date
+        try:
+            eventToUpdate.setDate(newDateString)
+        except Exception:
+            await ctx.send("Date not properly formatted")
+            return
+
+        # Update event
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await ctx.send("Date set")
 
     # Set time of event command
     @commands.command(pass_context=True, name="settime", brief="")
@@ -117,14 +125,21 @@ class CommandListener:
         eventMessage = await self.getMessage(info[1], ctx)
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
 
-        # Get newTime
-        newTime = ""
+        # Get newTimeString
+        newTimeString = ""
         for word in info[2:]:
-            newTime += word
+            newTimeString += word
 
-        # Change time, update event
-        eventToUpdate.setTime(newTime)
+        # Change time
+        try:
+            eventToUpdate.setTime(newTimeString)
+        except Exception:
+            await ctx.send("Time not properly formatted")
+            return
+
+        # Update event
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await ctx.send("Time set")
 
     # Set terrain of event command
     @commands.command(pass_context=True, name="setterrain", brief="")
@@ -143,6 +158,7 @@ class CommandListener:
         # Change terrain, update event
         eventToUpdate.setTerrain(newTerrain)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await ctx.send("Terrain set")
 
     # Set faction of event command
     @commands.command(pass_context=True, name="setfaction", brief="")
@@ -161,6 +177,7 @@ class CommandListener:
         # Change faction, update event
         eventToUpdate.setFaction(newFaction)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await ctx.send("Faction set")
 
     # Sign user up to event command
     @commands.command(pass_context=True, name="signup", brief="")
