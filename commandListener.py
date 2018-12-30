@@ -37,43 +37,17 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
-
-        # Get eventchannel
-        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
-
-        # Get data
-        try:
-            messageID = int(info[1])
-        except Exception:
-            await ctx.send("Invalid message ID, needs to be an integer")
-            return
+        eventMessage = await self.getMessage(info[1], ctx)
+        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
 
         # Get roleName
         roleName = ""
         for word in info[2:]:
             roleName += " " + word
 
-        # Get message, return if not found
-        try:
-            eventMessage = await eventchannel.get_message(messageID)
-        except Exception:
-            await ctx.send("No message found with that message ID")
-            return
-
-        # Find event with messageID
-        try:
-            eventToUpdate = self.eventDatabase.findEvent(messageID)
-        except Exception:
-            await ctx.send("No event found with that message ID")
-            return
-
-        # Add role
+        # Add role, update event, add reaction
         reaction = eventToUpdate.addAdditionalRole(roleName)
-
-        # Update event
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
-
-        # Add reaction for role
         await self.eventDatabase.addReaction(eventMessage, reaction)
 
     # Add additional role to event command
@@ -82,47 +56,19 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
-
-        # Get eventchannel
-        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
-
-        # Get data
-        try:
-            messageID = int(info[1])
-        except Exception:
-            await ctx.send("Invalid message ID, needs to be an integer")
-            return
+        eventMessage = await self.getMessage(info[1], ctx)
+        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
 
         # Get roleName
         roleName = ""
         for word in info[2:]:
             roleName += " " + word
 
-        # Get message, return if not found
-        try:
-            eventMessage = await eventchannel.get_message(messageID)
-        except Exception:
-            await ctx.send("No message found with that message ID")
-            return
-
-        # Find event with messageID
-        try:
-            eventToUpdate = self.eventDatabase.findEvent(messageID)
-        except Exception:
-            await ctx.send("No event found with that message ID")
-            return
-
-        # Remove additional reactions
+        # Remove reactions, remove role, update event, add reactions
         for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
             await eventMessage.remove_reaction(reaction, self.bot.user)
-
-        # Remove role
         eventToUpdate.removeAdditionalRole(roleName)
-
-        # Update event
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
-
-        # Add additional reactions
         for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
             await self.eventDatabase.addReaction(eventMessage, reaction)
 
@@ -132,40 +78,16 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
-
-        # Get eventchannel
-        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
-
-        # Get data
-        try:
-            messageID = int(info[1])
-        except Exception:
-            await ctx.send("Invalid message ID, needs to be an integer")
-            return
+        eventMessage = await self.getMessage(info[1], ctx)
+        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
 
         # Get newTitle
         newTitle = ""
         for word in info[2:]:
             newTitle += " " + word
 
-        # Get message, return if not found
-        try:
-            eventMessage = await eventchannel.get_message(messageID)
-        except Exception:
-            await ctx.send("No message found with that message ID")
-            return
-
-        # Find event with messageID
-        try:
-            eventToUpdate = self.eventDatabase.findEvent(messageID)
-        except Exception:
-            await ctx.send("No event found with that message ID")
-            return
-
-        # Change title
+        # Change title, update event
         eventToUpdate.setTitle(newTitle)
-
-        # Update event
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
     # Add additional role to event command
@@ -174,40 +96,16 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
-
-        # Get eventchannel
-        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
-
-        # Get data
-        try:
-            messageID = int(info[1])
-        except Exception:
-            await ctx.send("Invalid message ID, needs to be an integer")
-            return
+        eventMessage = await self.getMessage(info[1], ctx)
+        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
 
         # Get newDate
         newDate = ""
         for word in info[2:]:
-            newDate += " " + word
+            newDate += word
 
-        # Get message, return if not found
-        try:
-            eventMessage = await eventchannel.get_message(messageID)
-        except Exception:
-            await ctx.send("No message found with that message ID")
-            return
-
-        # Find event with messageID
-        try:
-            eventToUpdate = self.eventDatabase.findEvent(messageID)
-        except Exception:
-            await ctx.send("No event found with that message ID")
-            return
-
-        # Change date
+        # Change date, update event
         eventToUpdate.setDate(newDate)
-
-        # Update event
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
     # Add additional role to event command
@@ -216,41 +114,78 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
-
-        # Get eventchannel
-        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
-
-        # Get data
-        try:
-            messageID = int(info[1])
-        except Exception:
-            await ctx.send("Invalid message ID, needs to be an integer")
-            return
+        eventMessage = await self.getMessage(info[1], ctx)
+        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
 
         # Get newTime
         newTime = ""
         for word in info[2:]:
-            newTime += " " + word
+            newTime += word
 
-        # Get message, return if not found
+        # Change time, update event
+        eventToUpdate.setTime(newTime)
+        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+
+    # Add additional role to event command
+    @commands.command(pass_context=True, name="setterrain", brief="")
+    async def setTerrain(self, ctx):
+        # Get info from context
+        info = ctx.message.content
+        info = info.split(" ")
+        eventMessage = await self.getMessage(info[1], ctx)
+        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+
+        # Get newTerrain
+        newTerrain = ""
+        for word in info[2:]:
+            newTerrain += " " + word
+
+        # Change terrain, update event
+        eventToUpdate.setTerrain(newTerrain)
+        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+
+    # Add additional role to event command
+    @commands.command(pass_context=True, name="setfaction", brief="")
+    async def setFaction(self, ctx):
+        # Get info from context
+        info = ctx.message.content
+        info = info.split(" ")
+        eventMessage = await self.getMessage(info[1], ctx)
+        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+
+        # Get newFaction
+        newFaction = ""
+        for word in info[2:]:
+            newFaction += " " + word
+
+        # Change faction, update event
+        eventToUpdate.setFaction(newFaction)
+        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+
+    # Returns message from given string or gives an error
+    async def getMessage(self, string, ctx):
+        # Get messageID
         try:
-            eventMessage = await eventchannel.get_message(messageID)
+            messageID = int(string)
+        except Exception:
+            await ctx.send("Invalid message ID, needs to be an integer")
+            return
+
+        # Get message
+        try:
+            eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
+            return await eventchannel.get_message(messageID)
         except Exception:
             await ctx.send("No message found with that message ID")
             return
 
+    async def getEvent(self, messageID, ctx):
         # Find event with messageID
         try:
-            eventToUpdate = self.eventDatabase.findEvent(messageID)
+            return self.eventDatabase.findEvent(messageID)
         except Exception:
             await ctx.send("No event found with that message ID")
             return
-
-        # Change time
-        eventToUpdate.setTime(newTime)
-
-        # Update event
-        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
 
 def setup(bot):

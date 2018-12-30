@@ -10,6 +10,8 @@ class Event:
         self.title = "Operation"
         self.date = date
         self.time = "18:45"
+        self.terrain = " unknown"
+        self.faction = " unknown"
         self.color = 0xFF4500
         self.roleGroups = {}
         self.additionalRoleCount = 0
@@ -20,11 +22,10 @@ class Event:
 
     # Return an embed for the event
     def createEmbed(self):
-        eventEmbed = discord.Embed(title=self.title + " (" +
-                                   self.date + " - " + self.time + ")",
-                                   description="Terrain: unknown - Faction: \
-                                                unknown",
-                                   colour=self.color)
+        eventEmbed = discord.Embed(title=self.title + " (" + self.date + " - "
+                                   + self.time + ")", description="Terrain:"
+                                   + self.terrain + " - Faction:"
+                                   + self.faction, colour=self.color)
 
         # Add field to embed for every rolegroup
         for group in self.roleGroups.values():
@@ -94,6 +95,14 @@ class Event:
     # Time setter
     def setTime(self, newTime):
         self.time = newTime
+
+    # Terrain setter
+    def setTerrain(self, newTerrain):
+        self.terrain = newTerrain
+
+    # Faction setter
+    def setFaction(self, newFaction):
+        self.faction = newFaction
 
     # Get emojis for normal roles
     def getNormalEmojis(self, guildEmojis):
