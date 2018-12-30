@@ -145,10 +145,8 @@ class Event:
     def findRoleWithName(self, roleName):
         for roleGroup_ in self.roleGroups.values():
             for role_ in roleGroup_.roles:
-                print(role_.name)
                 if role_.name == roleName:
                     return role_
-        print(roleName)
         return None
 
     # Add username to role

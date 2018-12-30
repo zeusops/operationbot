@@ -179,13 +179,26 @@ class CommandListener:
 
         # Find role
         role_ = eventToUpdate.findRoleWithName(roleName)
-        print(user_.display_name, role_)
         if role_ is None:
             await ctx.send("No role found with that name")
             return
 
         # Sign user up, update event
         eventToUpdate.signup(role_, user_.display_name)
+        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+
+    # Add additional role to event command
+    @commands.command(pass_context=True, name="undosignup", brief="")
+    async def undoSignup(self, ctx):
+        # Get info from context
+        info = ctx.message.content
+        info = info.split(" ")
+        eventMessage = await self.getMessage(info[1], ctx)
+        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        user_ = await self.getUser(info[2], ctx)
+
+        # Sign user up, update event
+        eventToUpdate.undoSignup(user_.display_name)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
     # Returns message from given string or gives an error
