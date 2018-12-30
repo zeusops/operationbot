@@ -20,25 +20,29 @@ class Event:
 
     # Return an embed for the event
     def createEmbed(self):
-        eventEmbed = discord.Embed(title=self.title, description="`" +
-                                   self.date + "` - `" + self.time + "`",
+        eventEmbed = discord.Embed(title=self.title + " (" +
+                                   self.date + " - " + self.time + ")",
+                                   description="Terrain: unknown - Faction: \
+                                                unknown",
                                    colour=self.color)
 
         # Add field to embed for every rolegroup
         for group in self.roleGroups.values():
             if len(group.roles) > 0:
                 eventEmbed.add_field(name=group.name, value=str(group),
-                                     inline=True)
+                                     inline=group.isInline)
 
         return eventEmbed
 
     # Add default role groups
     def addDefaultRoleGroups(self):
-        platoonGroup = roleGroup.RoleGroup("Platoon")
-        alphaGroup = roleGroup.RoleGroup("Alpha")
-        bravoGroup = roleGroup.RoleGroup("Bravo")
-        additionalGroup = roleGroup.RoleGroup("Additional")
+        companyGroup = roleGroup.RoleGroup("Company", False)
+        platoonGroup = roleGroup.RoleGroup("Platoon", True)
+        alphaGroup = roleGroup.RoleGroup("Alpha", True)
+        bravoGroup = roleGroup.RoleGroup("Bravo", True)
+        additionalGroup = roleGroup.RoleGroup("Additional", True)
 
+        self.roleGroups["Company"] = companyGroup
         self.roleGroups["Platoon"] = platoonGroup
         self.roleGroups["Alpha"] = alphaGroup
         self.roleGroups["Bravo"] = bravoGroup

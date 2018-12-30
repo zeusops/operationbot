@@ -1,7 +1,8 @@
 class RoleGroup:
 
-    def __init__(self, name):
+    def __init__(self, name, isInline):
         self.name = name
+        self.isInline = isInline
         self.roles = []
 
     # Add role to the group
