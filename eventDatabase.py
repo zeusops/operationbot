@@ -102,7 +102,7 @@ class EventDatabase:
             events.append(event_)
 
         # Sort events based on date and time
-        events.sort(key=lambda event: event.date)
+        events.sort(key=lambda event: event.date, True)
 
         # Fill events again
         index = 0
