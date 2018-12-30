@@ -61,18 +61,33 @@ class Event:
         # Create role
         newRole = role.Role(name, emoji, True)
 
-        # Add role to roles
+        # Add role to additional roles
         self.roleGroups["Additional"].addRole(newRole)
         self.additionalRoleCount += 1
 
         return emoji
 
+    # Remove an additional role from the event
+    def removeAdditionalRole(self, role_):
+        # Remove role from additional roles
+        self.roleGroups["Additional"].removeRole(role_)
+
+        # Reorder the emotes of all the additional roles
+        self.additionalRoleCount = 0
+        for roleInstance in self.roleGroups["Additional"].roles:
+            emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additionalRoleCount]
+            roleInstance.emoji = emoji
+            self.additionalRoleCount += 1
+
+    # Title setter
     def setTitle(self, newTitle):
         self.title = newTitle
 
+    # Date setter
     def setDate(self, newDate):
         self.date = newDate
 
+    # Time setter
     def setTime(self, newTime):
         self.time = newTime
 
@@ -92,6 +107,15 @@ class Event:
 
         for roleGroup_ in self.roleGroups.values():
             for role_ in roleGroup_.roles:
+                reactions.append(role_.emoji)
+
+        return reactions
+
+    def getReactionsOfGroup(self, groupName):
+        reactions = []
+
+        if groupName in self.roleGroups.keys():
+            for role_ in self.roleGroups[groupName].roles:
                 reactions.append(role_.emoji)
 
         return reactions

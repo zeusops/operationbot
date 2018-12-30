@@ -77,6 +77,56 @@ class CommandListener:
         await self.eventDatabase.addReaction(eventMessage, reaction)
 
     # Add additional role to event command
+    @commands.command(pass_context=True, name="removerole", brief="")
+    async def removeRole(self, ctx):
+        # Get info from context
+        info = ctx.message.content
+        info = info.split(" ")
+
+        # Get eventchannel
+        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
+
+        # Get data
+        try:
+            messageID = int(info[1])
+        except Exception:
+            await ctx.send("Invalid message ID, needs to be an integer")
+            return
+
+        # Get roleName
+        roleName = ""
+        for word in info[2:]:
+            roleName += " " + word
+
+        # Get message, return if not found
+        try:
+            eventMessage = await eventchannel.get_message(messageID)
+        except Exception:
+            await ctx.send("No message found with that message ID")
+            return
+
+        # Find event with messageID
+        try:
+            eventToUpdate = self.eventDatabase.findEvent(messageID)
+        except Exception:
+            await ctx.send("No event found with that message ID")
+            return
+
+        # Remove additional reactions
+        for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
+            await eventMessage.remove_reaction(reaction, self.bot.user)
+
+        # Remove role
+        eventToUpdate.removeAdditionalRole(roleName)
+
+        # Update event
+        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+
+        # Add additional reactions
+        for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
+            await self.eventDatabase.addReaction(eventMessage, reaction)
+
+    # Add additional role to event command
     @commands.command(pass_context=True, name="settitle", brief="")
     async def setTitle(self, ctx):
         # Get info from context
