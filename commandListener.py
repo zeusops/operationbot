@@ -260,6 +260,16 @@ class CommandListener:
             else:
                 await ctx.send("No event found with that message ID")
 
+    # sort events command
+    @commands.command(pass_context=True, name="sort", brief="")
+    async def sort(self, ctx):
+        self.eventDatabase.sortEvents()
+
+        for messageID, event_ in self.eventDatabase.events.items():
+            eventMessage = await self.getMessage(messageID, ctx)
+            await self.eventDatabase.updateEvent(eventMessage, event_)
+        await ctx.send("Events sorted")
+
     # Returns message from given string or gives an error
     async def getMessage(self, string, ctx):
         # Get messageID

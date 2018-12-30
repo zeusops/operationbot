@@ -91,3 +91,22 @@ class EventDatabase:
         # except Exception:
         #     print("Emote " + str(reaction) + " is unknown", type(reaction))
         #     return
+
+    def sortEvents(self):
+        messageIDs = []
+        events = []
+
+        # Store existing events
+        for messageID, event_ in self.events.items():
+            messageIDs.append(messageID)
+            events.append(event_)
+
+        # Sort events based on date and time
+        events.sort(key=lambda event: event.date)
+
+        # Fill events again
+        index = 0
+        self.events = {}
+        for messageID in messageIDs:
+            self.events[messageID] = events[index]
+            index += 1
