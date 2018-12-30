@@ -1,4 +1,5 @@
 import importlib
+import json
 from discord.ext import commands
 import event
 import config as cfg
@@ -276,6 +277,12 @@ class CommandListener:
             await self.eventDatabase.updateEvent(eventMessage, event_)
         await ctx.send("Events sorted")
 
+    # export to json
+    @commands.command(pass_context=True, name="export", brief="")
+    async def export(self, ctx):
+        self.writeJson()
+        await ctx.send("EventDatabase exported")
+
     # Returns message from given string or gives an error
     async def getMessage(self, string, ctx):
         # Get messageID
@@ -337,6 +344,13 @@ class CommandListener:
                 return member
         await ctx.send("No user found with that user ID")
         return
+
+    # Export eventDatabase to json
+    def writeJson(self):
+        data = self.eventDatabase.toJson()
+
+        with open(cfg.JSON_FILEPATH, "w") as filepath:
+            json.dump(data, filepath)
 
 
 def setup(bot):

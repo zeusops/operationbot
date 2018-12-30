@@ -20,3 +20,11 @@ class Role:
         roleString += " " + self.user + "\n"
 
         return roleString
+
+    def toJson(self):
+        data = {}
+        data["name"] = self.name
+        data["emoji"] = self.emoji.name
+        data["displayName"] = self.displayName
+        data["user"] = self.user
+        return data

@@ -180,3 +180,17 @@ class Event:
 
     def __str__(self):
         return "{} at {}".format(self.title, self.date)
+
+    def toJson(self):
+        roleGroupsData = {}
+        for groupName, roleGroup_ in self.roleGroups.items():
+            roleGroupsData[groupName] = roleGroup_.toJson()
+
+        data = {}
+        data["title"] = self.title
+        data["date"] = self.date.strftime("%Y-%m-%d %H:%M")
+        data["terrain"] = self.terrain
+        data["faction"] = self.faction
+        data["color"] = self.color
+        data["roleGroups"] = roleGroupsData
+        return data

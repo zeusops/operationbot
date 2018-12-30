@@ -102,7 +102,7 @@ class EventDatabase:
             events.append(event_)
 
         # Sort events based on date and time
-        events.sort(key=lambda event: event.date, True)
+        events.sort(key=lambda event: event.date, reverse=True)
 
         # Fill events again
         index = 0
@@ -110,3 +110,20 @@ class EventDatabase:
         for messageID in messageIDs:
             self.events[messageID] = events[index]
             index += 1
+
+    def toJson(self):
+        # Get eventsData
+        eventsData = {}
+        for messageID, event_ in self.events.items():
+            eventsData[messageID] = event_.toJson()
+
+        # Get eventsArchiveData
+        eventsArchiveData = {}
+        for messageID, event_ in self.eventsArchive.items():
+            eventsData[messageID] = event_.toJson()
+
+        # Store data and return
+        data = {}
+        data["events"] = eventsData
+        data["eventsArchive"] = eventsArchiveData
+        return data

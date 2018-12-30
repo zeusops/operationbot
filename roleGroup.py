@@ -22,3 +22,14 @@ class RoleGroup:
             roleGroupString += str(role_)
 
         return roleGroupString
+
+    def toJson(self):
+        rolesData = {}
+        for role_ in self.roles:
+            rolesData[role_.name] = role_.toJson()
+
+        data = {}
+        data["name"] = self.name
+        data["isInline"] = self.isInline
+        data["roles"] = rolesData
+        return data
