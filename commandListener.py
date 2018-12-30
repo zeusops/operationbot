@@ -118,6 +118,90 @@ class CommandListener:
         # Update event
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
 
+    # Add additional role to event command
+    @commands.command(pass_context=True, name="setdate", brief="")
+    async def setDate(self, ctx):
+        # Get info from context
+        info = ctx.message.content
+        info = info.split(" ")
+
+        # Get eventchannel
+        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
+
+        # Get data
+        try:
+            messageID = int(info[1])
+        except Exception:
+            await ctx.send("Invalid message ID, needs to be an integer")
+            return
+
+        # Get newDate
+        newDate = ""
+        for word in info[2:]:
+            newDate += " " + word
+
+        # Get message, return if not found
+        try:
+            eventMessage = await eventchannel.get_message(messageID)
+        except Exception:
+            await ctx.send("No message found with that message ID")
+            return
+
+        # Find event with messageID
+        try:
+            eventToUpdate = self.eventDatabase.findEvent(messageID)
+        except Exception:
+            await ctx.send("No event found with that message ID")
+            return
+
+        # Change date
+        eventToUpdate.setDate(newDate)
+
+        # Update event
+        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+
+    # Add additional role to event command
+    @commands.command(pass_context=True, name="settime", brief="")
+    async def setTime(self, ctx):
+        # Get info from context
+        info = ctx.message.content
+        info = info.split(" ")
+
+        # Get eventchannel
+        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
+
+        # Get data
+        try:
+            messageID = int(info[1])
+        except Exception:
+            await ctx.send("Invalid message ID, needs to be an integer")
+            return
+
+        # Get newTime
+        newTime = ""
+        for word in info[2:]:
+            newTime += " " + word
+
+        # Get message, return if not found
+        try:
+            eventMessage = await eventchannel.get_message(messageID)
+        except Exception:
+            await ctx.send("No message found with that message ID")
+            return
+
+        # Find event with messageID
+        try:
+            eventToUpdate = self.eventDatabase.findEvent(messageID)
+        except Exception:
+            await ctx.send("No event found with that message ID")
+            return
+
+        # Change time
+        eventToUpdate.setTime(newTime)
+
+        # Update event
+        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+
 
 def setup(bot):
     importlib.reload(event)

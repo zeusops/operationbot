@@ -9,6 +9,7 @@ class Event:
     def __init__(self, date, guildEmojis):
         self.title = "Operation"
         self.date = date
+        self.time = "18:45"
         self.color = 0xFF4500
         self.roleGroups = {}
         self.additionalRoleCount = 0
@@ -19,7 +20,8 @@ class Event:
 
     # Return an embed for the event
     def createEmbed(self):
-        eventEmbed = discord.Embed(title=self.title, description=self.date,
+        eventEmbed = discord.Embed(title=self.title, description="`" +
+                                   self.date + "` - `" + self.time + "`",
                                    colour=self.color)
 
         # Add field to embed for every rolegroup
@@ -67,6 +69,12 @@ class Event:
 
     def setTitle(self, newTitle):
         self.title = newTitle
+
+    def setDate(self, newDate):
+        self.date = newDate
+
+    def setTime(self, newTime):
+        self.time = newTime
 
     # Get emojis for normal roles
     def getNormalEmojis(self, guildEmojis):
