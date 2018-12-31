@@ -28,9 +28,11 @@ class CommandListener:
         date = info[1]
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
 
-        # Create event
+        # Create event and sort events, export
         await self.eventDatabase.createEvent(date, ctx,
                                              eventchannel)
+        await self.sortEvents(ctx)
+        self.writeJson()  # Update JSON file
         await ctx.send("Event created")
 
     # Add additional role to event command
@@ -47,10 +49,11 @@ class CommandListener:
         for word in info[2:]:
             roleName += " " + word
 
-        # Add role, update event, add reaction
+        # Add role, update event, add reaction, export
         reaction = eventToUpdate.addAdditionalRole(roleName)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
         await self.eventDatabase.addReaction(eventMessage, reaction)
+        self.writeJson()  # Update JSON file
         await ctx.send("Role added")
 
     # Remove additional role from event command
@@ -67,13 +70,14 @@ class CommandListener:
         for word in info[2:]:
             roleName += " " + word
 
-        # Remove reactions, remove role, update event, add reactions
+        # Remove reactions, remove role, update event, add reactions, export
         for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
             await eventMessage.remove_reaction(reaction, self.bot.user)
         eventToUpdate.removeAdditionalRole(roleName)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
         for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
             await self.eventDatabase.addReaction(eventMessage, reaction)
+        self.writeJson()  # Update JSON file
         await ctx.send("Role removed")
 
     # Set title of event command
@@ -90,9 +94,10 @@ class CommandListener:
         for word in info[2:]:
             newTitle += " " + word
 
-        # Change title, update event
+        # Change title, update event, export
         eventToUpdate.setTitle(newTitle)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        self.writeJson()  # Update JSON file
         await ctx.send("Title set")
 
     # Set date of event command
@@ -116,8 +121,10 @@ class CommandListener:
             await ctx.send("Date not properly formatted")
             return
 
-        # Update event
+        # Update event and sort events, export
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await self.sortEvents(ctx)
+        self.writeJson()  # Update JSON file
         await ctx.send("Date set")
 
     # Set time of event command
@@ -141,8 +148,10 @@ class CommandListener:
             await ctx.send("Time not properly formatted")
             return
 
-        # Update event
+        # Update event and sort events, export
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await self.sortEvents(ctx)
+        self.writeJson()  # Update JSON file
         await ctx.send("Time set")
 
     # Set terrain of event command
@@ -159,9 +168,10 @@ class CommandListener:
         for word in info[2:]:
             newTerrain += " " + word
 
-        # Change terrain, update event
+        # Change terrain, update event, export
         eventToUpdate.setTerrain(newTerrain)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        self.writeJson()  # Update JSON file
         await ctx.send("Terrain set")
 
     # Set faction of event command
@@ -178,9 +188,10 @@ class CommandListener:
         for word in info[2:]:
             newFaction += " " + word
 
-        # Change faction, update event
+        # Change faction, update event, export
         eventToUpdate.setFaction(newFaction)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        self.writeJson()  # Update JSON file
         await ctx.send("Faction set")
 
     # Sign user up to event command
@@ -204,9 +215,10 @@ class CommandListener:
             await ctx.send("No role found with that name")
             return
 
-        # Sign user up, update event
+        # Sign user up, update event, export
         eventToUpdate.signup(role_, user_.display_name)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        self.writeJson()  # Update JSON file
         await ctx.send("User signed up")
 
     # Remove signup on event of user command
@@ -219,9 +231,10 @@ class CommandListener:
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         user_ = await self.getUser(info[2], ctx)
 
-        # Remove signup, update event
+        # Remove signup, update event, export
         eventToUpdate.undoSignup(user_.display_name)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        self.writeJson()  # Update JSON file
         await ctx.send("User signup removed")
 
     # Archive event command
@@ -235,10 +248,11 @@ class CommandListener:
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
         eventarchivechannel = self.bot.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
 
-        # Archive event
+        # Archive event and export
         await self.eventDatabase.archiveEvent(eventMessage, eventToUpdate,
                                               eventchannel,
                                               eventarchivechannel)
+        self.writeJson()  # Update JSON file
         await ctx.send("Event archived")
 
     # Delete event command
@@ -267,14 +281,12 @@ class CommandListener:
             else:
                 await ctx.send("No event found with that message ID")
 
+        self.writeJson()  # Update JSON file
+
     # sort events command
     @commands.command(pass_context=True, name="sort", brief="")
     async def sort(self, ctx):
-        self.eventDatabase.sortEvents()
-
-        for messageID, event_ in self.eventDatabase.events.items():
-            eventMessage = await self.getMessage(messageID, ctx)
-            await self.eventDatabase.updateEvent(eventMessage, event_)
+        await self.sortEvents(ctx)
         await ctx.send("Events sorted")
 
     # export to json
@@ -350,6 +362,14 @@ class CommandListener:
                 return member
         await ctx.send("No user found with that user ID")
         return
+
+    # Sort events in eventDatabase
+    async def sortEvents(self, ctx):
+        self.eventDatabase.sortEvents()
+
+        for messageID, event_ in self.eventDatabase.events.items():
+            eventMessage = await self.getMessage(messageID, ctx)
+            await self.eventDatabase.updateEvent(eventMessage, event_)
 
     # Export eventDatabase to json
     def writeJson(self):
