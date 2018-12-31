@@ -28,3 +28,6 @@ class Role:
         data["displayName"] = self.displayName
         data["user"] = self.user
         return data
+
+    def fromJson(self, data):
+        self.user = data["user"]

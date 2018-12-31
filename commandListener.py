@@ -279,9 +279,15 @@ class CommandListener:
 
     # export to json
     @commands.command(pass_context=True, name="export", brief="")
-    async def export(self, ctx):
+    async def exportJson(self, ctx):
         self.writeJson()
         await ctx.send("EventDatabase exported")
+
+    # import from json
+    @commands.command(pass_context=True, name="import", brief="")
+    async def importJson(self, ctx):
+        await self.readJson(ctx)
+        await ctx.send("EventDatabase imported")
 
     # Returns message from given string or gives an error
     async def getMessage(self, string, ctx):
@@ -349,8 +355,14 @@ class CommandListener:
     def writeJson(self):
         data = self.eventDatabase.toJson()
 
-        with open(cfg.JSON_FILEPATH, "w") as filepath:
-            json.dump(data, filepath)
+        with open(cfg.JSON_FILEPATH, "w") as jsonFile:
+            json.dump(data, jsonFile)
+
+    # Export eventDatabase to json
+    async def readJson(self, ctx):
+        with open(cfg.JSON_FILEPATH) as jsonFile:
+            data = json.load(jsonFile)
+            await self.eventDatabase.fromJson(data, ctx)
 
 
 def setup(bot):

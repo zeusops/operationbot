@@ -8,7 +8,7 @@ class EventDatabase:
         self.eventsArchive = {}
 
     # Create a new event and store it
-    async def createEvent(self, date, ctx, eventchannel):
+    async def createEvent(self, date, ctx, channel):
         # Create event
         try:
             newEvent = event.Event(date, ctx.guild.emojis)
@@ -17,7 +17,7 @@ class EventDatabase:
             return
 
         # Create message
-        newEventMessage = await self.createEventMessage(newEvent, eventchannel)
+        newEventMessage = await self.createEventMessage(newEvent, channel)
 
         # Add reactions
         reactions = newEvent.getReactions()
@@ -127,3 +127,34 @@ class EventDatabase:
         data["events"] = eventsData
         data["eventsArchive"] = eventsArchiveData
         return data
+
+    # Fills events and eventsArchive with data from JSON
+    async def fromJson(self, data, ctx):
+        self.events = {}
+        self.eventsArchive = {}
+        eventsData = data["events"]
+        eventsArchiveData = data["eventsArchive"]
+
+        for messageID, eventData in eventsData.items():
+            # Create event
+            try:
+                event_ = event.Event(eventData["date"], ctx.guild.emojis)
+            except Exception:
+                await ctx.send("Failed creating event from JSON")
+                return
+            event_.fromJson(eventData, ctx)
+            self.events[messageID] = event_
+
+        for messageID, eventData in eventsArchiveData.items():
+            # Create event
+            try:
+                event_ = event.Event(eventsArchiveData["date"],
+                                     ctx.guild.emojis)
+            except Exception:
+                await ctx.send("Failed creating event from JSON")
+                return
+            event_.fromJson(eventData, ctx)
+            self.eventsArchive[messageID] = event_
+
+        for messageID, event_ in self.events.items():
+            print(messageID, event_)

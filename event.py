@@ -188,9 +188,21 @@ class Event:
 
         data = {}
         data["title"] = self.title
-        data["date"] = self.date.strftime("%Y-%m-%d %H:%M")
+        data["date"] = self.date.strftime("%Y-%m-%d")
+        data["time"] = self.date.strftime("%H:%M")
         data["terrain"] = self.terrain
         data["faction"] = self.faction
         data["color"] = self.color
         data["roleGroups"] = roleGroupsData
         return data
+
+    def fromJson(self, data, ctx):
+        self.setTitle(data["title"])
+        self.setTime(data["time"])
+        self.setTerrain(data["terrain"])
+        self.faction = data["faction"]
+        self.color = data["color"]
+        for groupName, roleGroupData in data["roleGroups"].items():
+            roleGroup_ = roleGroup.RoleGroup(groupName, False)
+            roleGroup_.fromJson(roleGroupData, ctx)
+            self.roleGroups[groupName] = roleGroup_

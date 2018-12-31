@@ -1,3 +1,6 @@
+import role
+
+
 class RoleGroup:
 
     def __init__(self, name, isInline):
@@ -33,3 +36,16 @@ class RoleGroup:
         data["isInline"] = self.isInline
         data["roles"] = rolesData
         return data
+
+    def fromJson(self, data, ctx):
+        self.name = data["name"]
+        self.isInline = data["isInline"]
+        for roleName, roleData in data["roles"].items():
+            emoji = None
+            for emoji_ in ctx.guild.emojis:
+                if emoji_.name == roleData["emoji"]:
+                    emoji = emoji_
+                    break
+            role_ = role.Role(roleData["name"], emoji, roleData["displayName"])
+            role_.fromJson(roleData)
+            self.roles.append(role_)
