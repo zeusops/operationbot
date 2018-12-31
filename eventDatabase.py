@@ -27,6 +27,8 @@ class EventDatabase:
         # Store event
         self.events[newEventMessage.id] = newEvent
 
+        return newEventMessage, newEvent
+
     # Create a new event message
     async def createEventMessage(self, event_, channel):
         # Create embed and message
@@ -129,21 +131,21 @@ class EventDatabase:
         return data
 
     # Fills events and eventsArchive with data from JSON
-    async def fromJson(self, data, ctx):
+    async def fromJson(self, data, ctx, channel):
         self.events = {}
         self.eventsArchive = {}
         eventsData = data["events"]
         eventsArchiveData = data["eventsArchive"]
 
+        # Clear events channel
+        await channel.purge(limit=100)
+
         for messageID, eventData in eventsData.items():
             # Create event
-            try:
-                event_ = event.Event(eventData["date"], ctx.guild.emojis)
-            except Exception:
-                await ctx.send("Failed creating event from JSON")
-                return
+            eventMessage_, event_ = await self.createEvent(eventData["date"],
+                                                           ctx, channel)
             event_.fromJson(eventData, ctx)
-            self.events[messageID] = event_
+            await self.updateEvent(eventMessage_, event_)
 
         for messageID, eventData in eventsArchiveData.items():
             # Create event

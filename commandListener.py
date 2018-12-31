@@ -358,11 +358,14 @@ class CommandListener:
         with open(cfg.JSON_FILEPATH, "w") as jsonFile:
             json.dump(data, jsonFile)
 
-    # Export eventDatabase to json
+    # Clear eventchannel and import eventDatabase from json
     async def readJson(self, ctx):
+        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
+
+        # Import
         with open(cfg.JSON_FILEPATH) as jsonFile:
             data = json.load(jsonFile)
-            await self.eventDatabase.fromJson(data, ctx)
+            await self.eventDatabase.fromJson(data, ctx, eventchannel)
 
 
 def setup(bot):
