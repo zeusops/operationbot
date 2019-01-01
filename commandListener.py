@@ -43,7 +43,11 @@ class CommandListener:
         info = ctx.message.content
         info = info.split(" ")
         eventMessage = await self.getMessage(info[1], ctx)
+        if eventMessage is None:
+            return
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        if eventToUpdate is None:
+            return
 
         # Get roleName
         roleName = ""
@@ -64,7 +68,11 @@ class CommandListener:
         info = ctx.message.content
         info = info.split(" ")
         eventMessage = await self.getMessage(info[1], ctx)
+        if eventMessage is None:
+            return
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        if eventToUpdate is None:
+            return
 
         # Get roleName
         roleName = ""
@@ -88,7 +96,11 @@ class CommandListener:
         info = ctx.message.content
         info = info.split(" ")
         eventMessage = await self.getMessage(info[1], ctx)
+        if eventMessage is None:
+            return
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        if eventToUpdate is None:
+            return
 
         # Get newTitle
         newTitle = ""
@@ -108,7 +120,11 @@ class CommandListener:
         info = ctx.message.content
         info = info.split(" ")
         eventMessage = await self.getMessage(info[1], ctx)
+        if eventMessage is None:
+            return
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        if eventToUpdate is None:
+            return
 
         # Get newDateString
         newDateString = ""
@@ -135,7 +151,11 @@ class CommandListener:
         info = ctx.message.content
         info = info.split(" ")
         eventMessage = await self.getMessage(info[1], ctx)
+        if eventMessage is None:
+            return
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        if eventToUpdate is None:
+            return
 
         # Get newTimeString
         newTimeString = ""
@@ -162,7 +182,11 @@ class CommandListener:
         info = ctx.message.content
         info = info.split(" ")
         eventMessage = await self.getMessage(info[1], ctx)
+        if eventMessage is None:
+            return
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        if eventToUpdate is None:
+            return
 
         # Get newTerrain
         newTerrain = ""
@@ -182,7 +206,11 @@ class CommandListener:
         info = ctx.message.content
         info = info.split(" ")
         eventMessage = await self.getMessage(info[1], ctx)
+        if eventMessage is None:
+            return
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        if eventToUpdate is None:
+            return
 
         # Get newFaction
         newFaction = ""
@@ -202,8 +230,14 @@ class CommandListener:
         info = ctx.message.content
         info = info.split(" ")
         eventMessage = await self.getMessage(info[1], ctx)
+        if eventMessage is None:
+            return
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        if eventToUpdate is None:
+            return
         user_ = await self.getUser(info[2], ctx)
+        if user_ is None:
+            return
 
         # Get roleName
         roleName = ""
@@ -229,7 +263,11 @@ class CommandListener:
         info = ctx.message.content
         info = info.split(" ")
         eventMessage = await self.getMessage(info[1], ctx)
+        if eventMessage is None:
+            return
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        if eventToUpdate is None:
+            return
         user_ = await self.getUser(info[2], ctx)
 
         # Remove signup, update event, export
@@ -245,7 +283,11 @@ class CommandListener:
         info = ctx.message.content
         info = info.split(" ")
         eventMessage = await self.getMessage(info[1], ctx)
+        if eventMessage is None:
+            return
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        if eventToUpdate is None:
+            return
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
         eventarchivechannel = self.bot.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
 
@@ -315,6 +357,7 @@ class CommandListener:
             return await eventchannel.get_message(messageID)
         except Exception:
             await ctx.send("No message found with that message ID")
+            return
 
     # Returns message from archive from given string or gives an error
     async def getMessageFromArchive(self, string, ctx):
@@ -329,6 +372,7 @@ class CommandListener:
             return await eventarchivechannel.get_message(messageID)
         except Exception:
             await ctx.send("No message found in archive with that message ID")
+            return
 
     # Returns integer from given string or gives an error
     async def getMessageID(self, string, ctx):
