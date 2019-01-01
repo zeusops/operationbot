@@ -1,5 +1,6 @@
 import importlib
 import json
+import discord
 from discord.ext import commands
 import event
 import config as cfg
@@ -343,6 +344,63 @@ class CommandListener:
     async def importJson(self, ctx):
         await self.readJson(ctx)
         await ctx.send("EventDatabase imported")
+
+    # help command
+    @commands.command(pass_context=True, name="help", brief="")
+    async def help(self, ctx):
+        embed = discord.Embed(colour=0xFF4500)
+        commandChar = self.bot.command_prefix
+
+        embed.add_field(name="Create event", value=commandChar +
+                        "create DATE\n" + commandChar + "create 2019-01-01",
+                        inline=False)
+        embed.add_field(name="Delete event", value=commandChar +
+                        "delete MESSAGEID\n" + commandChar +
+                        "delete 439406781123264523", inline=False)
+        embed.add_field(name="Archive event", value=commandChar +
+                        "archive MESSAGEID\n" + commandChar +
+                        "archive 439406781123264523", inline=False)
+        embed.add_field(name="Add additional role", value=commandChar +
+                        "addrole MESSAGEID ROLENAME\n" + commandChar +
+                        "addrole 439406781123264523 Y1 (Bradley) Gunner",
+                        inline=False)
+        embed.add_field(name="Remove additional role", value=commandChar +
+                        "removerole MESSAGEID\n" + commandChar +
+                        "removerole 439406781123264523", inline=False)
+        embed.add_field(name="Set event title", value=commandChar +
+                        "settitle MESSAGEID TITLE\n" + commandChar +
+                        "settitle 439406781123264523 Operation Striker",
+                        inline=False)
+        embed.add_field(name="Set event date", value=commandChar +
+                        "setdate MESSAGEID DATE\n" + commandChar +
+                        "setdate 439406781123264523 2019-01-01", inline=False)
+        embed.add_field(name="Set event time", value=commandChar +
+                        "settime MESSAGEID TIME\n" + commandChar +
+                        "settime 439406781123264523 18:45", inline=False)
+        embed.add_field(name="Set event terrain", value=commandChar +
+                        "setterrain MESSAGEID TERRAIN\n" + commandChar +
+                        "setterrain 439406781123264523 Takistan", inline=False)
+        embed.add_field(name="Set event faction", value=commandChar +
+                        "setfaction MESSAGEID FACTION\n" + commandChar +
+                        "setfaction 439406781123264523 Insurgents",
+                        inline=False)
+        embed.add_field(name="Sign user up (manually)", value=commandChar +
+                        "signup MESSAGEID USERID ROLENAME\n" + commandChar +
+                        "signup 439406781123264523 165853537945780224 Y1 \
+                        (Bradley) Gunner", inline=False)
+        embed.add_field(name="Undo user signup (manually)", value=commandChar +
+                        "removesignup MESSAGEID USERID\n" + commandChar +
+                        "removesignup 439406781123264523 165853537945780224",
+                        inline=False)
+        embed.add_field(name="Import eventDatabase", value=commandChar +
+                        "import\n" + commandChar + "delete", inline=False)
+        embed.add_field(name="Export eventDatabase (manually)",
+                        value=commandChar + "export\n" + commandChar +
+                        "delete", inline=False)
+        embed.add_field(name="Sort events (manually)", value=commandChar +
+                        "sort\n" + commandChar + "delete", inline=False)
+
+        await ctx.send(embed=embed)
 
     # Returns message from given string or gives an error
     async def getMessage(self, string, ctx):
