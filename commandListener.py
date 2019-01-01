@@ -29,8 +29,9 @@ class CommandListener:
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
 
         # Create event and sort events, export
-        await self.eventDatabase.createEvent(date, ctx,
-                                             eventchannel)
+        message_, event_ = await self.eventDatabase.createEvent(date, ctx,
+                                                                eventchannel)
+        await self.eventDatabase.updateReactions(message_, event_, self.bot)
         await self.sortEvents(ctx)
         self.writeJson()  # Update JSON file
         await ctx.send("Event created")
@@ -369,6 +370,8 @@ class CommandListener:
 
         for messageID, event_ in self.eventDatabase.events.items():
             eventMessage = await self.getMessage(messageID, ctx)
+            await self.eventDatabase.updateReactions(eventMessage, event_,
+                                                     self.bot)
             await self.eventDatabase.updateEvent(eventMessage, event_)
 
     # Export eventDatabase to json
@@ -385,7 +388,8 @@ class CommandListener:
         # Import
         with open(cfg.JSON_FILEPATH) as jsonFile:
             data = json.load(jsonFile)
-            await self.eventDatabase.fromJson(data, ctx, eventchannel)
+            await self.eventDatabase.fromJson(data, ctx, eventchannel,
+                                              self.bot)
 
 
 def setup(bot):

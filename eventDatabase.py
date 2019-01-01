@@ -19,11 +19,6 @@ class EventDatabase:
         # Create message
         newEventMessage = await self.createEventMessage(newEvent, channel)
 
-        # Add reactions
-        reactions = newEvent.getReactions()
-        for reaction in reactions:
-            await self.addReaction(newEventMessage, reaction)
-
         # Store event
         self.events[newEventMessage.id] = newEvent
 
@@ -87,12 +82,10 @@ class EventDatabase:
 
     # Add given reaction to given message
     async def addReaction(self, eventMessage, reaction):
-        # try:
-            await eventMessage.add_reaction(reaction)
-        # TODO: catch only discord API related errors
-        # except Exception:
-        #     print("Emote " + str(reaction) + " is unknown", type(reaction))
-        #     return
+        await eventMessage.add_reaction(reaction)
+
+    async def removeReaction(self, eventMessage, reaction, user):
+        await eventMessage.remove_reaction(reaction, user)
 
     def sortEvents(self):
         messageIDs = []
@@ -113,6 +106,30 @@ class EventDatabase:
             self.events[messageID] = events[index]
             index += 1
 
+    async def updateReactions(self, message_, event_, bot):
+        reactionsCurrent = message_.reactions
+        reactionsIntended = event_.getReactions()
+        reactionsToRemove = []
+        reactionsToAdd = []
+
+        # Find reactions to remove
+        for reaction in reactionsCurrent:
+            if reaction not in reactionsIntended:
+                reactionsToRemove.append(reaction)
+
+        # Find reactions to add
+        for reaction in reactionsIntended:
+            if reaction not in reactionsCurrent:
+                reactionsToAdd.append(reaction)
+
+        # Remove existing unintended reactions
+        for reaction in reactionsToRemove:
+            await self.removeReaction(message_, reaction, bot.user)
+
+        # Add not existing intended reactions
+        for reaction in reactionsToAdd:
+            await self.addReaction(message_, reaction)
+
     def toJson(self):
         # Get eventsData
         eventsData = {}
@@ -131,7 +148,7 @@ class EventDatabase:
         return data
 
     # Fills events and eventsArchive with data from JSON
-    async def fromJson(self, data, ctx, channel):
+    async def fromJson(self, data, ctx, channel, bot):
         self.events = {}
         self.eventsArchive = {}
         eventsData = data["events"]
@@ -145,6 +162,7 @@ class EventDatabase:
             eventMessage_, event_ = await self.createEvent(eventData["date"],
                                                            ctx, channel)
             event_.fromJson(eventData, ctx)
+            await self.updateReactions(eventMessage_, event_, bot)
             await self.updateEvent(eventMessage_, event_)
 
         for messageID, eventData in eventsArchiveData.items():

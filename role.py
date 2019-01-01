@@ -1,3 +1,6 @@
+import config as cfg
+
+
 class Role:
 
     def __init__(self, name, emoji, displayName):
@@ -15,8 +18,7 @@ class Role:
         # Add name after emote if it should display
         if self.displayName:
             roleString += self.name + ":"
-        # TODO: Check if a space before the username is necessary
-        # (depends on input function)
+
         roleString += " " + self.user + "\n"
 
         return roleString
@@ -24,9 +26,13 @@ class Role:
     def toJson(self):
         data = {}
         data["name"] = self.name
-        data["emoji"] = self.emoji.name
         data["displayName"] = self.displayName
         data["user"] = self.user
+
+        if (type(self.emoji) is str):
+            data["emoji"] = cfg.ADDITIONAL_ROLE_EMOJIS.index(self.emoji)
+        else:
+            data["emoji"] = self.emoji.name
         return data
 
     def fromJson(self, data):

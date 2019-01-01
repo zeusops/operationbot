@@ -1,4 +1,5 @@
 import role
+import config as cfg
 
 
 class RoleGroup:
@@ -42,10 +43,13 @@ class RoleGroup:
         self.isInline = data["isInline"]
         for roleName, roleData in data["roles"].items():
             emoji = None
-            for emoji_ in ctx.guild.emojis:
-                if emoji_.name == roleData["emoji"]:
-                    emoji = emoji_
-                    break
+            if (type(roleData["emoji"]) is str):
+                for emoji_ in ctx.guild.emojis:
+                    if emoji_.name == roleData["emoji"]:
+                        emoji = emoji_
+                        break
+            else:
+                emoji = cfg.ADDITIONAL_ROLE_EMOJIS[roleData["emoji"]]
             role_ = role.Role(roleData["name"], emoji, roleData["displayName"])
             role_.fromJson(roleData)
             self.roles.append(role_)
