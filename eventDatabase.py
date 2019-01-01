@@ -162,14 +162,20 @@ class EventDatabase:
         # Clear events channel
         await channel.purge(limit=100)
 
+        # Add events
         for messageID, eventData in eventsData.items():
             # Create event
             eventMessage_, event_ = await self.createEvent(eventData["date"],
                                                            ctx, channel)
             event_.fromJson(eventData, ctx)
-            await self.updateReactions(eventMessage_, event_, bot)
             await self.updateEvent(eventMessage_, event_)
 
+        # Add reactions to events
+        for messageID, event_ in self.events.items():
+            eventmessage = await channel.get_message(messageID)
+            await self.updateReactions(eventmessage, event_, bot)
+
+        # Add archived events
         for messageID, eventData in eventsArchiveData.items():
             # Create event
             try:
