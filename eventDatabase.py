@@ -107,28 +107,33 @@ class EventDatabase:
             index += 1
 
     async def updateReactions(self, message_, event_, bot):
+        reactionEmojisIntended = event_.getReactions()
         reactionsCurrent = message_.reactions
-        reactionsIntended = event_.getReactions()
+        reactionEmojisCurrent = {}
         reactionsToRemove = []
-        reactionsToAdd = []
+        reactionEmojisToAdd = []
 
-        # Find reactions to remove
+        # Find reaction emojis current
         for reaction in reactionsCurrent:
-            if reaction not in reactionsIntended:
+            reactionEmojisCurrent[reaction.emoji] = reaction
+
+        # Find emojis to remove
+        for emoji, reaction in reactionEmojisCurrent.items():
+            if emoji not in reactionEmojisIntended:
                 reactionsToRemove.append(reaction)
 
-        # Find reactions to add
-        for reaction in reactionsIntended:
-            if reaction not in reactionsCurrent:
-                reactionsToAdd.append(reaction)
+        # Find emojis to add
+        for emoji in reactionEmojisIntended:
+            if emoji not in reactionEmojisCurrent.keys():
+                reactionEmojisToAdd.append(emoji)
 
         # Remove existing unintended reactions
         for reaction in reactionsToRemove:
             await self.removeReaction(message_, reaction, bot.user)
 
-        # Add not existing intended reactions
-        for reaction in reactionsToAdd:
-            await self.addReaction(message_, reaction)
+        # Add not existing intended emojis
+        for emoji in reactionEmojisToAdd:
+            await self.addReaction(message_, emoji)
 
     def toJson(self):
         # Get eventsData
