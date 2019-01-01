@@ -33,7 +33,7 @@ class EventListener:
             emoji = reaction.emoji
 
             # Find signup of user
-            signup = reactedEvent.findSignup(user.display_name)
+            signup = reactedEvent.findSignup(user.id)
 
             # if user is not signed up, and the role is free, signup
             # if user is not signed up, and the role is not free, do nothing
@@ -47,16 +47,16 @@ class EventListener:
                     return
 
                 # Sign up if role is free
-                if role_.user == "":
+                if role_.userID is None:
                     # signup
-                    reactedEvent.signup(role_, user.display_name)
+                    reactedEvent.signup(role_, user)
 
                     # Update event
                     await self.eventDatabase.updateEvent(reaction.message,
                                                          reactedEvent)
             elif signup.emoji == emoji:
                 # undo signup
-                reactedEvent.undoSignup(user.display_name)
+                reactedEvent.undoSignup(user)
 
                 # Update event
                 await self.eventDatabase.updateEvent(reaction.message,

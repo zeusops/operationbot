@@ -155,26 +155,28 @@ class Event:
         return None
 
     # Add username to role
-    def signup(self, roleToSet, username):
+    def signup(self, roleToSet, user):
         for roleGroup_ in self.roleGroups.values():
             for role_ in roleGroup_.roles:
                 if role_ == roleToSet:
-                    role_.user = username
+                    role_.userID = user.id
+                    role_.userName = user.display_name
 
     # Remove username from any signups
-    def undoSignup(self, username):
+    def undoSignup(self, user):
         for roleGroup_ in self.roleGroups.values():
             for role_ in roleGroup_.roles:
-                if role_.user == username:
-                    role_.user = ""
+                if role_.userID == user.id:
+                    role_.userID = None
+                    role_.userName = ""
                     return role_.emoji
         return None
 
     # Returns if given user is already signed up
-    def findSignup(self, username):
+    def findSignup(self, userID):
         for roleGroup_ in self.roleGroups.values():
             for role_ in roleGroup_.roles:
-                if role_.user == username:
+                if role_.userID == int(userID):
                     return role_
         return None
 

@@ -7,7 +7,8 @@ class Role:
         self.name = name
         self.emoji = emoji
         self.displayName = displayName
-        self.user = ""
+        self.userID = None
+        self.userName = ""
 
     def setUser(self, user):
         self.user = user
@@ -19,7 +20,7 @@ class Role:
         if self.displayName:
             roleString += self.name + ":"
 
-        roleString += " " + self.user + "\n"
+        roleString += " " + self.userName + "\n"
 
         return roleString
 
@@ -27,7 +28,8 @@ class Role:
         data = {}
         data["name"] = self.name
         data["displayName"] = self.displayName
-        data["user"] = self.user
+        data["userID"] = self.userID
+        data["userName"] = self.userName
 
         if (type(self.emoji) is str):
             data["emoji"] = cfg.ADDITIONAL_ROLE_EMOJIS.index(self.emoji)
@@ -36,4 +38,5 @@ class Role:
         return data
 
     def fromJson(self, data):
-        self.user = data["user"]
+        self.userID = data["userID"]
+        self.userName = data["userName"]

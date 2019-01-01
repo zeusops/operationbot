@@ -217,7 +217,7 @@ class CommandListener:
             return
 
         # Sign user up, update event, export
-        eventToUpdate.signup(role_, user_.display_name)
+        eventToUpdate.signup(role_, user_)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
         self.writeJson()  # Update JSON file
         await ctx.send("User signed up")
@@ -233,7 +233,7 @@ class CommandListener:
         user_ = await self.getUser(info[2], ctx)
 
         # Remove signup, update event, export
-        eventToUpdate.undoSignup(user_.display_name)
+        eventToUpdate.undoSignup(user_)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
         self.writeJson()  # Update JSON file
         await ctx.send("User signup removed")
