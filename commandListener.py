@@ -393,12 +393,12 @@ class CommandListener:
                         "removesignup 439406781123264523 165853537945780224",
                         inline=False)
         embed.add_field(name="Import eventDatabase", value=commandChar +
-                        "import\n" + commandChar + "delete", inline=False)
+                        "import\n" + commandChar + "import", inline=False)
         embed.add_field(name="Export eventDatabase (manually)",
                         value=commandChar + "export\n" + commandChar +
-                        "delete", inline=False)
+                        "import", inline=False)
         embed.add_field(name="Sort events (manually)", value=commandChar +
-                        "sort\n" + commandChar + "delete", inline=False)
+                        "sort\n" + commandChar + "sort", inline=False)
 
         await ctx.send(embed=embed)
 
