@@ -198,7 +198,7 @@ class Event:
         data["roleGroups"] = roleGroupsData
         return data
 
-    def fromJson(self, data, ctx):
+    def fromJson(self, data, guild):
         self.setTitle(data["title"])
         self.setTime(data["time"])
         self.setTerrain(data["terrain"])
@@ -206,5 +206,5 @@ class Event:
         self.color = data["color"]
         for groupName, roleGroupData in data["roleGroups"].items():
             roleGroup_ = roleGroup.RoleGroup(groupName, False)
-            roleGroup_.fromJson(roleGroupData, ctx)
+            roleGroup_.fromJson(roleGroupData, guild)
             self.roleGroups[groupName] = roleGroup_

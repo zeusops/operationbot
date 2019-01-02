@@ -38,13 +38,13 @@ class RoleGroup:
         data["roles"] = rolesData
         return data
 
-    def fromJson(self, data, ctx):
+    def fromJson(self, data, guild):
         self.name = data["name"]
         self.isInline = data["isInline"]
         for roleName, roleData in data["roles"].items():
             emoji = None
             if (type(roleData["emoji"]) is str):
-                for emoji_ in ctx.guild.emojis:
+                for emoji_ in guild.emojis:
                     if emoji_.name == roleData["emoji"]:
                         emoji = emoji_
                         break

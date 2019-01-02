@@ -22,6 +22,7 @@ eventDatabase = eventDatabase.EventDatabase()
 @bot.event
 async def on_ready():
     await bot.wait_until_ready()
+    await eventDatabase.fromJson(bot)
     print('Logged in as')
     print(bot.user.name)
     print(bot.user.id)

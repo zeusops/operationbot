@@ -30,9 +30,12 @@ class CommandListener:
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
 
         # Create event and sort events, export
-        message_, event_ = await self.eventDatabase.createEvent(date, ctx,
+        try:
+            msg_, event_ = await self.eventDatabase.createEvent(date,
                                                                 eventchannel)
-        await self.eventDatabase.updateReactions(message_, event_, self.bot)
+        except Exception:
+            await ctx.send("Date not properly formatted")
+        await self.eventDatabase.updateReactions(msg_, event_, self.bot)
         await self.sortEvents(ctx)
         self.writeJson()  # Update JSON file
         await ctx.send("Event created")
@@ -342,7 +345,7 @@ class CommandListener:
     # import from json
     @commands.command(pass_context=True, name="import", brief="")
     async def importJson(self, ctx):
-        await self.readJson(ctx)
+        await self.readJson()
         await ctx.send("EventDatabase imported")
 
     # help command
@@ -484,14 +487,8 @@ class CommandListener:
             json.dump(data, jsonFile)
 
     # Clear eventchannel and import eventDatabase from json
-    async def readJson(self, ctx):
-        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
-
-        # Import
-        with open(cfg.JSON_FILEPATH) as jsonFile:
-            data = json.load(jsonFile)
-            await self.eventDatabase.fromJson(data, ctx, eventchannel,
-                                              self.bot)
+    async def readJson(self):
+        await self.eventDatabase.fromJson(self.bot)
 
 
 def setup(bot):

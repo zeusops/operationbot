@@ -1,4 +1,6 @@
+import json
 import event
+import config as cfg
 
 
 class EventDatabase:
@@ -8,13 +10,9 @@ class EventDatabase:
         self.eventsArchive = {}
 
     # Create a new event and store it
-    async def createEvent(self, date, ctx, channel):
+    async def createEvent(self, date, channel):
         # Create event
-        try:
-            newEvent = event.Event(date, ctx.guild.emojis)
-        except Exception:
-            await ctx.send("Date not properly formatted")
-            return
+        newEvent = event.Event(date, channel.guild.emojis)
 
         # Create message
         newEventMessage = await self.createEventMessage(newEvent, channel)
@@ -73,11 +71,12 @@ class EventDatabase:
 
     # Find an event with it's message ID
     def findEvent(self, messageID):
-        if messageID in self.events:
+        print(len(self.events.keys()))
+        if messageID in self.events.keys():
             return self.events[messageID]
 
     def findEventInArchive(self, messageID):
-        if messageID in self.eventsArchive:
+        if messageID in self.eventsArchive.keys():
             return self.eventsArchive[messageID]
 
     # Add given reaction to given message
@@ -153,38 +152,41 @@ class EventDatabase:
         return data
 
     # Fills events and eventsArchive with data from JSON
-    async def fromJson(self, data, ctx, channel, bot):
+    async def fromJson(self, bot):
+        # Import
+        with open(cfg.JSON_FILEPATH) as jsonFile:
+            data = json.load(jsonFile)
+
         self.events = {}
         self.eventsArchive = {}
         eventsData = data["events"]
         eventsArchiveData = data["eventsArchive"]
+        eventchannel = bot.get_channel(cfg.EVENT_CHANNEL)
 
         # Clear events channel
-        await channel.purge(limit=100)
+        await eventchannel.purge(limit=100)
 
         # Add events
         for messageID, eventData in eventsData.items():
             # Create event
             eventMessage_, event_ = await self.createEvent(eventData["date"],
-                                                           ctx, channel)
-            event_.fromJson(eventData, ctx)
+                                                           eventchannel)
+            event_.fromJson(eventData, eventchannel.guild)
             await self.updateEvent(eventMessage_, event_)
+
+        print(self.events.keys())
 
         # Add reactions to events
         for messageID, event_ in self.events.items():
-            eventmessage = await channel.get_message(messageID)
+            eventmessage = await eventchannel.get_message(messageID)
             await self.updateReactions(eventmessage, event_, bot)
 
         # Add archived events
         for messageID, eventData in eventsArchiveData.items():
             # Create event
-            try:
-                event_ = event.Event(eventsArchiveData["date"],
-                                     ctx.guild.emojis)
-            except Exception:
-                await ctx.send("Failed creating event from JSON")
-                return
-            event_.fromJson(eventData, ctx)
+            event_ = event.Event(eventsArchiveData["date"],
+                                 eventchannel.guild.emojis)
+            event_.fromJson(eventData, eventchannel.guild)
             self.eventsArchive[messageID] = event_
 
         for messageID, event_ in self.events.items():
