@@ -148,7 +148,9 @@ class EventDatabase:
         data = {}
         data["events"] = eventsData
         data["eventsArchive"] = eventsArchiveData
-        return data
+
+        with open(cfg.JSON_FILEPATH, "w") as jsonFile:
+            json.dump(data, jsonFile)
 
     # Fills events and eventsArchive with data from JSON
     async def fromJson(self, bot):

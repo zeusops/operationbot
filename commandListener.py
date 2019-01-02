@@ -1,5 +1,4 @@
 import importlib
-import json
 import discord
 from discord.ext import commands
 import event
@@ -481,10 +480,7 @@ class CommandListener:
 
     # Export eventDatabase to json
     def writeJson(self):
-        data = self.eventDatabase.toJson()
-
-        with open(cfg.JSON_FILEPATH, "w") as jsonFile:
-            json.dump(data, jsonFile)
+        self.eventDatabase.toJson()
 
     # Clear eventchannel and import eventDatabase from json
     async def readJson(self):

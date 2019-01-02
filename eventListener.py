@@ -58,6 +58,7 @@ class EventListener:
                     # Update event
                     await self.eventDatabase.updateEvent(reaction.message,
                                                          reactedEvent)
+                    self.writeJson()
             elif signup.emoji == emoji:
                 # undo signup
                 reactedEvent.undoSignup(user)
@@ -65,9 +66,11 @@ class EventListener:
                 # Update event
                 await self.eventDatabase.updateEvent(reaction.message,
                                                      reactedEvent)
+                self.writeJson()
 
-        # @self.bot.event
-        # async def on_reaction_remove(reaction, user):
+    # Export eventDatabase to json
+    def writeJson(self):
+        self.eventDatabase.toJson()
 
 
 def setup(bot):
