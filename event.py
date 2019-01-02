@@ -24,7 +24,7 @@ class Event:
     # Return an embed for the event
     def createEmbed(self):
         eventEmbed = discord.Embed(title=self.title + " (" +
-                                   self.date.strftime("%Y-%m-%d - %H:%M") +
+                                   self.date.strftime("%a %Y-%m-%d - %H:%M") +
                                    ")", description="Terrain:" + self.terrain +
                                    " - Faction:" + self.faction,
                                    colour=self.color)
