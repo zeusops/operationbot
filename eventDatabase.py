@@ -71,7 +71,6 @@ class EventDatabase:
 
     # Find an event with it's message ID
     def findEvent(self, messageID):
-        print(len(self.events.keys()))
         if messageID in self.events.keys():
             return self.events[messageID]
 
@@ -173,8 +172,6 @@ class EventDatabase:
                                                            eventchannel)
             event_.fromJson(eventData, eventchannel.guild)
             await self.updateEvent(eventMessage_, event_)
-
-        print(self.events.keys())
 
         # Add reactions to events
         for messageID, event_ in self.events.items():

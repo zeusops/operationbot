@@ -11,30 +11,25 @@ if cfg.VERSION != CONFIG_VERSION:
         "Outdated config file, expecting version {}, found version {}"
         .format(CONFIG_VERSION, cfg.VERSION))
 
-initial_extensions = ['commandListener', 'eventListener']
-
+initial_extensions = ['commandListener', 'eventListener', 'reload']
 bot = commands.Bot(command_prefix=COMMAND_CHAR)
 bot.remove_command("help")
-
 eventDatabase = eventDatabase.EventDatabase()
 
 
 @bot.event
 async def on_ready():
     await bot.wait_until_ready()
-    await eventDatabase.fromJson(bot)
-    print('Logged in as')
-    print(bot.user.name)
-    print(bot.user.id)
     await bot.change_presence(activity=discord.Game(name=cfg.GAME, type=2))
 
-
-if __name__ == '__main__':
-    bot.load_extension('reload')
     for extension in initial_extensions:
         # try:
             bot.load_extension(extension)
-        # except Exception as e:
-        #     print(f'failed to load extension {extension}')
+        # except Exception:
+        #    print(f'failed to load extension {extension}')
 
+    print('Logged in as', bot.user.name, bot.user.id)
+
+
+if __name__ == '__main__':
     bot.run(TOKEN)
