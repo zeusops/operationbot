@@ -34,10 +34,11 @@ class CommandListener:
                                                                 eventchannel)
         except Exception:
             await ctx.send("Date not properly formatted")
+            return
         await self.eventDatabase.updateReactions(msg_, event_, self.bot)
         await self.sortEvents(ctx)
         self.writeJson()  # Update JSON file
-        await ctx.send("Event created")
+        await ctx.send("Created event: {}".format(event_))
 
     # Add additional role to event command
     @commands.command(pass_context=True, name="addrole", brief="")
@@ -45,6 +46,9 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
+        if len(info) < 3:
+            await ctx.send("Usage: addrole MESSAGEID ROLENAME")
+            return
         eventMessage = await self.getMessage(info[1], ctx)
         if eventMessage is None:
             return
@@ -67,9 +71,13 @@ class CommandListener:
     # Remove additional role from event command
     @commands.command(pass_context=True, name="removerole", brief="")
     async def removeRole(self, ctx):
+        # TODO: Check for non-existent role
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
+        if len(info) < 3:
+            await ctx.send("Usage: removerole MESSAGEID ROLENAME")
+            return
         eventMessage = await self.getMessage(info[1], ctx)
         if eventMessage is None:
             return
@@ -79,6 +87,7 @@ class CommandListener:
 
         # Get roleName
         roleName = ""
+        # TODO: Replace with join()
         for word in info[2:]:
             roleName += " " + word
 
@@ -98,6 +107,9 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
+        if len(info) < 3:
+            await ctx.send("Usage: settitle MESSAGEID TITLE")
+            return
         eventMessage = await self.getMessage(info[1], ctx)
         if eventMessage is None:
             return
@@ -111,6 +123,8 @@ class CommandListener:
             newTitle += " " + word
 
         # Change title, update event, export
+        # NOTE: Does not check for too long input. Will result in an API error
+        # and a bot crash
         eventToUpdate.setTitle(newTitle)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
         self.writeJson()  # Update JSON file
@@ -122,6 +136,9 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
+        if len(info) != 3:
+            await ctx.send("Usage: setdate MESSAGEID DATE")
+            return
         eventMessage = await self.getMessage(info[1], ctx)
         if eventMessage is None:
             return
@@ -131,6 +148,7 @@ class CommandListener:
 
         # Get newDateString
         newDateString = ""
+        # TODO: Not necessary
         for word in info[2:]:
             newDateString += word
 
@@ -153,6 +171,9 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
+        if len(info) != 3:
+            await ctx.send("Usage: settime MESSAGEID TIME")
+            return
         eventMessage = await self.getMessage(info[1], ctx)
         if eventMessage is None:
             return
@@ -161,6 +182,7 @@ class CommandListener:
             return
 
         # Get newTimeString
+        # TODO: Check if necessary
         newTimeString = ""
         for word in info[2:]:
             newTimeString += word
@@ -184,6 +206,9 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
+        if len(info) < 3:
+            await ctx.send("Usage: setterrain MESSAGEID TERRAIN")
+            return
         eventMessage = await self.getMessage(info[1], ctx)
         if eventMessage is None:
             return
@@ -208,6 +233,9 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
+        if len(info) < 3:
+            await ctx.send("Usage: setfaction MESSAGEID FACTION")
+            return
         eventMessage = await self.getMessage(info[1], ctx)
         if eventMessage is None:
             return
@@ -216,6 +244,7 @@ class CommandListener:
             return
 
         # Get newFaction
+        # TODO: join()
         newFaction = ""
         for word in info[2:]:
             newFaction += " " + word
@@ -232,6 +261,9 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
+        if len(info) < 4:
+            await ctx.send("Usage: signup MESSAGEID USERID ROLENAME")
+            return
         eventMessage = await self.getMessage(info[1], ctx)
         if eventMessage is None:
             return
@@ -265,6 +297,9 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
+        if len(info) != 3:
+            await ctx.send("Usage: removesignup MESSAGEID USERID")
+            return
         eventMessage = await self.getMessage(info[1], ctx)
         if eventMessage is None:
             return
@@ -285,6 +320,9 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
+        if len(info) != 2:
+            await ctx.send("Usage: archive MESSAGEID")
+            return
         eventMessage = await self.getMessage(info[1], ctx)
         if eventMessage is None:
             return
@@ -307,6 +345,9 @@ class CommandListener:
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
+        if len(info) != 2:
+            await ctx.send("Usage: delete MESSAGEID")
+            return
 
         # Get message ID
         eventMessageID = await self.getMessageID(info[1], ctx)
@@ -367,8 +408,9 @@ class CommandListener:
                         "addrole 439406781123264523 Y1 (Bradley) Gunner",
                         inline=False)
         embed.add_field(name="Remove additional role", value=commandChar +
-                        "removerole MESSAGEID\n" + commandChar +
-                        "removerole 439406781123264523", inline=False)
+                        "removerole MESSAGEID ROLENAME\n" + commandChar +
+                        "removerole 439406781123264523 Y1 (Bradley) Gunner",
+                        inline=False)
         embed.add_field(name="Set event title", value=commandChar +
                         "settitle MESSAGEID TITLE\n" + commandChar +
                         "settitle 439406781123264523 Operation Striker",
@@ -408,6 +450,8 @@ class CommandListener:
     async def getMessage(self, string, ctx):
         # Get messageID
         messageID = await self.getMessageID(string, ctx)
+        if messageID is None:
+            return
 
         # Get channels
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)

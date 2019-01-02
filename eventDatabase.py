@@ -155,7 +155,9 @@ class EventDatabase:
     # Fills events and eventsArchive with data from JSON
     async def fromJson(self, bot):
         # Import
+        # FIXME: Handle missing json file
         with open(cfg.JSON_FILEPATH) as jsonFile:
+            # FIXME: Handle empty json file
             data = json.load(jsonFile)
 
         self.events = {}
