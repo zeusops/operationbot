@@ -398,7 +398,7 @@ class CommandListener:
                         "import\n" + commandChar + "import", inline=False)
         embed.add_field(name="Export eventDatabase (manually)",
                         value=commandChar + "export\n" + commandChar +
-                        "import", inline=False)
+                        "export", inline=False)
         embed.add_field(name="Sort events (manually)", value=commandChar +
                         "sort\n" + commandChar + "sort", inline=False)
 
