@@ -1,14 +1,18 @@
 import importlib
 import event
 import config as cfg
-from main import eventDatabase
+from main import eventDatabase_
 
 
 class EventListener:
 
     def __init__(self, bot):
         self.bot = bot
-        self.eventDatabase = eventDatabase
+        self.eventDatabase = eventDatabase_
+
+        @self.bot.event
+        async def on_ready():
+            await self.eventDatabase.fromJson(self.bot)
 
         # Create event command
         @self.bot.event

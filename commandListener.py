@@ -4,14 +4,14 @@ import discord
 from discord.ext import commands
 import event
 import config as cfg
-from main import eventDatabase
+from main import eventDatabase_
 
 
 class CommandListener:
 
     def __init__(self, bot):
         self.bot = bot
-        self.eventDatabase = eventDatabase
+        self.eventDatabase = eventDatabase_
 
     # Create event command
     @commands.command(pass_context=True, name="create", brief="")
