@@ -23,11 +23,11 @@ class Event:
 
     # Return an embed for the event
     def createEmbed(self):
-        eventEmbed = discord.Embed(title=self.title + " (" +
-                                   self.date.strftime("%a %Y-%m-%d - \
-                                                      %H:%M CET") + ")",
-                                   description="Terrain:" + self.terrain +
-                                   " - Faction:" + self.faction,
+        title = "{} ({})".format(
+            self.title, self.date.strftime("%a %Y-%m-%d - %H:%M CET"))
+        description = "Terrain: {} - Faction: {}".format(
+            self.terrain, self.faction)
+        eventEmbed = discord.Embed(title=title, description=description,
                                    colour=self.color)
 
         # Add field to embed for every rolegroup
