@@ -9,8 +9,9 @@ class Event:
 
     def __init__(self, date, guildEmojis):
         self.title = "Operation"
-        self.date = datetime.datetime.strptime(date + " 18:45",
-                                               "%Y-%m-%d %H:%M")
+        self.date = date
+        # datetime.datetime.strptime(date + " 18:45",
+        #                                       "%Y-%m-%d %H:%M")
         self.terrain = "unknown"
         self.faction = "unknown"
         self.color = 0xFF4500

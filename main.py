@@ -1,5 +1,4 @@
 #!/usr/bin/env python3.7
-import discord
 from discord.ext import commands
 import eventDatabase
 import config as cfg
@@ -13,7 +12,7 @@ if cfg.VERSION != CONFIG_VERSION:
 
 initial_extensions = ['commandListener', 'eventListener']
 bot = commands.Bot(command_prefix=COMMAND_CHAR)
-bot.remove_command("help")
+# bot.remove_command("help")
 eventDatabase_ = eventDatabase.EventDatabase()
 
 if __name__ == '__main__':

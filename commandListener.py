@@ -1,9 +1,21 @@
+import datetime
+import sys
 import importlib
 import discord
 from discord.ext import commands
 import event
 import config as cfg
+from secret import COMMAND_CHAR as CMD
 from main import eventDatabase_
+
+
+class EventDate(commands.Converter):
+    async def convert(self, ctx, arg):
+        try:
+            date = datetime.datetime.strptime(arg, '%Y-%m-%d')
+        except ValueError:
+            raise commands.BadArgument
+        return date.replace(hour=18, minute=45)
 
 
 class CommandListener:
@@ -13,54 +25,50 @@ class CommandListener:
         self.eventDatabase = eventDatabase_
 
     # Create event command
-    @commands.command(pass_context=True, name="create", brief="")
-    async def createEvent(self, ctx):
-        # Get info from context
-        info = ctx.message.content
-        info = info.split(" ")
-
-        # Exit if not enough info
-        if (len(info) < 2):
-            await ctx.send("No date specified")
-            return
-
-        # Get event data
-        date = info[1]
+    @commands.command(
+        help="Create a new event\n"
+             "Example: {}create 2019-01-01".format(CMD))
+    async def create(self, ctx, date: EventDate):
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
 
         # Create event and sort events, export
-        try:
-            msg_, event_ = await self.eventDatabase.createEvent(date,
-                                                                eventchannel)
-        except Exception:
-            await ctx.send("Date not properly formatted")
-            return
+        msg_, event_ = await self.eventDatabase.createEvent(date, eventchannel)
         await self.eventDatabase.updateReactions(msg_, event_, self.bot)
         await self.sortEvents(ctx)
         self.writeJson()  # Update JSON file
         await ctx.send("Created event: {}".format(event_))
 
+    @create.error
+    async def create_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("Missing date. See: {}help create".format(CMD))
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("Invalid date")
+        else:
+            await ctx.send("Unexpected error occured:", error.message)
+            print(error)
+
     # Add additional role to event command
-    @commands.command(pass_context=True, name="addrole", brief="")
-    async def addRole(self, ctx):
-        # Get info from context
-        info = ctx.message.content
-        info = info.split(" ")
-        if len(info) < 3:
-            await ctx.send("Usage: addrole MESSAGEID ROLENAME")
-            return
-        eventMessage = await self.getMessage(info[1], ctx)
+    @commands.command(description="Add a new role to the event")
+    async def addrole(self, ctx, messageid: int, *, rolename: str):
+        # # Get info from context
+        # info = ctx.message.content
+        # info = info.split(" ")
+        # if len(info) < 3:
+        #     await ctx.send("Usage: addrole MESSAGEID ROLENAME")
+        #     return
+        eventMessage = await self.getMessage(messageid, ctx)
         if eventMessage is None:
             return
-        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        eventToUpdate = await self.getEvent(messageid, ctx)
         if eventToUpdate is None:
             return
 
-        # Get roleName
-        roleName = " ".join(info[2:])
+        # # Get roleName
+        # roleName = " ".join(info[2:])
 
         # Add role, update event, add reaction, export
-        reaction = eventToUpdate.addAdditionalRole(roleName)
+        reaction = eventToUpdate.addAdditionalRole(rolename)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
         await self.eventDatabase.addReaction(eventMessage, reaction)
         self.writeJson()  # Update JSON file
@@ -367,63 +375,74 @@ class CommandListener:
         await self.readJson()
         await ctx.send("EventDatabase imported")
 
-    # help command
-    @commands.command(pass_context=True, name="help", brief="")
-    async def help(self, ctx):
-        embed = discord.Embed(colour=0xFF4500)
-        commandChar = self.bot.command_prefix
+    @commands.command(brief="Shut down the bot")
+    async def shutdown(self, ctx):
+        await ctx.send("Shutting down")
+        print("logging out")
+        await self.bot.logout()
+        print("exiting")
+        sys.exit()
 
-        embed.add_field(name="Create event", value=commandChar +
-                        "create DATE\n" + commandChar + "create 2019-01-01",
-                        inline=False)
-        embed.add_field(name="Delete event", value=commandChar +
-                        "delete MESSAGEID\n" + commandChar +
-                        "delete 439406781123264523", inline=False)
-        embed.add_field(name="Archive event", value=commandChar +
-                        "archive MESSAGEID\n" + commandChar +
-                        "archive 439406781123264523", inline=False)
-        embed.add_field(name="Add additional role", value=commandChar +
-                        "addrole MESSAGEID ROLENAME\n" + commandChar +
-                        "addrole 439406781123264523 Y1 (Bradley) Gunner",
-                        inline=False)
-        embed.add_field(name="Remove additional role", value=commandChar +
-                        "removerole MESSAGEID ROLENAME\n" + commandChar +
-                        "removerole 439406781123264523 Y1 (Bradley) Gunner",
-                        inline=False)
-        embed.add_field(name="Set event title", value=commandChar +
-                        "settitle MESSAGEID TITLE\n" + commandChar +
-                        "settitle 439406781123264523 Operation Striker",
-                        inline=False)
-        embed.add_field(name="Set event date", value=commandChar +
-                        "setdate MESSAGEID DATE\n" + commandChar +
-                        "setdate 439406781123264523 2019-01-01", inline=False)
-        embed.add_field(name="Set event time", value=commandChar +
-                        "settime MESSAGEID TIME\n" + commandChar +
-                        "settime 439406781123264523 18:45", inline=False)
-        embed.add_field(name="Set event terrain", value=commandChar +
-                        "setterrain MESSAGEID TERRAIN\n" + commandChar +
-                        "setterrain 439406781123264523 Takistan", inline=False)
-        embed.add_field(name="Set event faction", value=commandChar +
-                        "setfaction MESSAGEID FACTION\n" + commandChar +
-                        "setfaction 439406781123264523 Insurgents",
-                        inline=False)
-        embed.add_field(name="Sign user up (manually)", value=commandChar +
-                        "signup MESSAGEID USERID ROLENAME\n" + commandChar +
-                        "signup 439406781123264523 165853537945780224 Y1 \
-                        (Bradley) Gunner", inline=False)
-        embed.add_field(name="Undo user signup (manually)", value=commandChar +
-                        "removesignup MESSAGEID USERID\n" + commandChar +
-                        "removesignup 439406781123264523 165853537945780224",
-                        inline=False)
-        embed.add_field(name="Import eventDatabase", value=commandChar +
-                        "import\n" + commandChar + "import", inline=False)
-        embed.add_field(name="Export eventDatabase (manually)",
-                        value=commandChar + "export\n" + commandChar +
-                        "export", inline=False)
-        embed.add_field(name="Sort events (manually)", value=commandChar +
-                        "sort\n" + commandChar + "sort", inline=False)
+    # # help command
+    # @commands.command(name="help", brief="")
+    # async def help(self, ctx):
+    #     embed = discord.Embed(colour=0xFF4500)
+    #     commandChar = self.bot.command_prefix
 
-        await ctx.send(embed=embed)
+    #     embed.add_field(name="Create event", value=commandChar +
+    #                     "create DATE\n" + commandChar + "create 2019-01-01",
+    #                     inline=False)
+    #     embed.add_field(name="Delete event", value=commandChar +
+    #                     "delete MESSAGEID\n" + commandChar +
+    #                     "delete 439406781123264523", inline=False)
+    #     embed.add_field(name="Archive event", value=commandChar +
+    #                     "archive MESSAGEID\n" + commandChar +
+    #                     "archive 439406781123264523", inline=False)
+    #     embed.add_field(name="Add additional role", value=commandChar +
+    #                     "addrole MESSAGEID ROLENAME\n" + commandChar +
+    #                     "addrole 439406781123264523 Y1 (Bradley) Gunner",
+    #                     inline=False)
+    #     embed.add_field(name="Remove additional role", value=commandChar +
+    #                     "removerole MESSAGEID ROLENAME\n" + commandChar +
+    #                     "removerole 439406781123264523 Y1 (Bradley) Gunner",
+    #                     inline=False)
+    #     embed.add_field(name="Set event title", value=commandChar +
+    #                     "settitle MESSAGEID TITLE\n" + commandChar +
+    #                     "settitle 439406781123264523 Operation Striker",
+    #                     inline=False)
+    #     embed.add_field(name="Set event date", value=commandChar +
+    #                     "setdate MESSAGEID DATE\n" + commandChar +
+    #                     "setdate 439406781123264523 2019-01-01",
+    #                     inline=False)
+    #     embed.add_field(name="Set event time", value=commandChar +
+    #                     "settime MESSAGEID TIME\n" + commandChar +
+    #                     "settime 439406781123264523 18:45", inline=False)
+    #     embed.add_field(name="Set event terrain", value=commandChar +
+    #                     "setterrain MESSAGEID TERRAIN\n" + commandChar +
+    #                     "setterrain 439406781123264523 Takistan",
+    #                     inline=False)
+    #     embed.add_field(name="Set event faction", value=commandChar +
+    #                     "setfaction MESSAGEID FACTION\n" + commandChar +
+    #                     "setfaction 439406781123264523 Insurgents",
+    #                     inline=False)
+    #     embed.add_field(name="Sign user up (manually)", value=commandChar +
+    #                     "signup MESSAGEID USERID ROLENAME\n" + commandChar +
+    #                     "signup 439406781123264523 165853537945780224 Y1 \
+    #                     (Bradley) Gunner", inline=False)
+    #     embed.add_field(name="Undo user signup (manually)",
+    #                     value=commandChar +
+    #                     "removesignup MESSAGEID USERID\n" + commandChar +
+    #                     "removesignup 439406781123264523 165853537945780224",
+    #                     inline=False)
+    #     embed.add_field(name="Import eventDatabase", value=commandChar +
+    #                     "import\n" + commandChar + "import", inline=False)
+    #     embed.add_field(name="Export eventDatabase (manually)",
+    #                     value=commandChar + "export\n" + commandChar +
+    #                     "export", inline=False)
+    #     embed.add_field(name="Sort events (manually)", value=commandChar +
+    #                     "sort\n" + commandChar + "sort", inline=False)
+
+    #     await ctx.send(embed=embed)
 
     # Returns message from given string or gives an error
     async def getMessage(self, string, ctx):

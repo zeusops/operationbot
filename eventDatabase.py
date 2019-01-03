@@ -172,7 +172,9 @@ class EventDatabase:
         # Add events
         for messageID, eventData in eventsData.items():
             # Create event
-            eventMessage_, event_ = await self.createEvent(eventData["date"],
+            date = datetime.datetime.strptime(eventData["date"],
+                                              '%Y-%m-%d')
+            eventMessage_, event_ = await self.createEvent(date,
                                                            eventchannel)
             event_.fromJson(eventData, eventchannel.guild)
             await self.updateEvent(eventMessage_, event_)
