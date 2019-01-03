@@ -57,10 +57,7 @@ class CommandListener:
             return
 
         # Get roleName
-        # TODO: join()
-        roleName = ""
-        for word in info[2:]:
-            roleName += " " + word
+        roleName = " ".join(info[2:])
 
         # Add role, update event, add reaction, export
         reaction = eventToUpdate.addAdditionalRole(roleName)
@@ -72,7 +69,6 @@ class CommandListener:
     # Remove additional role from event command
     @commands.command(pass_context=True, name="removerole", brief="")
     async def removeRole(self, ctx):
-        # TODO: Check for non-existent role
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
@@ -87,10 +83,13 @@ class CommandListener:
             return
 
         # Get roleName
-        roleName = ""
-        # TODO: Replace with join()
-        for word in info[2:]:
-            roleName += " " + word
+        roleName = " ".join(info[2:])
+
+        # Find role
+        role_ = eventToUpdate.findRoleWithName(roleName)
+        if role_ is None:
+            await ctx.send("No role found with that name")
+            return
 
         # Remove reactions, remove role, update event, add reactions, export
         for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
@@ -119,10 +118,7 @@ class CommandListener:
             return
 
         # Get newTitle
-        newTitle = ""
-        # TODO: join()
-        for word in info[2:]:
-            newTitle += " " + word
+        newTitle = " ".join(info[2:])
 
         # Change title, update event, export
         # NOTE: Does not check for too long input. Will result in an API error
@@ -207,10 +203,7 @@ class CommandListener:
             return
 
         # Get newTerrain
-        newTerrain = ""
-        # TODO: join()
-        for word in info[2:]:
-            newTerrain += " " + word
+        newTerrain = " ".join(info[2:])
 
         # Change terrain, update event, export
         eventToUpdate.setTerrain(newTerrain)
@@ -235,10 +228,7 @@ class CommandListener:
             return
 
         # Get newFaction
-        # TODO: join()
-        newFaction = ""
-        for word in info[2:]:
-            newFaction += " " + word
+        newFaction = " ".join(info[2:])
 
         # Change faction, update event, export
         eventToUpdate.setFaction(newFaction)
@@ -266,10 +256,7 @@ class CommandListener:
             return
 
         # Get roleName
-        roleName = ""
-        # TODO: join()
-        for word in info[3:]:
-            roleName += " " + word
+        roleName = " ".join(info[3:])
 
         # Find role
         role_ = eventToUpdate.findRoleWithName(roleName)
