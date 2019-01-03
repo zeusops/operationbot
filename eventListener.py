@@ -1,4 +1,5 @@
 import importlib
+import discord
 import event
 import config as cfg
 from main import eventDatabase_
@@ -12,7 +13,13 @@ class EventListener:
 
         @self.bot.event
         async def on_ready():
+            print("eventListener: on_ready")
+            await self.bot.wait_until_ready()
+            print("eventListener: await on_ready")
             await self.eventDatabase.fromJson(self.bot)
+            await self.bot.change_presence(activity=discord.Game(name=cfg.GAME,
+                                                                 type=2))
+            print('Logged in as', self.bot.user.name, self.bot.user.id)
 
         # Create event command
         @self.bot.event

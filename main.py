@@ -16,14 +16,6 @@ bot = commands.Bot(command_prefix=COMMAND_CHAR)
 bot.remove_command("help")
 eventDatabase_ = eventDatabase.EventDatabase()
 
-
-@bot.event
-async def on_ready():
-    await bot.wait_until_ready()
-    print('Logged in as', bot.user.name, bot.user.id)
-    await bot.change_presence(activity=discord.Game(name=cfg.GAME, type=2))
-
-
 if __name__ == '__main__':
     for extension in initial_extensions:
         try:
