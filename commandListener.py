@@ -67,8 +67,8 @@ class CommandListener:
         await ctx.send("Role added")
 
     # Remove additional role from event command
-    @commands.command(pass_context=True, name="removerole", brief="")
-    async def removeRole(self, ctx):
+    @commands.command()
+    async def removerole(self, ctx):
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
@@ -102,8 +102,8 @@ class CommandListener:
         await ctx.send("Role removed")
 
     # Set title of event command
-    @commands.command(pass_context=True, name="settitle", brief="")
-    async def setTitle(self, ctx):
+    @commands.command()
+    async def settitle(self, ctx):
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
@@ -129,8 +129,8 @@ class CommandListener:
         await ctx.send("Title set")
 
     # Set date of event command
-    @commands.command(pass_context=True, name="setdate", brief="")
-    async def setDate(self, ctx):
+    @commands.command()
+    async def setdate(self, ctx):
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
@@ -158,8 +158,8 @@ class CommandListener:
         await ctx.send("Date set")
 
     # Set time of event command
-    @commands.command(pass_context=True, name="settime", brief="")
-    async def setTime(self, ctx):
+    @commands.command()
+    async def settime(self, ctx):
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
@@ -187,8 +187,8 @@ class CommandListener:
         await ctx.send("Time set")
 
     # Set terrain of event command
-    @commands.command(pass_context=True, name="setterrain", brief="")
-    async def setTerrain(self, ctx):
+    @commands.command()
+    async def setterrain(self, ctx):
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
@@ -212,8 +212,8 @@ class CommandListener:
         await ctx.send("Terrain set")
 
     # Set faction of event command
-    @commands.command(pass_context=True, name="setfaction", brief="")
-    async def setFaction(self, ctx):
+    @commands.command()
+    async def setfaction(self, ctx):
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
@@ -237,7 +237,7 @@ class CommandListener:
         await ctx.send("Faction set")
 
     # Sign user up to event command
-    @commands.command(pass_context=True, name="signup", brief="")
+    @commands.command()
     async def signup(self, ctx):
         # Get info from context
         info = ctx.message.content
@@ -271,8 +271,8 @@ class CommandListener:
         await ctx.send("User signed up")
 
     # Remove signup on event of user command
-    @commands.command(pass_context=True, name="removesignup", brief="")
-    async def removeSignup(self, ctx):
+    @commands.command()
+    async def removesignup(self, ctx):
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
@@ -294,7 +294,7 @@ class CommandListener:
         await ctx.send("User signup removed")
 
     # Archive event command
-    @commands.command(pass_context=True, name="archive", brief="")
+    @commands.command()
     async def archive(self, ctx):
         # Get info from context
         info = ctx.message.content
@@ -319,7 +319,7 @@ class CommandListener:
         await ctx.send("Event archived")
 
     # Delete event command
-    @commands.command(pass_context=True, name="delete", brief="")
+    @commands.command()
     async def delete(self, ctx):
         # Get info from context
         info = ctx.message.content
@@ -350,19 +350,19 @@ class CommandListener:
         self.writeJson()  # Update JSON file
 
     # sort events command
-    @commands.command(pass_context=True, name="sort", brief="")
+    @commands.command()
     async def sort(self, ctx):
         await self.sortEvents(ctx)
         await ctx.send("Events sorted")
 
     # export to json
-    @commands.command(pass_context=True, name="export", brief="")
-    async def exportJson(self, ctx):
+    @commands.command()
+    async def export(self, ctx):
         self.writeJson()
         await ctx.send("EventDatabase exported")
 
     # import from json
-    @commands.command(pass_context=True, name="import", brief="")
+    @commands.command(name="import")
     async def importJson(self, ctx):
         await self.readJson()
         await ctx.send("EventDatabase imported")

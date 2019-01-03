@@ -8,8 +8,8 @@ class Reload:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(pass_context=True, name="reload", brief="")
-    async def reloadBot(self, ctx):
+    @commands.command()
+    async def reload(self, ctx):
         print("Reloading extensions")
         for extension in initial_extensions:
             self.bot.unload_extension(extension)
