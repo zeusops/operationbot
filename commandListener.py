@@ -148,15 +148,9 @@ class CommandListener:
         if eventToUpdate is None:
             return
 
-        # Get newDateString
-        newDateString = ""
-        # TODO: Not necessary
-        for word in info[2:]:
-            newDateString += word
-
         # Change date
         try:
-            eventToUpdate.setDate(newDateString)
+            eventToUpdate.setDate(info[2])
         except Exception:
             await ctx.send("Date not properly formatted")
             return
@@ -183,15 +177,9 @@ class CommandListener:
         if eventToUpdate is None:
             return
 
-        # Get newTimeString
-        # TODO: Check if necessary
-        newTimeString = ""
-        for word in info[2:]:
-            newTimeString += word
-
         # Change time
         try:
-            eventToUpdate.setTime(newTimeString)
+            eventToUpdate.setTime(info[2])
         except Exception:
             await ctx.send("Time not properly formatted")
             return
