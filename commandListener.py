@@ -57,6 +57,7 @@ class CommandListener:
             return
 
         # Get roleName
+        # TODO: join()
         roleName = ""
         for word in info[2:]:
             roleName += " " + word
@@ -119,6 +120,7 @@ class CommandListener:
 
         # Get newTitle
         newTitle = ""
+        # TODO: join()
         for word in info[2:]:
             newTitle += " " + word
 
@@ -218,6 +220,7 @@ class CommandListener:
 
         # Get newTerrain
         newTerrain = ""
+        # TODO: join()
         for word in info[2:]:
             newTerrain += " " + word
 
@@ -276,6 +279,7 @@ class CommandListener:
 
         # Get roleName
         roleName = ""
+        # TODO: join()
         for word in info[3:]:
             roleName += " " + word
 
