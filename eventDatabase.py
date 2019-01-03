@@ -1,4 +1,6 @@
+import datetime
 import json
+import os
 import event
 import config as cfg
 
@@ -155,10 +157,30 @@ class EventDatabase:
     # Fills events and eventsArchive with data from JSON
     async def fromJson(self, bot):
         # Import
-        # FIXME: Handle missing json file
-        with open(cfg.JSON_FILEPATH) as jsonFile:
-            # FIXME: Handle empty json file
-            data = json.load(jsonFile)
+        try:
+            try:
+                with open(cfg.JSON_FILEPATH) as jsonFile:
+                    data = json.load(jsonFile)
+            except json.decoder.JSONDecodeError:
+                print("Malformed JSON file! Backing up and",
+                      "creating an empty database")
+                # Backup old file
+                backupName = "{}-{}.bak" \
+                    .format(cfg.JSON_FILEPATH,
+                            datetime.datetime.now().strftime(
+                                '%Y-%m-%dT%H-%M-%S'))
+                os.rename(cfg.JSON_FILEPATH, backupName)
+                print("Backed up to", backupName)
+                # Let next handler create the file and continue importing
+                raise FileNotFoundError
+        except FileNotFoundError:
+            print("JSON not found, creating")
+            with open(cfg.JSON_FILEPATH, "w") as jsonFile:
+                # Create a new file with empty JSON structure inside
+                json.dump({"events": {}, "eventsArchive": {}}, jsonFile)
+            # Try to import again
+            await self.fromJson(bot)
+            return
 
         self.events = {}
         self.eventsArchive = {}
