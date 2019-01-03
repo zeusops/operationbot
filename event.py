@@ -11,8 +11,8 @@ class Event:
         self.title = "Operation"
         self.date = datetime.datetime.strptime(date + " 18:45",
                                                "%Y-%m-%d %H:%M")
-        self.terrain = " unknown"
-        self.faction = " unknown"
+        self.terrain = "unknown"
+        self.faction = "unknown"
         self.color = 0xFF4500
         self.roleGroups = {}
         self.additionalRoleCount = 0
@@ -58,7 +58,7 @@ class Event:
             # Only add role if the group exists
             if groupName in self.roleGroups.keys():
                 emoji = self.normalEmojis[name]
-                newRole = role.Role(" " + name, emoji, False)
+                newRole = role.Role(name, emoji, False)
                 self.roleGroups[groupName].addRole(newRole)
 
     # Add an additional role to the event

@@ -14,15 +14,13 @@ class Role:
         self.user = user
 
     def __str__(self):
-        roleString = str(self.emoji)
-
         # Add name after emote if it should display
         if self.displayName:
-            roleString += self.name + ":"
-
-        roleString += " " + self.userName + "\n"
-
-        return roleString
+            return "{} {}: {}\n".format(str(self.emoji),
+                                        self.name,
+                                        self.userName)
+        else:
+            return "{} {}\n".format(str(self.emoji), self.userName)
 
     def toJson(self):
         data = {}
