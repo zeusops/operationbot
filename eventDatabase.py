@@ -144,7 +144,7 @@ class EventDatabase:
         # Get eventsArchiveData
         eventsArchiveData = {}
         for messageID, event_ in self.eventsArchive.items():
-            eventsData[messageID] = event_.toJson()
+            eventsArchiveData[messageID] = event_.toJson()
 
         # Store data and return
         data = {}
