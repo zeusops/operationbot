@@ -1,7 +1,7 @@
 import datetime
 import json
 import os
-import event
+from event import Event
 import config as cfg
 
 
@@ -14,7 +14,7 @@ class EventDatabase:
     # Create a new event and store it
     async def createEvent(self, date, channel):
         # Create event
-        newEvent = event.Event(date, channel.guild.emojis)
+        newEvent = Event(date, channel.guild.emojis)
 
         # Create message
         newEventMessage = await self.createEventMessage(newEvent, channel)
@@ -38,8 +38,7 @@ class EventDatabase:
         return newEventMessage
 
     # Move event to archive
-    async def archiveEvent(self, eventmessage, event_, eventchannel,
-                           eventarchivechannel):
+    async def archiveEvent(self, eventmessage, event_, eventarchivechannel):
         # Remove event from events
         await self.removeEvent(eventmessage)
 
@@ -144,7 +143,7 @@ class EventDatabase:
         # Get eventsArchiveData
         eventsArchiveData = {}
         for messageID, event_ in self.eventsArchive.items():
-            eventsData[messageID] = event_.toJson()
+            eventsArchiveData[messageID] = event_.toJson()
 
         # Store data and return
         data = {}
@@ -209,8 +208,8 @@ class EventDatabase:
         # Add archived events
         for messageID, eventData in eventsArchiveData.items():
             # Create event
-            event_ = event.Event(eventsArchiveData["date"],
-                                 eventchannel.guild.emojis)
+            date = datetime.datetime.strptime(eventData["date"], "%Y-%m-%d")
+            event_ = Event(date, eventchannel.guild.emojis)
             event_.fromJson(eventData, eventchannel.guild)
             self.eventsArchive[messageID] = event_
 
