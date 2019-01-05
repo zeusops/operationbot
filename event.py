@@ -10,8 +10,6 @@ class Event:
     def __init__(self, date, guildEmojis):
         self.title = "Operation"
         self.date = date
-        # datetime.datetime.strptime(date + " 18:45",
-        #                                       "%Y-%m-%d %H:%M")
         self.terrain = "unknown"
         self.faction = "unknown"
         self.color = 0xFF4500
@@ -93,14 +91,12 @@ class Event:
         self.title = newTitle
 
     # Date setter
-    def setDate(self, newDateString):
-        newDate = datetime.datetime.strptime(newDateString, "%Y-%m-%d")
+    def setDate(self, newDate):
         self.date = self.date.replace(year=newDate.year, month=newDate.month,
                                       day=newDate.day)
 
     # Time setter
-    def setTime(self, newTimeString):
-        newTime = datetime.datetime.strptime(newTimeString, "%H:%M")
+    def setTime(self, newTime):
         self.date = self.date.replace(hour=newTime.hour, minute=newTime.minute)
 
     # Terrain setter
@@ -202,7 +198,8 @@ class Event:
 
     def fromJson(self, data, guild):
         self.setTitle(data["title"])
-        self.setTime(data["time"])
+        time = datetime.datetime.strptime(data["time"], "%H:%M")
+        self.setTime(time)
         self.setTerrain(data["terrain"])
         self.faction = data["faction"]
         self.color = data["color"]
