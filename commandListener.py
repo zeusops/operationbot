@@ -211,7 +211,7 @@ class CommandListener:
             return
 
         # TODO: Replace with Member Converter
-        user_ = self.bot.get_user(userid)
+        user_ = ctx.guild.get_member(userid)
         if user_ is None:
             await ctx.send("No user found with that user ID")
             return
