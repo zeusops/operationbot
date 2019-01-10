@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from typing import Dict, Tuple
 
-from discord import Emoji, Member, Message, TextChannel, Reaction
+from discord import Member, Message, TextChannel, Reaction
 from discord.ext.commands import Bot
 
 import config as cfg
@@ -18,7 +18,7 @@ class EventDatabase:
 
     # Create a new event and store it
     async def createEvent(self, date: datetime,
-            channel: TextChannel) -> Tuple[Message, Event]:
+                          channel: TextChannel) -> Tuple[Message, Event]:
         # Create event
         newEvent = Event(date, channel.guild.emojis)
 
@@ -32,7 +32,7 @@ class EventDatabase:
 
     # Create a new event message
     async def createEventMessage(self, event: Event,
-            channel: TextChannel) -> Message:
+                                 channel: TextChannel) -> Message:
         # Create embed and message
         newEventEmbed = event.createEmbed()
         newEventMessage = await channel.send(embed=newEventEmbed)
@@ -203,9 +203,9 @@ class EventDatabase:
         for messageID, eventData in eventsData.items():
             # Create event
             date = datetime.strptime(eventData["date"],
-                                              '%Y-%m-%d')
+                                     '%Y-%m-%d')
             eventMessage, event = await self.createEvent(date,
-                                                          eventchannel)
+                                                         eventchannel)
             event.fromJson(eventData, eventchannel.guild)
             await self.updateEvent(eventMessage, event)
 

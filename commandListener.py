@@ -227,7 +227,7 @@ class CommandListener:
              "Example: {}setdescription 530481556083441684 Insurgents"
              .format(CMD))
     async def setdescription(self, ctx: Context, eventMessage: EventMessage, *,
-                         description: str):
+                             description: str):
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
