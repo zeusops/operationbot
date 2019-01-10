@@ -54,6 +54,22 @@ class CommandListener:
         self.bot = bot
         self.eventDatabase = eventDatabase
 
+    @command(
+        help="Execute arbitrary code\n"
+             "Example: {}exec print(\"Hello World\")".format(CMD))
+    async def exec(self, ctx: Context, *, cmd: str):
+        # Allow only Gehock#9738 to send commands for security
+        if ctx.message.author.id != 150625032656125952:
+            await ctx.send("Unauthorized")
+            return
+
+        try:
+            msg = eval(cmd)
+        except Exception:
+            msg = "An error occured while executing: ```{}```" \
+                  .format(traceback.format_exc())
+        await ctx.send(msg)
+
     # Create event command
     @command(
         help="Create a new event\n"
