@@ -1,6 +1,6 @@
 import importlib
 
-from discord import Emoji, Member, Reaction
+from discord import Emoji, Member, Reaction, Game
 from discord.ext.commands import Bot
 
 import config as cfg
@@ -21,8 +21,8 @@ class EventListener:
             await commandchannel.send("Importing events")
             await self.eventDatabase.fromJson(self.bot)
             await commandchannel.send("Events imported")
-            await self.bot.change_presence(activity=discord.Game(name=cfg.GAME,
-                                                                 type=2))
+            await self.bot.change_presence(activity=Game(name=cfg.GAME,
+                                                         type=2))
             print('Logged in as', self.bot.user.name, self.bot.user.id)
 
         # Create event command
