@@ -221,6 +221,23 @@ class CommandListener:
         self.writeJson()  # Update JSON file
         await ctx.send("Faction set")
 
+    # Set faction of event command
+    @command(
+        help="Set event description\n"
+             "Example: {}setdescription 530481556083441684 Insurgents"
+             .format(CMD))
+    async def setdescription(self, ctx: Context, eventMessage: EventMessage, *,
+                         description: str):
+        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        if eventToUpdate is None:
+            return
+
+        # Change description, update event, export
+        eventToUpdate.description = description
+        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        self.writeJson()  # Update JSON file
+        await ctx.send("Description set")
+
     # Sign user up to event command
     @command(
         help="Sign user up (manually)\n"

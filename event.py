@@ -15,6 +15,7 @@ class Event:
         self.date = date
         self.terrain = "unknown"
         self.faction = "unknown"
+        self.description = ""
         self.color = 0xFF4500
         self.roleGroups: Dict[str, RoleGroup] = {}
         self.additionalRoleCount = 0
@@ -27,8 +28,8 @@ class Event:
     def createEmbed(self) -> Embed:
         title = "{} ({})".format(
             self.title, self.date.strftime("%a %Y-%m-%d - %H:%M CET"))
-        description = "Terrain: {} - Faction: {}".format(
-            self.terrain, self.faction)
+        description = "Terrain: {} - Faction: {}\n\n{}".format(
+            self.terrain, self.faction, self.description)
         eventEmbed = Embed(title=title, description=description,
                            colour=self.color)
 
@@ -192,6 +193,7 @@ class Event:
         data = {}
         data["title"] = self.title
         data["date"] = self.date.strftime("%Y-%m-%d")
+        data["description"] = self.description
         data["time"] = self.date.strftime("%H:%M")
         data["terrain"] = self.terrain
         data["faction"] = self.faction
@@ -205,6 +207,7 @@ class Event:
         self.setTime(time)
         self.setTerrain(data["terrain"])
         self.faction = data["faction"]
+        self.description = data.get("description", "")
         self.color = data["color"]
         for groupName, roleGroupData in data["roleGroups"].items():
             roleGroup = RoleGroup(groupName, False)
