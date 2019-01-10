@@ -3,3 +3,4 @@ secret.py
 __pycache__
 .vscode
 eventDatabase.json
+.mypy_cache
