@@ -1,39 +1,42 @@
-import datetime
-import sys
 import importlib
-import discord
-from discord.ext import commands
-import event
+import sys
+import traceback
+from datetime import datetime
+
+from discord import NotFound, Message
+from discord.ext.commands import (BadArgument, Bot, Context, Converter,
+                                  MissingRequiredArgument, command)
+
 import config as cfg
+from main import eventDatabase
 from secret import COMMAND_CHAR as CMD
-from main import eventDatabase_
 
 
-class EventDate(commands.Converter):
-    async def convert(self, ctx, arg):
+class EventDate(Converter):
+    async def convert(self, ctx: Context, arg: str) -> datetime:
         try:
-            date = datetime.datetime.strptime(arg, '%Y-%m-%d')
+            date = datetime.strptime(arg, '%Y-%m-%d')
         except ValueError:
-            raise commands.BadArgument("Invalid date format")
+            raise BadArgument("Invalid date format")
         return date.replace(hour=18, minute=45)
 
 
-class EventTime(commands.Converter):
-    async def convert(self, ctx, arg):
+class EventTime(Converter):
+    async def convert(self, ctx: Context, arg: str) -> datetime:
         try:
-            time = datetime.datetime.strptime(arg, '%H:%M')
+            time = datetime.strptime(arg, '%H:%M')
         except ValueError:
-            raise commands.BadArgument("Invalid time format")
+            raise BadArgument("Invalid time format")
         return time
 
 
-class EventMessage(commands.Converter):
-    async def convert(self, ctx, string):
+class EventMessage(Converter):
+    async def convert(self, ctx: Context, arg: str) -> Message:
         try:
-            messageid = int(string)
+            messageid = int(arg)
         except ValueError:
-            raise commands.BadArgument("Invalid message ID, needs to be an "
-                                       "integer")
+            raise BadArgument("Invalid message ID, needs to be an "
+                              "integer")
 
         # Get channels
         eventchannel = ctx.bot.get_channel(cfg.EVENT_CHANNEL)
@@ -41,36 +44,37 @@ class EventMessage(commands.Converter):
         # Get message
         try:
             return await eventchannel.get_message(messageid)
-        except discord.NotFound:
-            raise commands.BadArgument("No message found with that message ID")
+        except NotFound:
+            raise BadArgument("No message found with that message ID")
 
 
 class CommandListener:
 
-    def __init__(self, bot):
+    def __init__(self, bot: Bot):
         self.bot = bot
-        self.eventDatabase = eventDatabase_
+        self.eventDatabase = eventDatabase
 
     # Create event command
-    @commands.command(
+    @command(
         help="Create a new event\n"
              "Example: {}create 2019-01-01".format(CMD))
-    async def create(self, ctx, date: EventDate):
+    async def create(self, ctx: Context, date: EventDate):
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
 
         # Create event and sort events, export
-        msg_, event_ = await self.eventDatabase.createEvent(date, eventchannel)
-        await self.eventDatabase.updateReactions(msg_, event_, self.bot)
+        msg, event = await self.eventDatabase.createEvent(date, eventchannel)
+        await self.eventDatabase.updateReactions(msg, event, self.bot)
         await self.sortEvents(ctx)
         self.writeJson()  # Update JSON file
-        await ctx.send("Created event: {}".format(event_))
+        await ctx.send("Created event: {}".format(event))
 
     # Add additional role to event command
-    @commands.command(
+    @command(
         help="Add a new additional role to the event\n"
              "Example: {}addrole 530481556083441684 Y1 (Bradley) Driver"
              .format(CMD))
-    async def addrole(self, ctx, eventMessage: EventMessage, *, rolename: str):
+    async def addrole(self, ctx: Context, eventMessage: EventMessage, *,
+                      rolename: str):
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -82,19 +86,19 @@ class CommandListener:
         await ctx.send("Role added")
 
     # Remove additional role from event command
-    @commands.command(
+    @command(
         help="Remove an additional role from the event\n"
              "Example: {}removerole 530481556083441684 Y1 (Bradley) Driver"
              .format(CMD))
-    async def removerole(self, ctx, eventMessage: EventMessage, *,
+    async def removerole(self, ctx: Context, eventMessage: EventMessage, *,
                          rolename: str):
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
         # Find role
-        role_ = eventToUpdate.findRoleWithName(rolename)
-        if role_ is None:
+        role = eventToUpdate.findRoleWithName(rolename)
+        if role is None:
             await ctx.send("No role found with that name")
             return
 
@@ -109,11 +113,12 @@ class CommandListener:
         await ctx.send("Role removed")
 
     # Set title of event command
-    @commands.command(
+    @command(
         help="Set event title\n"
              "Example: {}settitle 530481556083441684 Operation Striker"
              .format(CMD))
-    async def settitle(self, ctx, eventMessage: EventMessage, *, title: str):
+    async def settitle(self, ctx: Context, eventMessage: EventMessage, *,
+                       title: str):
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -127,11 +132,12 @@ class CommandListener:
         await ctx.send("Title set")
 
     # Set date of event command
-    @commands.command(
+    @command(
         help="Set event date\n"
              "Example: {}setdate 530481556083441684 2019-01-01"
              .format(CMD))
-    async def setdate(self, ctx, eventMessage: EventMessage, date: EventDate):
+    async def setdate(self, ctx: Context, eventMessage: EventMessage,
+                      date: EventDate):
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -146,11 +152,12 @@ class CommandListener:
         await ctx.send("Date set")
 
     # Set time of event command
-    @commands.command(
+    @command(
         help="Set event time\n"
              "Example: {}settime 530481556083441684 18:45"
              .format(CMD))
-    async def settime(self, ctx, eventMessage: EventMessage, time: EventTime):
+    async def settime(self, ctx: Context, eventMessage: EventMessage,
+                      time: EventTime):
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -165,11 +172,11 @@ class CommandListener:
         await ctx.send("Time set")
 
     # Set terrain of event command
-    @commands.command(
+    @command(
         help="Set event terrain\n"
              "Example: {}settime 530481556083441684 Takistan"
              .format(CMD))
-    async def setterrain(self, ctx, eventMessage: EventMessage, *,
+    async def setterrain(self, ctx: Context, eventMessage: EventMessage, *,
                          terrain: str):
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
@@ -182,11 +189,11 @@ class CommandListener:
         await ctx.send("Terrain set")
 
     # Set faction of event command
-    @commands.command(
+    @command(
         help="Set event faction\n"
              "Example: {}setfaction 530481556083441684 Insurgents"
              .format(CMD))
-    async def setfaction(self, ctx, eventMessage: EventMessage, *,
+    async def setfaction(self, ctx: Context, eventMessage: EventMessage, *,
                          faction: str):
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
@@ -199,65 +206,65 @@ class CommandListener:
         await ctx.send("Faction set")
 
     # Sign user up to event command
-    @commands.command(
+    @command(
         help="Sign user up (manually)\n"
              "Example: {}signup 530481556083441684 165853537945780224 "
              "Y1 (Bradley) Gunner"
              .format(CMD))
-    async def signup(self, ctx, eventMessage: EventMessage, userid: int, *,
-                     roleName: str):
+    async def signup(self, ctx: Context, eventMessage: EventMessage,
+                     userid: int, *, roleName: str):
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
         # TODO: Replace with Member Converter
-        user_ = ctx.guild.get_member(userid)
-        if user_ is None:
+        user = ctx.guild.get_member(userid)
+        if user is None:
             await ctx.send("No user found with that user ID")
             return
 
         # Find role
-        role_ = eventToUpdate.findRoleWithName(roleName)
-        if role_ is None:
+        role = eventToUpdate.findRoleWithName(roleName)
+        if role is None:
             await ctx.send("No role found with that name")
             return
 
         # Sign user up, update event, export
-        eventToUpdate.signup(role_, user_)
+        eventToUpdate.signup(role, user)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
         self.writeJson()  # Update JSON file
         await ctx.send("User signed up")
 
     # Remove signup on event of user command
-    @commands.command(
+    @command(
         help="Undo user signup (manually)\n"
              "Example: {}removesignup 530481556083441684 165853537945780224 "
              "Y1 (Bradley) Gunner"
              .format(CMD))
-    async def removesignup(self, ctx, eventMessage: EventMessage,
+    async def removesignup(self, ctx: Context, eventMessage: EventMessage,
                            userid: int, *, roleName: str):
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
         # TODO: Replace with Member Converter
-        user_ = self.bot.get_user(userid)
-        if user_ is None:
+        user = self.bot.get_user(userid)
+        if user is None:
             await ctx.send("No user found with that user ID")
             return
 
         # Remove signup, update event, export
-        eventToUpdate.undoSignup(user_)
+        eventToUpdate.undoSignup(user)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
         self.writeJson()  # Update JSON file
         await ctx.send("User signup removed")
 
     # Archive event command
-    @commands.command(
+    @command(
         help="Archive event\n"
              "Example: {}archive 530481556083441684"
              .format(CMD))
-    async def archive(self, ctx, eventMessage: EventMessage):
+    async def archive(self, ctx: Context, eventMessage: EventMessage):
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -272,11 +279,11 @@ class CommandListener:
         await ctx.send("Event archived")
 
     # Delete event command
-    @commands.command(
+    @command(
         help="Delete event\n"
              "Example: {}delete 530481556083441684"
              .format(CMD))
-    async def delete(self, ctx, eventMessage: EventMessage):
+    async def delete(self, ctx: Context, eventMessage: EventMessage):
         # Get info from context
         info = ctx.message.content
         info = info.split(" ")
@@ -293,7 +300,7 @@ class CommandListener:
             eventchannel = ctx.bot.get_channel(cfg.EVENT_CHANNEL)
             try:
                 eventMessage = await eventchannel.get_message(eventMessageID)
-            except discord.NotFound:
+            except NotFound:
                 await ctx.send("No message found with that message ID")
                 return
             await self.eventDatabase.removeEvent(eventMessage)
@@ -311,25 +318,25 @@ class CommandListener:
         self.writeJson()  # Update JSON file
 
     # sort events command
-    @commands.command(help="Sort events (manually)")
-    async def sort(self, ctx):
+    @command(help="Sort events (manually)")
+    async def sort(self, ctx: Context):
         await self.sortEvents(ctx)
         await ctx.send("Events sorted")
 
     # export to json
-    @commands.command(help="Export eventDatabase (manually)")
-    async def export(self, ctx):
+    @command(help="Export eventDatabase (manually)")
+    async def export(self, ctx: Context):
         self.writeJson()
         await ctx.send("EventDatabase exported")
 
     # import from json
-    @commands.command(name="import", help="Export eventDatabase (manually)")
-    async def importJson(self, ctx):
+    @command(name="import", help="Export eventDatabase (manually)")
+    async def importJson(self, ctx: Context):
         await self.readJson()
         await ctx.send("EventDatabase imported")
 
-    @commands.command(help="Shut down the bot")
-    async def shutdown(self, ctx):
+    @command(help="Shut down the bot")
+    async def shutdown(self, ctx: Context):
         await ctx.send("Shutting down")
         print("logging out")
         await self.bot.logout()
@@ -337,6 +344,7 @@ class CommandListener:
         sys.exit()
 
     # TODO: Test commands
+    @exec.error
     @create.error
     @addrole.error
     @removerole.error
@@ -350,11 +358,11 @@ class CommandListener:
     @delete.error
     @importJson.error
     @export.error
-    async def command_error(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
+    async def command_error(self, ctx: Context, error):
+        if isinstance(error, MissingRequiredArgument):
             await ctx.send("Missing argument. See: {}help {}"
                            .format(CMD, ctx.command))
-        elif isinstance(error, commands.BadArgument):
+        elif isinstance(error, BadArgument):
             await ctx.send("Invalid argument: {}. See: {}help {}"
                            .format(error, CMD, ctx.command))
         else:
@@ -362,7 +370,7 @@ class CommandListener:
             print(error)
 
     # Returns message from archive from given string or gives an error
-    async def getMessageFromArchive(self, messageID, ctx):
+    async def getMessageFromArchive(self, messageID: int, ctx: Context):
         # Get messageID
 
         # Get channels
@@ -375,7 +383,7 @@ class CommandListener:
             await ctx.send("No message found in archive with that message ID")
             return
 
-    async def getEvent(self, messageID, ctx):
+    async def getEvent(self, messageID, ctx: Context):
         eventToUpdate = self.eventDatabase.findEvent(messageID)
         if eventToUpdate is None:
             await ctx.send("No event found with that message ID")
@@ -383,14 +391,14 @@ class CommandListener:
         return eventToUpdate
 
     # Sort events in eventDatabase
-    async def sortEvents(self, ctx):
+    async def sortEvents(self, ctx: Context):
         self.eventDatabase.sortEvents()
 
         for messageID, event_ in self.eventDatabase.events.items():
             eventchannel = ctx.bot.get_channel(cfg.EVENT_CHANNEL)
             try:
                 eventMessage = await eventchannel.get_message(messageID)
-            except discord.NotFound:
+            except NotFound:
                 await ctx.send("No message found with that message ID")
                 return
             await self.eventDatabase.updateReactions(eventMessage, event_,
@@ -407,6 +415,6 @@ class CommandListener:
 
 
 def setup(bot):
-    importlib.reload(event)
+    # importlib.reload(event)
     importlib.reload(cfg)
     bot.add_cog(CommandListener(bot))

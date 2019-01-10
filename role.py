@@ -1,17 +1,18 @@
+from typing import Union
+
+from discord import Emoji
+
 import config as cfg
 
 
 class Role:
 
-    def __init__(self, name, emoji, displayName):
+    def __init__(self, name: str, emoji: Union[str, Emoji], displayName: bool):
         self.name = name
         self.emoji = emoji
         self.displayName = displayName
-        self.userID = None
+        self.userID: Union[int, None] = None
         self.userName = ""
-
-    def setUser(self, user):
-        self.user = user
 
     def __str__(self):
         # Add name after emote if it should display
@@ -35,6 +36,6 @@ class Role:
             data["emoji"] = self.emoji.name
         return data
 
-    def fromJson(self, data):
+    def fromJson(self, data: dict):
         self.userID = data["userID"]
         self.userName = data["userName"]

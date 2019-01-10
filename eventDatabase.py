@@ -1,18 +1,24 @@
-import datetime
 import json
 import os
-from event import Event
+from datetime import datetime
+from typing import Dict, Tuple
+
+from discord import Emoji, Member, Message, TextChannel, Reaction
+from discord.ext.commands import Bot
+
 import config as cfg
+from event import Event
 
 
 class EventDatabase:
 
     def __init__(self):
-        self.events = {}
-        self.eventsArchive = {}
+        self.events: Dict[int, Event] = {}
+        self.eventsArchive: Dict[int, Event] = {}
 
     # Create a new event and store it
-    async def createEvent(self, date, channel):
+    async def createEvent(self, date: datetime,
+            channel: TextChannel) -> Tuple[Message, Event]:
         # Create event
         newEvent = Event(date, channel.guild.emojis)
 
@@ -25,9 +31,10 @@ class EventDatabase:
         return newEventMessage, newEvent
 
     # Create a new event message
-    async def createEventMessage(self, event_, channel):
+    async def createEventMessage(self, event: Event,
+            channel: TextChannel) -> Message:
         # Create embed and message
-        newEventEmbed = event_.createEmbed()
+        newEventEmbed = event.createEmbed()
         newEventMessage = await channel.send(embed=newEventEmbed)
 
         # Put message ID in footer
@@ -38,19 +45,20 @@ class EventDatabase:
         return newEventMessage
 
     # Move event to archive
-    async def archiveEvent(self, eventmessage, event_, eventarchivechannel):
+    async def archiveEvent(self, eventmessage: Message, event: Event,
+                           eventarchivechannel: TextChannel):
         # Remove event from events
         await self.removeEvent(eventmessage)
 
         # Create new message
-        newEventMessage = await self.createEventMessage(event_,
+        newEventMessage = await self.createEventMessage(event,
                                                         eventarchivechannel)
 
         # Add event to eventsArchive
-        self.eventsArchive[newEventMessage.id] = event_
+        self.eventsArchive[newEventMessage.id] = event
 
     # Update an existing event and store it
-    async def updateEvent(self, eventMessage, updatedEvent):
+    async def updateEvent(self, eventMessage: Message, updatedEvent: Event):
         newEventEmbed = updatedEvent.createEmbed()
         newEventEmbed.set_footer(text="Message ID: " + str(eventMessage.id))
         await eventMessage.edit(embed=newEventEmbed)
@@ -59,31 +67,32 @@ class EventDatabase:
         self.events[eventMessage.id] = updatedEvent
 
     # Remove event
-    async def removeEvent(self, eventmessage):
+    async def removeEvent(self, eventmessage: Message):
         if eventmessage.id in self.events.keys():
             del self.events[eventmessage.id]
             await eventmessage.delete()
 
     # Remove event from archive
-    async def removeEventFromArchive(self, eventmessage):
+    async def removeEventFromArchive(self, eventmessage: Message):
         if eventmessage.id in self.eventsArchive.keys():
             del self.eventsArchive[eventmessage.id]
             await eventmessage.delete()
 
     # Find an event with it's message ID
-    def findEvent(self, messageID):
+    def findEvent(self, messageID: int):
         if messageID in self.events.keys():
             return self.events[messageID]
 
-    def findEventInArchive(self, messageID):
+    def findEventInArchive(self, messageID: int):
         if messageID in self.eventsArchive.keys():
             return self.eventsArchive[messageID]
 
     # Add given reaction to given message
-    async def addReaction(self, eventMessage, reaction):
+    async def addReaction(self, eventMessage: Message, reaction: Reaction):
         await eventMessage.add_reaction(reaction)
 
-    async def removeReaction(self, eventMessage, reaction, user):
+    async def removeReaction(self, eventMessage: Message, reaction: Reaction,
+                             user: Member):
         await eventMessage.remove_reaction(reaction, user)
 
     def sortEvents(self):
@@ -91,9 +100,9 @@ class EventDatabase:
         events = []
 
         # Store existing events
-        for messageID, event_ in self.events.items():
+        for messageID, event in self.events.items():
             messageIDs.append(messageID)
-            events.append(event_)
+            events.append(event)
 
         # Sort events based on date and time
         events.sort(key=lambda event: event.date, reverse=True)
@@ -105,9 +114,9 @@ class EventDatabase:
             self.events[messageID] = events[index]
             index += 1
 
-    async def updateReactions(self, message_, event_, bot):
-        reactionEmojisIntended = event_.getReactions()
-        reactionsCurrent = message_.reactions
+    async def updateReactions(self, message: Message, event: Event, bot: Bot):
+        reactionEmojisIntended = event.getReactions()
+        reactionsCurrent = message.reactions
         reactionEmojisCurrent = {}
         reactionsToRemove = []
         reactionEmojisToAdd = []
@@ -128,22 +137,22 @@ class EventDatabase:
 
         # Remove existing unintended reactions
         for reaction in reactionsToRemove:
-            await self.removeReaction(message_, reaction, bot.user)
+            await self.removeReaction(message, reaction, bot.user)
 
         # Add not existing intended emojis
         for emoji in reactionEmojisToAdd:
-            await self.addReaction(message_, emoji)
+            await self.addReaction(message, emoji)
 
     def toJson(self):
         # Get eventsData
         eventsData = {}
-        for messageID, event_ in self.events.items():
-            eventsData[messageID] = event_.toJson()
+        for messageID, event in self.events.items():
+            eventsData[messageID] = event.toJson()
 
         # Get eventsArchiveData
         eventsArchiveData = {}
-        for messageID, event_ in self.eventsArchive.items():
-            eventsArchiveData[messageID] = event_.toJson()
+        for messageID, event in self.eventsArchive.items():
+            eventsArchiveData[messageID] = event.toJson()
 
         # Store data and return
         data = {}
@@ -154,7 +163,7 @@ class EventDatabase:
             json.dump(data, jsonFile)
 
     # Fills events and eventsArchive with data from JSON
-    async def fromJson(self, bot):
+    async def fromJson(self, bot: Bot):
         # Import
         try:
             try:
@@ -166,7 +175,7 @@ class EventDatabase:
                 # Backup old file
                 backupName = "{}-{}.bak" \
                     .format(cfg.JSON_FILEPATH,
-                            datetime.datetime.now().strftime(
+                            datetime.now().strftime(
                                 '%Y-%m-%dT%H-%M-%S'))
                 os.rename(cfg.JSON_FILEPATH, backupName)
                 print("Backed up to", backupName)
@@ -193,25 +202,25 @@ class EventDatabase:
         # Add events
         for messageID, eventData in eventsData.items():
             # Create event
-            date = datetime.datetime.strptime(eventData["date"],
+            date = datetime.strptime(eventData["date"],
                                               '%Y-%m-%d')
-            eventMessage_, event_ = await self.createEvent(date,
-                                                           eventchannel)
-            event_.fromJson(eventData, eventchannel.guild)
-            await self.updateEvent(eventMessage_, event_)
+            eventMessage, event = await self.createEvent(date,
+                                                          eventchannel)
+            event.fromJson(eventData, eventchannel.guild)
+            await self.updateEvent(eventMessage, event)
 
         # Add reactions to events
-        for messageID, event_ in self.events.items():
+        for messageID, event in self.events.items():
             eventmessage = await eventchannel.get_message(messageID)
-            await self.updateReactions(eventmessage, event_, bot)
+            await self.updateReactions(eventmessage, event, bot)
 
         # Add archived events
         for messageID, eventData in eventsArchiveData.items():
             # Create event
-            date = datetime.datetime.strptime(eventData["date"], "%Y-%m-%d")
-            event_ = Event(date, eventchannel.guild.emojis)
-            event_.fromJson(eventData, eventchannel.guild)
-            self.eventsArchive[messageID] = event_
+            date = datetime.strptime(eventData["date"], "%Y-%m-%d")
+            event = Event(date, eventchannel.guild.emojis)
+            event.fromJson(eventData, eventchannel.guild)
+            self.eventsArchive[messageID] = event
 
-        for messageID, event_ in self.events.items():
-            print(messageID, event_)
+        for messageID, event in self.events.items():
+            print(messageID, event)

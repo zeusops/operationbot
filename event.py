@@ -1,19 +1,22 @@
-import datetime
-import discord
-import role
-import roleGroup
+from datetime import datetime
+from typing import Dict, Tuple
+
+from discord import Embed, Emoji
+
 import config as cfg
+from role import Role
+from roleGroup import RoleGroup
 
 
 class Event:
 
-    def __init__(self, date, guildEmojis):
+    def __init__(self, date: datetime, guildEmojis: Tuple[Emoji]):
         self.title = "Operation"
         self.date = date
         self.terrain = "unknown"
         self.faction = "unknown"
         self.color = 0xFF4500
-        self.roleGroups = {}
+        self.roleGroups: Dict[str, RoleGroup] = {}
         self.additionalRoleCount = 0
 
         self.normalEmojis = self.getNormalEmojis(guildEmojis)
@@ -21,13 +24,13 @@ class Event:
         self.addDefaultRoles()
 
     # Return an embed for the event
-    def createEmbed(self):
+    def createEmbed(self) -> Embed:
         title = "{} ({})".format(
             self.title, self.date.strftime("%a %Y-%m-%d - %H:%M CET"))
         description = "Terrain: {} - Faction: {}".format(
             self.terrain, self.faction)
-        eventEmbed = discord.Embed(title=title, description=description,
-                                   colour=self.color)
+        eventEmbed = Embed(title=title, description=description,
+                           colour=self.color)
 
         # Add field to embed for every rolegroup
         for group in self.roleGroups.values():
@@ -39,11 +42,11 @@ class Event:
 
     # Add default role groups
     def addDefaultRoleGroups(self):
-        companyGroup = roleGroup.RoleGroup("Company", False)
-        platoonGroup = roleGroup.RoleGroup("Platoon", True)
-        alphaGroup = roleGroup.RoleGroup("Alpha", True)
-        bravoGroup = roleGroup.RoleGroup("Bravo", True)
-        additionalGroup = roleGroup.RoleGroup("Additional", True)
+        companyGroup = RoleGroup("Company", False)
+        platoonGroup = RoleGroup("Platoon", True)
+        alphaGroup = RoleGroup("Alpha", True)
+        bravoGroup = RoleGroup("Bravo", True)
+        additionalGroup = RoleGroup("Additional", True)
 
         self.roleGroups["Company"] = companyGroup
         self.roleGroups["Platoon"] = platoonGroup
@@ -57,16 +60,16 @@ class Event:
             # Only add role if the group exists
             if groupName in self.roleGroups.keys():
                 emoji = self.normalEmojis[name]
-                newRole = role.Role(name, emoji, False)
+                newRole = Role(name, emoji, False)
                 self.roleGroups[groupName].addRole(newRole)
 
     # Add an additional role to the event
-    def addAdditionalRole(self, name):
+    def addAdditionalRole(self, name: str) -> str:
         # Find next emoji for additional role
         emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additionalRoleCount]
 
         # Create role
-        newRole = role.Role(name, emoji, True)
+        newRole = Role(name, emoji, True)
 
         # Add role to additional roles
         self.roleGroups["Additional"].addRole(newRole)
@@ -75,9 +78,9 @@ class Event:
         return emoji
 
     # Remove an additional role from the event
-    def removeAdditionalRole(self, role_):
+    def removeAdditionalRole(self, role: str):
         # Remove role from additional roles
-        self.roleGroups["Additional"].removeRole(role_)
+        self.roleGroups["Additional"].removeRole(role)
 
         # Reorder the emotes of all the additional roles
         self.additionalRoleCount = 0
@@ -121,9 +124,9 @@ class Event:
     def getReactions(self):
         reactions = []
 
-        for roleGroup_ in self.roleGroups.values():
-            for role_ in roleGroup_.roles:
-                reactions.append(role_.emoji)
+        for roleGroup in self.roleGroups.values():
+            for role in roleGroup.roles:
+                reactions.append(role.emoji)
 
         return reactions
 
@@ -131,51 +134,51 @@ class Event:
         reactions = []
 
         if groupName in self.roleGroups.keys():
-            for role_ in self.roleGroups[groupName].roles:
-                reactions.append(role_.emoji)
+            for role in self.roleGroups[groupName].roles:
+                reactions.append(role.emoji)
 
         return reactions
 
     # Find role with emoji
     def findRoleWithEmoji(self, emoji):
-        for roleGroup_ in self.roleGroups.values():
-            for role_ in roleGroup_.roles:
-                if role_.emoji == emoji:
-                    return role_
+        for roleGroup in self.roleGroups.values():
+            for role in roleGroup.roles:
+                if role.emoji == emoji:
+                    return role
         return None
 
     # Find role with name
     def findRoleWithName(self, roleName):
-        for roleGroup_ in self.roleGroups.values():
-            for role_ in roleGroup_.roles:
-                if role_.name == roleName:
-                    return role_
+        for roleGroup in self.roleGroups.values():
+            for role in roleGroup.roles:
+                if role.name == roleName:
+                    return role
         return None
 
     # Add username to role
     def signup(self, roleToSet, user):
-        for roleGroup_ in self.roleGroups.values():
-            for role_ in roleGroup_.roles:
-                if role_ == roleToSet:
-                    role_.userID = user.id
-                    role_.userName = user.display_name
+        for roleGroup in self.roleGroups.values():
+            for role in roleGroup.roles:
+                if role == roleToSet:
+                    role.userID = user.id
+                    role.userName = user.display_name
 
     # Remove username from any signups
     def undoSignup(self, user):
-        for roleGroup_ in self.roleGroups.values():
-            for role_ in roleGroup_.roles:
-                if role_.userID == user.id:
-                    role_.userID = None
-                    role_.userName = ""
-                    return role_.emoji
+        for roleGroup in self.roleGroups.values():
+            for role in roleGroup.roles:
+                if role.userID == user.id:
+                    role.userID = None
+                    role.userName = ""
+                    return role.emoji
         return None
 
     # Returns if given user is already signed up
     def findSignup(self, userID):
-        for roleGroup_ in self.roleGroups.values():
-            for role_ in roleGroup_.roles:
-                if role_.userID == int(userID):
-                    return role_
+        for roleGroup in self.roleGroups.values():
+            for role in roleGroup.roles:
+                if role.userID == int(userID):
+                    return role
         return None
 
     def __str__(self):
@@ -183,8 +186,8 @@ class Event:
 
     def toJson(self):
         roleGroupsData = {}
-        for groupName, roleGroup_ in self.roleGroups.items():
-            roleGroupsData[groupName] = roleGroup_.toJson()
+        for groupName, roleGroup in self.roleGroups.items():
+            roleGroupsData[groupName] = roleGroup.toJson()
 
         data = {}
         data["title"] = self.title
@@ -198,12 +201,12 @@ class Event:
 
     def fromJson(self, data, guild):
         self.setTitle(data["title"])
-        time = datetime.datetime.strptime(data["time"], "%H:%M")
+        time = datetime.strptime(data["time"], "%H:%M")
         self.setTime(time)
         self.setTerrain(data["terrain"])
         self.faction = data["faction"]
         self.color = data["color"]
         for groupName, roleGroupData in data["roleGroups"].items():
-            roleGroup_ = roleGroup.RoleGroup(groupName, False)
-            roleGroup_.fromJson(roleGroupData, guild)
-            self.roleGroups[groupName] = roleGroup_
+            roleGroup = RoleGroup(groupName, False)
+            roleGroup.fromJson(roleGroupData, guild)
+            self.roleGroups[groupName] = roleGroup

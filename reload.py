@@ -1,15 +1,16 @@
 import traceback
 
-from discord.ext import commands
+from discord.ext.commands import Bot, Context, command
+
 from main import initial_extensions
 
 
 class Reload:
-    def __init__(self, bot):
+    def __init__(self, bot: Bot):
         self.bot = bot
 
-    @commands.command()
-    async def reload(self, ctx):
+    @command()
+    async def reload(self, ctx: Context):
         print("Reloading extensions")
         for extension in initial_extensions:
             self.bot.unload_extension(extension)

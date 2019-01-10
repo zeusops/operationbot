@@ -1,8 +1,9 @@
 #!/usr/bin/env python3.7
-from discord.ext import commands
-import eventDatabase
+from discord.ext.commands import Bot
+
 import config as cfg
-from secret import TOKEN, COMMAND_CHAR
+from eventDatabase import EventDatabase
+from secret import COMMAND_CHAR, TOKEN
 
 CONFIG_VERSION = 4
 if cfg.VERSION != CONFIG_VERSION:
@@ -11,16 +12,16 @@ if cfg.VERSION != CONFIG_VERSION:
         .format(CONFIG_VERSION, cfg.VERSION))
 
 initial_extensions = ['commandListener', 'eventListener']
-bot = commands.Bot(command_prefix=COMMAND_CHAR)
+bot = Bot(command_prefix=COMMAND_CHAR)
 # bot.remove_command("help")
-eventDatabase_ = eventDatabase.EventDatabase()
+eventDatabase = EventDatabase()
 
 if __name__ == '__main__':
     bot.load_extension('reload')
     for extension in initial_extensions:
-        try:
+        # try:
             bot.load_extension(extension)
-        except Exception:
-            print(f'failed to load extension {extension}')
+        # except Exception:
+        #     print(f'failed to load extension {extension}')
 
     bot.run(TOKEN)
