@@ -224,7 +224,7 @@ class CommandListener:
     # Set faction of event command
     @command(
         help="Set event description\n"
-             "Example: {}setdescription 530481556083441684 Insurgents"
+             "Example: {}setdescription 530481556083441684 Extra mods required"
              .format(CMD))
     async def setdescription(self, ctx: Context, eventMessage: EventMessage, *,
                              description: str):
