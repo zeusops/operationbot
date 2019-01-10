@@ -76,13 +76,13 @@ class CommandListener:
              "Example: {}create 2019-01-01".format(CMD))
     async def create(self, ctx: Context, date: EventDate):
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
-
+        # TODO: Optionally specify sideop -> hide 1PLT and Bravo
         # Create event and sort events, export
         msg, event = await self.eventDatabase.createEvent(date, eventchannel)
         await self.eventDatabase.updateReactions(msg, event, self.bot)
         await self.sortEvents(ctx)
         self.writeJson()  # Update JSON file
-        await ctx.send("Created event: {}".format(event))
+        await ctx.send("Created event {} with id {}".format(event, msg.id))
 
     # Add additional role to event command
     @command(
