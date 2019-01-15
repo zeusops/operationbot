@@ -97,7 +97,7 @@ class CommandListener:
 
         reaction = eventToUpdate.addAdditionalRole(rolename)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
-        await self.eventDatabase.addReaction(eventMessage, reaction)
+        await eventMessage.add_reaction(reaction)
         self.writeJson()  # Update JSON file
         await ctx.send("Role added")
 
@@ -124,7 +124,7 @@ class CommandListener:
         eventToUpdate.removeAdditionalRole(rolename)
         await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
         for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
-            await self.eventDatabase.addReaction(eventMessage, reaction)
+            await eventMessage.add_reaction(reaction)
         self.writeJson()  # Update JSON file
         await ctx.send("Role removed")
 

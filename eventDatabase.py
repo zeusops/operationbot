@@ -80,20 +80,10 @@ class EventDatabase:
 
     # Find an event with it's message ID
     def findEvent(self, messageID: int):
-        if messageID in self.events.keys():
-            return self.events[messageID]
+        return self.events.get(messageID)
 
     def findEventInArchive(self, messageID: int):
-        if messageID in self.eventsArchive.keys():
-            return self.eventsArchive[messageID]
-
-    # Add given reaction to given message
-    async def addReaction(self, eventMessage: Message, reaction: Reaction):
-        await eventMessage.add_reaction(reaction)
-
-    async def removeReaction(self, eventMessage: Message, reaction: Reaction,
-                             user: Member):
-        await eventMessage.remove_reaction(reaction, user)
+        return self.eventsArchive.get(messageID)
 
     def sortEvents(self):
         messageIDs = []
@@ -137,11 +127,11 @@ class EventDatabase:
 
         # Remove existing unintended reactions
         for reaction in reactionsToRemove:
-            await self.removeReaction(message, reaction, bot.user)
+            await message.remove_reaction(reaction, bot.user)
 
         # Add not existing intended emojis
         for emoji in reactionEmojisToAdd:
-            await self.addReaction(message, emoji)
+            await message.add_reaction(emoji)
 
     def toJson(self):
         # Get eventsData
