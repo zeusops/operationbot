@@ -399,7 +399,7 @@ class CommandListener:
             await ctx.send("Invalid argument: {}. See: {}help {}"
                            .format(error, CMD, ctx.command))
         else:
-            await ctx.send("Unexpected error occured:", error.message)
+            await ctx.send("Unexpected error occured: ```{}```".format(error))
             print(error)
 
     # Returns message from archive from given string or gives an error
