@@ -317,13 +317,6 @@ class CommandListener:
              "Example: {}delete 530481556083441684"
              .format(CMD))
     async def delete(self, ctx: Context, eventMessage: EventMessage):
-        # Get info from context
-        info = ctx.message.content
-        info = info.split(" ")
-        if len(info) != 2:
-            await ctx.send("Usage: delete MESSAGEID")
-            return
-
         # Get message ID
         eventMessageID = eventMessage.id
 
