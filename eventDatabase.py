@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from typing import Dict, Tuple
 
-from discord import Member, Message, TextChannel, Reaction
+from discord import Message, TextChannel
 from discord.ext.commands import Bot
 
 import config as cfg
