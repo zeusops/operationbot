@@ -150,7 +150,7 @@ class EventDatabase:
         data["eventsArchive"] = eventsArchiveData
 
         with open(cfg.JSON_FILEPATH, "w") as jsonFile:
-            json.dump(data, jsonFile)
+            json.dump(data, jsonFile, indent=2)
 
     # Fills events and eventsArchive with data from JSON
     async def fromJson(self, bot: Bot):
@@ -175,7 +175,8 @@ class EventDatabase:
             print("JSON not found, creating")
             with open(cfg.JSON_FILEPATH, "w") as jsonFile:
                 # Create a new file with empty JSON structure inside
-                json.dump({"events": {}, "eventsArchive": {}}, jsonFile)
+                json.dump({"events": {}, "eventsArchive": {}}, jsonFile,
+                          indent=2)
             # Try to import again
             await self.fromJson(bot)
             return
