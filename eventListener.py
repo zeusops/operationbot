@@ -37,11 +37,9 @@ class EventListener:
             await reaction.message.remove_reaction(reaction, user)
 
             # Get event from database with message ID
-            try:
-                reactedEvent = self.eventDatabase \
-                               .findEvent(reaction.message.id)
-            except Exception:
-                print("No event found with that message ID")
+            reactedEvent = self.eventDatabase.findEvent(reaction.message.id)
+            if reactedEvent is None:
+                print("No event found with that id", reaction.message.id)
                 return
 
             # Get emoji string
