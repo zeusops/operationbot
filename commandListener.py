@@ -2,8 +2,9 @@ import importlib
 import sys
 import traceback
 from datetime import datetime
+from io import StringIO
 
-from discord import NotFound, Message
+from discord import Message, NotFound
 from discord.ext.commands import (BadArgument, Bot, Context, Converter,
                                   MissingRequiredArgument, command)
 
@@ -57,14 +58,23 @@ class CommandListener:
     @command(
         help="Execute arbitrary code\n"
              "Example: {}exec print(\"Hello World\")".format(CMD))
-    async def exec(self, ctx: Context, *, cmd: str):
+    async def exec(self, ctx: Context, flag: str, *, cmd: str):
         # Allow only Gehock#9738 to send commands for security
         if ctx.message.author.id != 150625032656125952:
             await ctx.send("Unauthorized")
             return
 
         try:
-            msg = eval(cmd)
+            old_stdout = sys.stdout
+            redirected_output = sys.stdout = StringIO()
+            if flag == 'p':
+                cmd = "print({})".format(cmd)
+                exec(cmd)
+                msg = "```{}```".format(redirected_output.getvalue())
+            else:
+                exec(cmd)
+                msg = "Executed"
+            sys.stdout = old_stdout
         except Exception:
             msg = "An error occured while executing: ```{}```" \
                   .format(traceback.format_exc())
