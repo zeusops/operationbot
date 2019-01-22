@@ -55,7 +55,9 @@ class EventListener:
             if signup is None:
                 # Get role with the emoji
                 role = reactedEvent.findRoleWithEmoji(emoji)
-                if role is None:
+                # No role found, or somebody with Nitro added the ZEUS reaction
+                # by hand
+                if role is None or role.name == "ZEUS":
                     print("No role found with that emoji")
                     return
 

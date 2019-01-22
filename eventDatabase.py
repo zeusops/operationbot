@@ -79,7 +79,7 @@ class EventDatabase:
             await eventmessage.delete()
 
     # Find an event with it's message ID
-    def findEvent(self, messageID: int):
+    def findEvent(self, messageID: int) -> Event:
         return self.events.get(messageID)
 
     def findEventInArchive(self, messageID: int):

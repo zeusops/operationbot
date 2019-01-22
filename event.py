@@ -126,8 +126,13 @@ class Event:
         reactions = []
 
         for roleGroup in self.roleGroups.values():
+            role: Role
             for role in roleGroup.roles:
-                reactions.append(role.emoji)
+                emoji = role.emoji
+                # Skip the ZEUS reaction. Zeuses can only be signed up using
+                # the signup command
+                if not (isinstance(emoji, Emoji) and emoji.name == "ZEUS"):
+                    reactions.append(role.emoji)
 
         return reactions
 
@@ -141,7 +146,7 @@ class Event:
         return reactions
 
     # Find role with emoji
-    def findRoleWithEmoji(self, emoji):
+    def findRoleWithEmoji(self, emoji) -> Role:
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role.emoji == emoji:
@@ -175,7 +180,7 @@ class Event:
         return None
 
     # Returns if given user is already signed up
-    def findSignup(self, userID):
+    def findSignup(self, userID) -> Role:
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role.userID == int(userID):
