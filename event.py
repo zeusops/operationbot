@@ -154,10 +154,12 @@ class Event:
         return None
 
     # Find role with name
-    def findRoleWithName(self, roleName):
+    def findRoleWithName(self, roleName: str) -> Role:
+        roleName = roleName.lower()
         for roleGroup in self.roleGroups.values():
+            role: Role
             for role in roleGroup.roles:
-                if role.name == roleName:
+                if role.name.lower() == roleName:
                     return role
         return None
 
