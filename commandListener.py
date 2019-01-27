@@ -4,7 +4,7 @@ import traceback
 from datetime import datetime
 from io import StringIO
 
-from discord import Message, NotFound
+from discord import Message, NotFound, Member
 from discord.ext.commands import (BadArgument, Bot, Context, Converter,
                                   MissingRequiredArgument, command)
 
@@ -251,19 +251,18 @@ class CommandListener:
     # Sign user up to event command
     @command(
         help="Sign user up (manually)\n"
-             "Example: {}signup 530481556083441684 165853537945780224 "
+             "\n"
+             "<user> can either be: ID, mention, nickname in quotes, username "
+             "or username#discriminator\n"
+             "<roleName> is case-insensitive\n"
+             "\n"
+             "Example: {}signup 530481556083441684 \"S. Gehock\" "
              "Y1 (Bradley) Gunner"
              .format(CMD))
     async def signup(self, ctx: Context, eventMessage: EventMessage,
-                     userid: int, *, roleName: str):
+                     user: Member, *, roleName: str):
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
-            return
-
-        # TODO: Replace with Member Converter
-        user = ctx.guild.get_member(userid)
-        if user is None:
-            await ctx.send("No user found with that user ID")
             return
 
         # Find role
@@ -281,19 +280,18 @@ class CommandListener:
     # Remove signup on event of user command
     @command(
         help="Undo user signup (manually)\n"
-             "Example: {}removesignup 530481556083441684 165853537945780224 "
+             "\n"
+             "<user> can either be: ID, mention, nickname in quotes, username "
+             "or username#discriminator\n"
+             "<roleName> is case-insensitive\n"
+             "\n"
+             "Example: {}removesignup 530481556083441684 \"S. Gehock\" "
              "Y1 (Bradley) Gunner"
              .format(CMD))
     async def removesignup(self, ctx: Context, eventMessage: EventMessage,
-                           userid: int, *, roleName: str):
+                           user: Member, *, roleName: str):
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
-            return
-
-        # TODO: Replace with Member Converter
-        user = self.bot.get_user(userid)
-        if user is None:
-            await ctx.send("No user found with that user ID")
             return
 
         # Remove signup, update event, export
