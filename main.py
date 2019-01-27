@@ -20,7 +20,7 @@ if __name__ == '__main__':
     bot.load_extension('reload')
     for extension in initial_extensions:
         # try:
-            bot.load_extension(extension)
+        bot.load_extension(extension)
         # except Exception:
         #     print(f'failed to load extension {extension}')
 

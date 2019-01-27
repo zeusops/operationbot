@@ -1,6 +1,6 @@
 import importlib
 
-from discord import Member, Reaction, Game
+from discord import Game, Member, Reaction
 from discord.ext.commands import Bot
 
 import config as cfg

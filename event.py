@@ -172,13 +172,12 @@ class Event:
                     role.userName = user.display_name
 
     # Remove username from any signups
-    def undoSignup(self, user):
+    def undoSignup(self, user) -> None:
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role.userID == user.id:
                     role.userID = None
                     role.userName = ""
-                    return role.emoji
         return None
 
     # Returns if given user is already signed up
