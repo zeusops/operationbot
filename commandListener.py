@@ -4,7 +4,7 @@ import traceback
 from datetime import datetime
 from io import StringIO
 
-from discord import Message, NotFound, Member
+from discord import Member, Message, NotFound
 from discord.ext.commands import (BadArgument, Bot, Context, Converter,
                                   MissingRequiredArgument, command)
 
@@ -55,10 +55,16 @@ class CommandListener:
         self.bot = bot
         self.eventDatabase = eventDatabase
 
-    @command(
-        help="Execute arbitrary code\n"
-             "Example: {}exec print(\"Hello World\")".format(CMD))
+    @command()
     async def exec(self, ctx: Context, flag: str, *, cmd: str):
+        """
+        Execute arbitrary code
+
+        If <flag> is p, the result gets wrapped in a print() statement
+
+        Example: exec a variable = 1
+        Example: exec p variable
+        """
         # Allow only Gehock#9738 to send commands for security
         if ctx.message.author.id != 150625032656125952:
             await ctx.send("Unauthorized")
@@ -81,10 +87,12 @@ class CommandListener:
         await ctx.send(msg)
 
     # Create event command
-    @command(
-        help="Create a new event\n"
-             "Example: {}create 2019-01-01".format(CMD))
+    @command()
     async def create(self, ctx: Context, date: EventDate):
+        """
+        Create a new event
+        Example: create 2019-01-01
+        """
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
         # TODO: Optionally specify sideop -> hide 1PLT and Bravo
         # Create event and sort events, export
@@ -95,12 +103,13 @@ class CommandListener:
         await ctx.send("Created event {} with id {}".format(event, msg.id))
 
     # Add additional role to event command
-    @command(
-        help="Add a new additional role to the event\n"
-             "Example: {}addrole 530481556083441684 Y1 (Bradley) Driver"
-             .format(CMD))
+    @command()
     async def addrole(self, ctx: Context, eventMessage: EventMessage, *,
                       rolename: str):
+        """
+        Add a new additional role to the event
+        Example: addrole 530481556083441684 Y1 (Bradley) Driver
+        """
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -112,12 +121,13 @@ class CommandListener:
         await ctx.send("Role added")
 
     # Remove additional role from event command
-    @command(
-        help="Remove an additional role from the event\n"
-             "Example: {}removerole 530481556083441684 Y1 (Bradley) Driver"
-             .format(CMD))
+    @command()
     async def removerole(self, ctx: Context, eventMessage: EventMessage, *,
                          rolename: str):
+        """
+        Remove an additional role from the event
+        Example: removerole 530481556083441684 Y1 (Bradley) Driver
+        """
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -139,12 +149,13 @@ class CommandListener:
         await ctx.send("Role removed")
 
     # Set title of event command
-    @command(
-        help="Set event title\n"
-             "Example: {}settitle 530481556083441684 Operation Striker"
-             .format(CMD))
+    @command()
     async def settitle(self, ctx: Context, eventMessage: EventMessage, *,
                        title: str):
+        """
+        Set event title
+        Example: settitle 530481556083441684 Operation Striker
+        """
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -158,12 +169,13 @@ class CommandListener:
         await ctx.send("Title set")
 
     # Set date of event command
-    @command(
-        help="Set event date\n"
-             "Example: {}setdate 530481556083441684 2019-01-01"
-             .format(CMD))
+    @command()
     async def setdate(self, ctx: Context, eventMessage: EventMessage,
                       date: EventDate):
+        """
+        Set event date
+        Example: setdate 530481556083441684 2019-01-01
+        """
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -178,12 +190,13 @@ class CommandListener:
         await ctx.send("Date set")
 
     # Set time of event command
-    @command(
-        help="Set event time\n"
-             "Example: {}settime 530481556083441684 18:45"
-             .format(CMD))
+    @command()
     async def settime(self, ctx: Context, eventMessage: EventMessage,
                       time: EventTime):
+        """
+        Set event time
+        Example: settime 530481556083441684 18:45
+        """
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -198,12 +211,13 @@ class CommandListener:
         await ctx.send("Time set")
 
     # Set terrain of event command
-    @command(
-        help="Set event terrain\n"
-             "Example: {}settime 530481556083441684 Takistan"
-             .format(CMD))
+    @command()
     async def setterrain(self, ctx: Context, eventMessage: EventMessage, *,
                          terrain: str):
+        """
+        Set event terrain
+        Example: settime 530481556083441684 Takistan
+        """
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -215,12 +229,13 @@ class CommandListener:
         await ctx.send("Terrain set")
 
     # Set faction of event command
-    @command(
-        help="Set event faction\n"
-             "Example: {}setfaction 530481556083441684 Insurgents"
-             .format(CMD))
+    @command()
     async def setfaction(self, ctx: Context, eventMessage: EventMessage, *,
                          faction: str):
+        """
+        Set event faction
+        Example: setfaction 530481556083441684 Insurgents
+        """
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -232,12 +247,13 @@ class CommandListener:
         await ctx.send("Faction set")
 
     # Set faction of event command
-    @command(
-        help="Set event description\n"
-             "Example: {}setdescription 530481556083441684 Extra mods required"
-             .format(CMD))
+    @command()
     async def setdescription(self, ctx: Context, eventMessage: EventMessage, *,
                              description: str):
+        """
+        Set event description
+        Example: setdescription 530481556083441684 Extra mods required
+        """
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -249,18 +265,17 @@ class CommandListener:
         await ctx.send("Description set")
 
     # Sign user up to event command
-    @command(
-        help="Sign user up (manually)\n"
-             "\n"
-             "<user> can either be: ID, mention, nickname in quotes, username "
-             "or username#discriminator\n"
-             "<roleName> is case-insensitive\n"
-             "\n"
-             "Example: {}signup 530481556083441684 \"S. Gehock\" "
-             "Y1 (Bradley) Gunner"
-             .format(CMD))
+    @command()
     async def signup(self, ctx: Context, eventMessage: EventMessage,
                      user: Member, *, roleName: str):
+        """
+        Sign user up (manually)
+
+        <user> can either be: ID, mention, nickname in quotes, username or username#discriminator
+        <roleName> is case-insensitive
+
+        Example: signup 530481556083441684 "S. Gehock" Y1 (Bradley) Gunner
+        """  # NOQA
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -278,18 +293,18 @@ class CommandListener:
         await ctx.send("User signed up")
 
     # Remove signup on event of user command
-    @command(
-        help="Undo user signup (manually)\n"
-             "\n"
-             "<user> can either be: ID, mention, nickname in quotes, username "
-             "or username#discriminator\n"
-             "<roleName> is case-insensitive\n"
-             "\n"
-             "Example: {}removesignup 530481556083441684 \"S. Gehock\" "
-             "Y1 (Bradley) Gunner"
-             .format(CMD))
+    @command()
     async def removesignup(self, ctx: Context, eventMessage: EventMessage,
                            user: Member, *, roleName: str):
+        """
+        Undo user signup (manually)
+
+        <user> can either be: ID, mention, nickname in quotes, username or username#discriminator
+        <roleName> is case-insensitive
+
+        Example: removesignup 530481556083441684 "S. Gehock"
+        Y1 (Bradley) Gunner
+        """  # NOQA
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -301,11 +316,12 @@ class CommandListener:
         await ctx.send("User signup removed")
 
     # Archive event command
-    @command(
-        help="Archive event\n"
-             "Example: {}archive 530481556083441684"
-             .format(CMD))
+    @command()
     async def archive(self, ctx: Context, eventMessage: EventMessage):
+        """
+        Archive event
+        Example: archive 530481556083441684
+        """
         eventToUpdate = await self.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
@@ -320,11 +336,12 @@ class CommandListener:
         await ctx.send("Event archived")
 
     # Delete event command
-    @command(
-        help="Delete event\n"
-             "Example: {}delete 530481556083441684"
-             .format(CMD))
+    @command()
     async def delete(self, ctx: Context, eventMessage: EventMessage):
+        """
+        Delete event
+        Example: delete 530481556083441684
+        """
         # Get message ID
         eventMessageID = eventMessage.id
 
@@ -352,25 +369,37 @@ class CommandListener:
         self.writeJson()  # Update JSON file
 
     # sort events command
-    @command(help="Sort events (manually)")
+    @command()
     async def sort(self, ctx: Context):
+        """
+        Sort events (manually)
+        """
         await self.sortEvents(ctx)
         await ctx.send("Events sorted")
 
     # export to json
-    @command(help="Export eventDatabase (manually)")
+    @command()
     async def export(self, ctx: Context):
+        """
+        Export eventDatabase (manually)
+        """
         self.writeJson()
         await ctx.send("EventDatabase exported")
 
     # import from json
-    @command(name="import", help="Export eventDatabase (manually)")
+    @command(name="import")
     async def importJson(self, ctx: Context):
+        """
+        Import eventDatabase (manually)
+        """
         await self.readJson()
         await ctx.send("EventDatabase imported")
 
-    @command(help="Shut down the bot")
+    @command()
     async def shutdown(self, ctx: Context):
+        """
+        Shut down the bot
+        """
         await ctx.send("Shutting down")
         print("logging out")
         await self.bot.logout()
