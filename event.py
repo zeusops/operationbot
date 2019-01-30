@@ -49,11 +49,11 @@ class Event:
 
     # Add default role groups
     def addDefaultRoleGroups(self):
-        self.roleGroups["Company"] = RoleGroup("Company", False)
-        self.roleGroups["Platoon"] = RoleGroup("Platoon", True)
-        self.roleGroups["Alpha"] = RoleGroup("Alpha", True)
-        self.roleGroups["Bravo"] = RoleGroup("Bravo", True)
-        self.roleGroups["Additional"] = RoleGroup("Additional", True)
+        self.roleGroups["Company"] = RoleGroup("Company", isInline=False)
+        self.roleGroups["Platoon"] = RoleGroup("Platoon")
+        self.roleGroups["Alpha"] = RoleGroup("Alpha")
+        self.roleGroups["Bravo"] = RoleGroup("Bravo")
+        self.roleGroups["Additional"] = RoleGroup("Additional")
 
     # Add default roles
     def addDefaultRoles(self):
@@ -217,6 +217,6 @@ class Event:
         self.color = data.get("color", COLOR)
         # TODO: Handle missing roleGroups
         for groupName, roleGroupData in data["roleGroups"].items():
-            roleGroup = RoleGroup(groupName, False)
+            roleGroup = RoleGroup(groupName)
             roleGroup.fromJson(roleGroupData, guild)
             self.roleGroups[groupName] = roleGroup
