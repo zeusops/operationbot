@@ -7,16 +7,22 @@ import config as cfg
 from role import Role
 from roleGroup import RoleGroup
 
+TITLE = "Operation"
+TERRAIN = "unknown"
+FACTION = "unknown"
+DESCRIPTION = ""
+COLOR = 0xFF4500
+
 
 class Event:
 
     def __init__(self, date: datetime, guildEmojis: Tuple[Emoji]):
-        self.title = "Operation"
+        self.title = TITLE
         self.date = date
-        self.terrain = "unknown"
-        self.faction = "unknown"
-        self.description = ""
-        self.color = 0xFF4500
+        self.terrain = TERRAIN
+        self.faction = FACTION
+        self.description = DESCRIPTION
+        self.color = COLOR
         self.roleGroups: Dict[str, RoleGroup] = {}
         self.additionalRoleCount = 0
 
@@ -43,17 +49,11 @@ class Event:
 
     # Add default role groups
     def addDefaultRoleGroups(self):
-        companyGroup = RoleGroup("Company", False)
-        platoonGroup = RoleGroup("Platoon", True)
-        alphaGroup = RoleGroup("Alpha", True)
-        bravoGroup = RoleGroup("Bravo", True)
-        additionalGroup = RoleGroup("Additional", True)
-
-        self.roleGroups["Company"] = companyGroup
-        self.roleGroups["Platoon"] = platoonGroup
-        self.roleGroups["Alpha"] = alphaGroup
-        self.roleGroups["Bravo"] = bravoGroup
-        self.roleGroups["Additional"] = additionalGroup
+        self.roleGroups["Company"] = RoleGroup("Company", False)
+        self.roleGroups["Platoon"] = RoleGroup("Platoon", True)
+        self.roleGroups["Alpha"] = RoleGroup("Alpha", True)
+        self.roleGroups["Bravo"] = RoleGroup("Bravo", True)
+        self.roleGroups["Additional"] = RoleGroup("Additional", True)
 
     # Add default roles
     def addDefaultRoles(self):
@@ -208,13 +208,14 @@ class Event:
         return data
 
     def fromJson(self, data, guild):
-        self.setTitle(data["title"])
-        time = datetime.strptime(data["time"], "%H:%M")
+        self.setTitle(data.get("title", TITLE))
+        time = datetime.strptime(data.get("time", "00:00"), "%H:%M")
         self.setTime(time)
-        self.setTerrain(data["terrain"])
-        self.faction = data["faction"]
-        self.description = data.get("description", "")
-        self.color = data["color"]
+        self.setTerrain(data.get("terrain", TERRAIN))
+        self.faction = data.get("faction", FACTION)
+        self.description = data.get("description", DESCRIPTION)
+        self.color = data.get("color", COLOR)
+        # TODO: Handle missing roleGroups
         for groupName, roleGroupData in data["roleGroups"].items():
             roleGroup = RoleGroup(groupName, False)
             roleGroup.fromJson(roleGroupData, guild)

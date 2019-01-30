@@ -188,7 +188,8 @@ class EventDatabase:
         eventchannel = bot.get_channel(cfg.EVENT_CHANNEL)
 
         # Clear events channel
-        await eventchannel.purge(limit=100)
+        if cfg.PURGE_ON_CONNECT:
+            await eventchannel.purge(limit=100)
 
         # Add events
         for messageID, eventData in eventsData.items():
