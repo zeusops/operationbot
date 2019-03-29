@@ -6,7 +6,7 @@ from io import StringIO
 
 from discord import Member, Message, NotFound
 from discord.ext.commands import (BadArgument, Bot, Context, Converter,
-                                  MissingRequiredArgument, command)
+                                  MissingRequiredArgument, command, Cog)
 
 import config as cfg
 from event import Event
@@ -50,7 +50,7 @@ class EventMessage(Converter):
             raise BadArgument("No message found with that message ID")
 
 
-class CommandListener:
+class CommandListener(Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
