@@ -1,11 +1,11 @@
 import traceback
 
-from discord.ext.commands import Bot, Context, command
+from discord.ext.commands import Bot, Context, command, Cog
 
 from main import initial_extensions
 
 
-class Reload:
+class Reload(Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
 

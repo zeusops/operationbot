@@ -203,7 +203,7 @@ class EventDatabase:
 
         # Add reactions to events
         for messageID, event in self.events.items():
-            eventmessage = await eventchannel.get_message(messageID)
+            eventmessage = await eventchannel.fetch_message(messageID)
             await self.updateReactions(eventmessage, event, bot)
 
         # Add archived events

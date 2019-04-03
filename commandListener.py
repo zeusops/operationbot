@@ -6,7 +6,7 @@ from io import StringIO
 
 from discord import Member, Message, NotFound
 from discord.ext.commands import (BadArgument, Bot, Context, Converter,
-                                  MissingRequiredArgument, command)
+                                  MissingRequiredArgument, command, Cog)
 
 import config as cfg
 from event import Event
@@ -45,12 +45,12 @@ class EventMessage(Converter):
 
         # Get message
         try:
-            return await eventchannel.get_message(messageid)
+            return await eventchannel.fetch_message(messageid)
         except NotFound:
             raise BadArgument("No message found with that message ID")
 
 
-class CommandListener:
+class CommandListener(Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
@@ -360,7 +360,7 @@ class CommandListener:
         if event is not None:
             eventchannel = ctx.bot.get_channel(cfg.EVENT_CHANNEL)
             try:
-                eventMessage = await eventchannel.get_message(eventMessageID)
+                eventMessage = await eventchannel.fetch_message(eventMessageID)
             except NotFound:
                 await ctx.send("No message found with that message ID")
                 return
@@ -443,7 +443,7 @@ class CommandListener:
 
         # Get message
         try:
-            return await eventarchivechannel.get_message(messageID)
+            return await eventarchivechannel.fetch_message(messageID)
         except Exception:
             await ctx.send("No message found in archive with that message ID")
             return
@@ -462,7 +462,7 @@ class CommandListener:
         for messageID, event_ in self.eventDatabase.events.items():
             eventchannel = ctx.bot.get_channel(cfg.EVENT_CHANNEL)
             try:
-                eventMessage = await eventchannel.get_message(messageID)
+                eventMessage = await eventchannel.fetch_message(messageID)
             except NotFound:
                 await ctx.send("No message found with that message ID")
                 return

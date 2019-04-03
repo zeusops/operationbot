@@ -1,14 +1,14 @@
 import importlib
 
 from discord import Game, Member, Reaction
-from discord.ext.commands import Bot
+from discord.ext.commands import Bot, Cog
 
 import config as cfg
 import event
 from main import eventDatabase
 
 
-class EventListener:
+class EventListener(Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
