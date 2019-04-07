@@ -11,7 +11,7 @@ from discord.ext.commands import (BadArgument, Bot, Context, Converter,
 import config as cfg
 from event import Event
 from main import eventDatabase
-from secret import COMMAND_CHAR as CMD
+from secret import COMMAND_CHAR as CMD, ADMINS
 
 
 class EventDate(Converter):
@@ -66,8 +66,8 @@ class CommandListener(Cog):
         Example: exec a variable = 1
         Example: exec p variable
         """
-        # Allow only Gehock#9738 to send commands for security
-        if ctx.message.author.id != 150625032656125952:
+        # Allow only specified admins to send commands for security reasons
+        if ctx.message.author.id not in ADMINS:
             await ctx.send("Unauthorized")
             return
 
