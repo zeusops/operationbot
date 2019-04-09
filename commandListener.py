@@ -152,6 +152,30 @@ class CommandListener(Cog):
         self.writeJson()  # Update JSON file
         await ctx.send("Role removed")
 
+    @command()
+    async def removegroup(self, ctx: Context, eventMessage: EventMessage, *,
+                          groupName: str):
+        """
+        Remove a role group from the event.
+
+        Example: removegroup 530481556083441684 Bravo
+        """
+        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        if eventToUpdate is None:
+            return
+
+        if not eventToUpdate.hasRoleGroup:
+            await ctx.send("No role group found with that name")
+            return
+
+        # Remove reactions, remove role, update event, add reactions, export
+        for reaction in eventToUpdate.getReactionsOfGroup(groupName):
+            await eventMessage.remove_reaction(reaction, self.bot.user)
+        eventToUpdate.removeRoleGroup(groupName)
+        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        self.writeJson()  # Update JSON file
+        await ctx.send("Group removed")
+
     # Set title of event command
     @command()
     async def settitle(self, ctx: Context, eventMessage: EventMessage, *,
@@ -434,10 +458,8 @@ class CommandListener(Cog):
             await ctx.send("Unexpected error occured: ```{}```".format(error))
             print(error)
 
-    # Returns message from archive from given string or gives an error
     async def getMessageFromArchive(self, messageID: int, ctx: Context):
-        # Get messageID
-
+        """Return a message from the archive based on a message id."""
         # Get channels
         eventarchivechannel = ctx.bot.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
 
@@ -470,12 +492,12 @@ class CommandListener(Cog):
                                                      self.bot)
             await self.eventDatabase.updateEvent(eventMessage, event_)
 
-    # Export eventDatabase to json
     def writeJson(self):
+        """Export eventDatabase to json."""
         self.eventDatabase.toJson()
 
-    # Clear eventchannel and import eventDatabase from json
     async def readJson(self):
+        """Clear eventchannel and import eventDatabase from json."""
         await self.eventDatabase.fromJson(self.bot)
 
 
