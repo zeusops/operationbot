@@ -16,11 +16,12 @@ class EventDatabase:
         self.events: Dict[int, Event] = {}
         self.eventsArchive: Dict[int, Event] = {}
 
-    # Create a new event and store it
     async def createEvent(self, date: datetime,
-                          channel: TextChannel) -> Tuple[Message, Event]:
+                          channel: TextChannel,
+                          importing=False) -> Tuple[Message, Event]:
+        """Create a new event and store it."""
         # Create event
-        newEvent = Event(date, channel.guild.emojis)
+        newEvent = Event(date, channel.guild.emojis, importing)
 
         # Create message
         newEventMessage = await self.createEventMessage(newEvent, channel)
@@ -197,7 +198,8 @@ class EventDatabase:
             date = datetime.strptime(eventData["date"],
                                      '%Y-%m-%d')
             eventMessage, event = await self.createEvent(date,
-                                                         eventchannel)
+                                                         eventchannel,
+                                                         importing=True)
             event.fromJson(eventData, eventchannel.guild)
             await self.updateEvent(eventMessage, event)
 

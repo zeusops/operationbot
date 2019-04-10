@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 
 from discord import Embed, Emoji
 
@@ -16,7 +16,8 @@ COLOR = 0xFF4500
 
 class Event:
 
-    def __init__(self, date: datetime, guildEmojis: Tuple[Emoji]):
+    def __init__(self, date: datetime, guildEmojis: Tuple[Emoji],
+                 importing=False):
         self.title = TITLE
         self.date = date
         self.terrain = TERRAIN
@@ -27,8 +28,9 @@ class Event:
         self.additionalRoleCount = 0
 
         self.normalEmojis = self.getNormalEmojis(guildEmojis)
-        self.addDefaultRoleGroups()
-        self.addDefaultRoles()
+        if not importing:
+            self.addDefaultRoleGroups()
+            self.addDefaultRoles()
 
     # Return an embed for the event
     def createEmbed(self) -> Embed:
@@ -78,8 +80,8 @@ class Event:
 
         return emoji
 
-    # Remove an additional role from the event
     def removeAdditionalRole(self, role: str):
+        """Remove an additional role from the event."""
         # Remove role from additional roles
         self.roleGroups["Additional"].removeRole(role)
 
@@ -89,6 +91,17 @@ class Event:
             emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additionalRoleCount]
             roleInstance.emoji = emoji
             self.additionalRoleCount += 1
+
+    def removeRoleGroup(self, groupName: str) -> bool:
+        """
+        Remove a role group.
+
+        Returns false if the group cannot be found.
+        """
+        if groupName not in self.roleGroups:
+            return False
+        self.roleGroups.pop(groupName, None)
+        return True
 
     # Title setter
     def setTitle(self, newTitle):
@@ -136,25 +149,26 @@ class Event:
 
         return reactions
 
-    def getReactionsOfGroup(self, groupName):
+    def getReactionsOfGroup(self, groupName: str) -> List[Emoji]:
+        """Find reactions of a given role group."""
         reactions = []
 
-        if groupName in self.roleGroups.keys():
+        if groupName in self.roleGroups:
             for role in self.roleGroups[groupName].roles:
                 reactions.append(role.emoji)
 
         return reactions
 
-    # Find role with emoji
     def findRoleWithEmoji(self, emoji) -> Role:
+        """Find a role with given emoji."""
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role.emoji == emoji:
                     return role
         return None
 
-    # Find role with name
     def findRoleWithName(self, roleName: str) -> Role:
+        """Find a role with given name."""
         roleName = roleName.lower()
         for roleGroup in self.roleGroups.values():
             role: Role
@@ -163,16 +177,20 @@ class Event:
                     return role
         return None
 
-    # Add username to role
+    def hasRoleGroup(self, groupName: str) -> bool:
+        """Check if a role group with given name exists in the event."""
+        return groupName in self.roleGroups
+
     def signup(self, roleToSet, user):
+        """Add username to role."""
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role == roleToSet:
                     role.userID = user.id
                     role.userName = user.display_name
 
-    # Remove username from any signups
     def undoSignup(self, user) -> None:
+        """Remove username from any signups."""
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role.userID == user.id:
@@ -180,8 +198,8 @@ class Event:
                     role.userName = ""
         return None
 
-    # Returns if given user is already signed up
     def findSignup(self, userID) -> Role:
+        """Check if given user is already signed up."""
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role.userID == int(userID):

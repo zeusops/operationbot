@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
 from discord.ext.commands import Bot
 
 import config as cfg
