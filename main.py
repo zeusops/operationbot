@@ -4,10 +4,10 @@ from discord.ext.commands import Bot
 import config as cfg
 from secret import COMMAND_CHAR, TOKEN
 
-CONFIG_VERSION = 4
+CONFIG_VERSION = 5
 if cfg.VERSION != CONFIG_VERSION:
     raise Exception(
-        "Outdated config file, expecting version {}, found version {}"
+        "Incompatible config file, expecting version {}, found version {}"
         .format(CONFIG_VERSION, cfg.VERSION))
 
 initial_extensions = ['commandListener', 'eventListener']
