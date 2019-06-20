@@ -12,10 +12,10 @@ from event import Event
 
 class EventDatabase:
 
-    def __init__(self):
-        self.events: Dict[int, Event] = {}
-        self.eventsArchive: Dict[int, Event] = {}
+    events: Dict[int, Event] = {}
+    eventsArchive: Dict[int, Event] = {}
 
+    @classmethod
     async def createEvent(self, date: datetime,
                           channel: TextChannel,
                           importing=False) -> Tuple[Message, Event]:
@@ -32,6 +32,7 @@ class EventDatabase:
         return newEventMessage, newEvent
 
     # Create a new event message
+    @classmethod
     async def createEventMessage(self, event: Event,
                                  channel: TextChannel) -> Message:
         # Create embed and message
@@ -46,6 +47,7 @@ class EventDatabase:
         return newEventMessage
 
     # Move event to archive
+    @classmethod
     async def archiveEvent(self, eventmessage: Message, event: Event,
                            eventarchivechannel: TextChannel):
         # Remove event from events
@@ -59,6 +61,7 @@ class EventDatabase:
         self.eventsArchive[newEventMessage.id] = event
 
     # Update an existing event and store it
+    @classmethod
     async def updateEvent(self, eventMessage: Message, updatedEvent: Event):
         newEventEmbed = updatedEvent.createEmbed()
         newEventEmbed.set_footer(text="Message ID: " + str(eventMessage.id))
@@ -68,24 +71,29 @@ class EventDatabase:
         self.events[eventMessage.id] = updatedEvent
 
     # Remove event
+    @classmethod
     async def removeEvent(self, eventmessage: Message):
         if eventmessage.id in self.events.keys():
             del self.events[eventmessage.id]
             await eventmessage.delete()
 
     # Remove event from archive
+    @classmethod
     async def removeEventFromArchive(self, eventmessage: Message):
         if eventmessage.id in self.eventsArchive.keys():
             del self.eventsArchive[eventmessage.id]
             await eventmessage.delete()
 
     # Find an event with it's message ID
+    @classmethod
     def findEvent(self, messageID: int) -> Event:
         return self.events.get(messageID)
 
+    @classmethod
     def findEventInArchive(self, messageID: int):
         return self.eventsArchive.get(messageID)
 
+    @classmethod
     def sortEvents(self):
         messageIDs = []
         events = []
@@ -105,6 +113,7 @@ class EventDatabase:
             self.events[messageID] = events[index]
             index += 1
 
+    @classmethod
     async def updateReactions(self, message: Message, event: Event, bot: Bot):
         reactionEmojisIntended = event.getReactions()
         reactionsCurrent = message.reactions
@@ -134,6 +143,7 @@ class EventDatabase:
         for emoji in reactionEmojisToAdd:
             await message.add_reaction(emoji)
 
+    @classmethod
     def toJson(self):
         # Get eventsData
         eventsData = {}
@@ -154,6 +164,7 @@ class EventDatabase:
             json.dump(data, jsonFile, indent=2)
 
     # Fills events and eventsArchive with data from JSON
+    @classmethod
     async def fromJson(self, bot: Bot):
         # Import
         try:

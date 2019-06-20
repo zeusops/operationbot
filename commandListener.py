@@ -10,7 +10,7 @@ from discord.ext.commands import (BadArgument, Bot, Context, Converter,
 
 import config as cfg
 from event import Event
-from main import eventDatabase
+from eventDatabase import EventDatabase
 from secret import COMMAND_CHAR as CMD, ADMINS
 
 
@@ -54,7 +54,6 @@ class CommandListener(Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.eventDatabase = eventDatabase
 
     @command()
     async def exec(self, ctx: Context, flag: str, *, cmd: str):
@@ -98,10 +97,10 @@ class CommandListener(Cog):
         eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
         # TODO: Optionally specify sideop -> hide 1PLT and Bravo
         # Create event and sort events, export
-        msg, event = await self.eventDatabase.createEvent(date, eventchannel)
-        await self.eventDatabase.updateReactions(msg, event, self.bot)
+        msg, event = await EventDatabase.createEvent(date, eventchannel)
+        await EventDatabase.updateReactions(msg, event, self.bot)
         await self.sortEvents(ctx)
-        self.writeJson()  # Update JSON file
+        EventDatabase.toJson()  # Update JSON file
         await ctx.send("Created event {} with id {}".format(event, msg.id))
 
     # Add additional role to event command
@@ -118,9 +117,9 @@ class CommandListener(Cog):
             return
 
         reaction = eventToUpdate.addAdditionalRole(rolename)
-        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
         await eventMessage.add_reaction(reaction)
-        self.writeJson()  # Update JSON file
+        EventDatabase.toJson()  # Update JSON file
         await ctx.send("Role added")
 
     # Remove additional role from event command
@@ -146,10 +145,10 @@ class CommandListener(Cog):
         for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
             await eventMessage.remove_reaction(reaction, self.bot.user)
         eventToUpdate.removeAdditionalRole(rolename)
-        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
         for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
             await eventMessage.add_reaction(reaction)
-        self.writeJson()  # Update JSON file
+        EventDatabase.toJson()  # Update JSON file
         await ctx.send("Role removed")
 
     @command()
@@ -172,8 +171,8 @@ class CommandListener(Cog):
         for reaction in eventToUpdate.getReactionsOfGroup(groupName):
             await eventMessage.remove_reaction(reaction, self.bot.user)
         eventToUpdate.removeRoleGroup(groupName)
-        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
-        self.writeJson()  # Update JSON file
+        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        EventDatabase.toJson()  # Update JSON file
         await ctx.send("Group removed")
 
     # Set title of event command
@@ -193,8 +192,8 @@ class CommandListener(Cog):
         # NOTE: Does not check for too long input. Will result in an API error
         # and a bot crash
         eventToUpdate.setTitle(title)
-        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
-        self.writeJson()  # Update JSON file
+        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        EventDatabase.toJson()  # Update JSON file
         await ctx.send("Title set")
 
     # Set date of event command
@@ -214,9 +213,9 @@ class CommandListener(Cog):
         eventToUpdate.setDate(date)
 
         # Update event and sort events, export
-        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
         await self.sortEvents(ctx)
-        self.writeJson()  # Update JSON file
+        EventDatabase.toJson()  # Update JSON file
         await ctx.send("Date set")
 
     # Set time of event command
@@ -236,9 +235,9 @@ class CommandListener(Cog):
         eventToUpdate.setTime(time)
 
         # Update event and sort events, export
-        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
         await self.sortEvents(ctx)
-        self.writeJson()  # Update JSON file
+        EventDatabase.toJson()  # Update JSON file
         await ctx.send("Time set")
 
     # Set terrain of event command
@@ -256,8 +255,8 @@ class CommandListener(Cog):
 
         # Change terrain, update event, export
         eventToUpdate.setTerrain(terrain)
-        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
-        self.writeJson()  # Update JSON file
+        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        EventDatabase.toJson()  # Update JSON file
         await ctx.send("Terrain set")
 
     # Set faction of event command
@@ -275,8 +274,8 @@ class CommandListener(Cog):
 
         # Change faction, update event, export
         eventToUpdate.setFaction(faction)
-        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
-        self.writeJson()  # Update JSON file
+        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        EventDatabase.toJson()  # Update JSON file
         await ctx.send("Faction set")
 
     # Set faction of event command
@@ -294,8 +293,8 @@ class CommandListener(Cog):
 
         # Change description, update event, export
         eventToUpdate.description = description
-        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
-        self.writeJson()  # Update JSON file
+        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        EventDatabase.toJson()  # Update JSON file
         await ctx.send("Description set")
 
     # Sign user up to event command
@@ -322,8 +321,8 @@ class CommandListener(Cog):
 
         # Sign user up, update event, export
         eventToUpdate.signup(role, user)
-        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
-        self.writeJson()  # Update JSON file
+        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        EventDatabase.toJson()  # Update JSON file
         await ctx.send("User signed up")
 
     # Remove signup on event of user command
@@ -343,8 +342,8 @@ class CommandListener(Cog):
 
         # Remove signup, update event, export
         eventToUpdate.undoSignup(user)
-        await self.eventDatabase.updateEvent(eventMessage, eventToUpdate)
-        self.writeJson()  # Update JSON file
+        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        EventDatabase.toJson()  # Update JSON file
         await ctx.send("User signup removed")
 
     # Archive event command
@@ -363,9 +362,9 @@ class CommandListener(Cog):
         eventarchivechannel = self.bot.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
 
         # Archive event and export
-        await self.eventDatabase.archiveEvent(eventMessage, eventToUpdate,
+        await EventDatabase.archiveEvent(eventMessage, eventToUpdate,
                                               eventarchivechannel)
-        self.writeJson()  # Update JSON file
+        EventDatabase.toJson()  # Update JSON file
         await ctx.send("Event archived")
 
     # Delete event command
@@ -380,7 +379,7 @@ class CommandListener(Cog):
         eventMessageID = eventMessage.id
 
         # Delete event
-        event = self.eventDatabase.findEvent(eventMessageID)
+        event = EventDatabase.findEvent(eventMessageID)
         if event is not None:
             eventchannel = ctx.bot.get_channel(cfg.EVENT_CHANNEL)
             try:
@@ -388,19 +387,19 @@ class CommandListener(Cog):
             except NotFound:
                 await ctx.send("No message found with that message ID")
                 return
-            await self.eventDatabase.removeEvent(eventMessage)
+            await EventDatabase.removeEvent(eventMessage)
             await ctx.send("Removed event from events")
         else:
-            event = self.eventDatabase.findEventInArchive(eventMessageID)
+            event = EventDatabase.findEventInArchive(eventMessageID)
             if event is not None:
                 eventMessage = await self.getMessageFromArchive(eventMessageID,
                                                                 ctx)
-                await self.eventDatabase.removeEventFromArchive(eventMessage)
+                await EventDatabase.removeEventFromArchive(eventMessage)
                 await ctx.send("Removed event from events archive")
             else:
                 await ctx.send("No event found with that message ID")
 
-        self.writeJson()  # Update JSON file
+        EventDatabase.toJson()  # Update JSON file
 
     # sort events command
     @command()
@@ -412,15 +411,15 @@ class CommandListener(Cog):
     # export to json
     @command()
     async def export(self, ctx: Context):
-        """Export eventDatabase (manually)."""
-        self.writeJson()
+        """Export event database (manually)."""
+        EventDatabase.toJson()
         await ctx.send("EventDatabase exported")
 
     # import from json
     @command(name="import")
     async def importJson(self, ctx: Context):
-        """Import eventDatabase (manually)."""
-        await self.readJson()
+        """Import event database (manually)."""
+        await EventDatabase.fromJson(self.bot)
         await ctx.send("EventDatabase imported")
 
     @command()
@@ -471,34 +470,26 @@ class CommandListener(Cog):
             return
 
     async def getEvent(self, messageID, ctx: Context) -> Event:
-        eventToUpdate = self.eventDatabase.findEvent(messageID)
+        eventToUpdate = EventDatabase.findEvent(messageID)
         if eventToUpdate is None:
             await ctx.send("No event found with that message ID")
             return None
         return eventToUpdate
 
-    # Sort events in eventDatabase
     async def sortEvents(self, ctx: Context):
-        self.eventDatabase.sortEvents()
+        """Sort events in event database"""
+        EventDatabase.sortEvents()
 
-        for messageID, event_ in self.eventDatabase.events.items():
+        for messageID, event_ in EventDatabase.events.items():
             eventchannel = ctx.bot.get_channel(cfg.EVENT_CHANNEL)
             try:
                 eventMessage = await eventchannel.fetch_message(messageID)
             except NotFound:
                 await ctx.send("No message found with that message ID")
                 return
-            await self.eventDatabase.updateReactions(eventMessage, event_,
+            await EventDatabase.updateReactions(eventMessage, event_,
                                                      self.bot)
-            await self.eventDatabase.updateEvent(eventMessage, event_)
-
-    def writeJson(self):
-        """Export eventDatabase to json."""
-        self.eventDatabase.toJson()
-
-    async def readJson(self):
-        """Clear eventchannel and import eventDatabase from json."""
-        await self.eventDatabase.fromJson(self.bot)
+            await EventDatabase.updateEvent(eventMessage, event_)
 
 
 def setup(bot):

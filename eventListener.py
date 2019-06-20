@@ -5,21 +5,20 @@ from discord.ext.commands import Bot, Cog
 
 import config as cfg
 import event
-from main import eventDatabase
+from eventDatabase import EventDatabase
 
 
 class EventListener(Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.eventDatabase = eventDatabase
 
         @self.bot.event
         async def on_ready():
             await self.bot.wait_until_ready()
             commandchannel = self.bot.get_channel(cfg.COMMAND_CHANNEL)
             await commandchannel.send("Importing events")
-            await self.eventDatabase.fromJson(self.bot)
+            await EventDatabase.fromJson(self.bot)
             await commandchannel.send("Events imported")
             await self.bot.change_presence(activity=Game(name=cfg.GAME,
                                                          type=2))
@@ -37,7 +36,7 @@ class EventListener(Cog):
             await reaction.message.remove_reaction(reaction, user)
 
             # Get event from database with message ID
-            reactedEvent = self.eventDatabase.findEvent(reaction.message.id)
+            reactedEvent = EventDatabase.findEvent(reaction.message.id)
             if reactedEvent is None:
                 print("No event found with that id", reaction.message.id)
                 return
@@ -67,21 +66,17 @@ class EventListener(Cog):
                     reactedEvent.signup(role, user)
 
                     # Update event
-                    await self.eventDatabase.updateEvent(reaction.message,
+                    await EventDatabase.updateEvent(reaction.message,
                                                          reactedEvent)
-                    self.writeJson()
+                    EventDatabase.toJson()
             elif signup.emoji == emoji:
                 # undo signup
                 reactedEvent.undoSignup(user)
 
                 # Update event
-                await self.eventDatabase.updateEvent(reaction.message,
+                await EventDatabase.updateEvent(reaction.message,
                                                      reactedEvent)
-                self.writeJson()
-
-    # Export eventDatabase to json
-    def writeJson(self):
-        self.eventDatabase.toJson()
+                EventDatabase.toJson()
 
 
 def setup(bot: Bot):
