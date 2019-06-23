@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Tuple, List
+from typing import Dict, List, Optional, Tuple
 
 from discord import Embed, Emoji
 
@@ -17,7 +17,7 @@ COLOR = 0xFF4500
 class Event:
 
     def __init__(self, date: datetime, guildEmojis: Tuple[Emoji],
-                 importing=False):
+                 eventID=0, importing=False):
         self.title = TITLE
         self.date = date
         self.terrain = TERRAIN
@@ -26,6 +26,8 @@ class Event:
         self.color = COLOR
         self.roleGroups: Dict[str, RoleGroup] = {}
         self.additionalRoleCount = 0
+        self.messageID = 0
+        self.id = eventID
 
         self.normalEmojis = self.getNormalEmojis(guildEmojis)
         if not importing:
@@ -159,7 +161,7 @@ class Event:
 
         return reactions
 
-    def findRoleWithEmoji(self, emoji) -> Role:
+    def findRoleWithEmoji(self, emoji) -> Optional[Role]:
         """Find a role with given emoji."""
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
@@ -167,7 +169,7 @@ class Event:
                     return role
         return None
 
-    def findRoleWithName(self, roleName: str) -> Role:
+    def findRoleWithName(self, roleName: str) -> Optional[Role]:
         """Find a role with given name."""
         roleName = roleName.lower()
         for roleGroup in self.roleGroups.values():
@@ -198,7 +200,7 @@ class Event:
                     role.userName = ""
         return None
 
-    def findSignup(self, userID) -> Role:
+    def findSignup(self, userID) -> Optional[Role]:
         """Check if given user is already signed up."""
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
@@ -208,6 +210,9 @@ class Event:
 
     def __str__(self):
         return "{} at {}".format(self.title, self.date)
+
+    def __repr__(self):
+        return self.__str__()
 
     def toJson(self):
         roleGroupsData = {}
@@ -225,7 +230,8 @@ class Event:
         data["roleGroups"] = roleGroupsData
         return data
 
-    def fromJson(self, data, guild):
+    def fromJson(self, eventID, data, guild):
+        self.id = int(eventID)
         self.setTitle(data.get("title", TITLE))
         time = datetime.strptime(data.get("time", "00:00"), "%H:%M")
         self.setTime(time)

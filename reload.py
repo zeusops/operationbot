@@ -1,6 +1,6 @@
 import traceback
 
-from discord.ext.commands import Bot, Context, command, Cog
+from discord.ext.commands import Bot, Cog, Context, command
 
 from main import initial_extensions
 

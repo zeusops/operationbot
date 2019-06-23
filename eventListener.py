@@ -36,7 +36,8 @@ class EventListener(Cog):
             await reaction.message.remove_reaction(reaction, user)
 
             # Get event from database with message ID
-            reactedEvent = EventDatabase.findEvent(reaction.message.id)
+            reactedEvent = EventDatabase.getEventByMessage(
+                    reaction.message.id)
             if reactedEvent is None:
                 print("No event found with that id", reaction.message.id)
                 return

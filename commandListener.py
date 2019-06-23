@@ -3,15 +3,18 @@ import sys
 import traceback
 from datetime import datetime
 from io import StringIO
+from typing import Optional
 
 from discord import Member, Message, NotFound
-from discord.ext.commands import (BadArgument, Bot, Context, Converter,
-                                  MissingRequiredArgument, command, Cog)
+from discord.ext.commands import (BadArgument, Bot, Cog, Context, Converter,
+                                  MissingRequiredArgument, command)
 
 import config as cfg
 from event import Event
 from eventDatabase import EventDatabase
-from secret import COMMAND_CHAR as CMD, ADMINS
+from messageFunctions import getEvent, getEventMessage, sortEventMessages
+from secret import ADMINS
+from secret import COMMAND_CHAR as CMD
 
 
 class EventDate(Converter):
@@ -35,19 +38,22 @@ class EventTime(Converter):
 class EventMessage(Converter):
     async def convert(self, ctx: Context, arg: str) -> Message:
         try:
-            messageid = int(arg)
+            eventID = int(arg)
         except ValueError:
             raise BadArgument("Invalid message ID, needs to be an "
                               "integer")
 
         # Get channels
-        eventchannel = ctx.bot.get_channel(cfg.EVENT_CHANNEL)
 
         # Get message
-        try:
-            return await eventchannel.fetch_message(messageid)
-        except NotFound:
-            raise BadArgument("No message found with that message ID")
+        event = EventDatabase.getEventByID(eventID)
+        if event is None:
+            raise BadArgument("No event found with that ID")
+        message = await getEventMessage(ctx.bot, event)
+        if message is None:
+            raise BadArgument("No message found with that event ID")
+
+        return message
 
 
 class CommandListener(Cog):
@@ -99,9 +105,9 @@ class CommandListener(Cog):
         # Create event and sort events, export
         msg, event = await EventDatabase.createEvent(date, eventchannel)
         await EventDatabase.updateReactions(msg, event, self.bot)
-        await self.sortEvents(ctx)
+        await sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Created event {} with id {}".format(event, msg.id))
+        await ctx.send("Created event {} with id {}".format(event, event.id))
 
     # Add additional role to event command
     @command()
@@ -112,7 +118,7 @@ class CommandListener(Cog):
 
         Example: addrole 530481556083441684 Y1 (Bradley) Driver
         """
-        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        eventToUpdate = await getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -214,7 +220,7 @@ class CommandListener(Cog):
 
         # Update event and sort events, export
         await EventDatabase.updateEvent(eventMessage, eventToUpdate)
-        await self.sortEvents(ctx)
+        await sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Date set")
 
@@ -236,7 +242,7 @@ class CommandListener(Cog):
 
         # Update event and sort events, export
         await EventDatabase.updateEvent(eventMessage, eventToUpdate)
-        await self.sortEvents(ctx)
+        await sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Time set")
 
@@ -309,7 +315,7 @@ class CommandListener(Cog):
 
         Example: signup 530481556083441684 "S. Gehock" Y1 (Bradley) Gunner
         """  # NOQA
-        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        eventToUpdate = await getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -348,22 +354,30 @@ class CommandListener(Cog):
 
     # Archive event command
     @command()
-    async def archive(self, ctx: Context, eventMessage: EventMessage):
+    async def archive(self, ctx: Context, eventID: str):
         """
         Archive event.
 
         Example: archive 530481556083441684
         """
-        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
-        if eventToUpdate is None:
+        event = await self.getEvent(eventID, ctx)
+        if event is None:
             return
 
         # eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
         eventarchivechannel = self.bot.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
 
         # Archive event and export
-        await EventDatabase.archiveEvent(eventMessage, eventToUpdate,
-                                              eventarchivechannel)
+        EventDatabase.archiveEvent(event)
+        eventMessage = await getEventMessage(self.bot, event)
+        if eventMessage:
+            await eventMessage.delete()
+        else:
+            ctx.send("Internal error: event without a message found")
+
+        # Create new message
+        await EventDatabase.createEventMessage(event, eventarchivechannel)
+
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Event archived")
 
@@ -379,7 +393,7 @@ class CommandListener(Cog):
         eventMessageID = eventMessage.id
 
         # Delete event
-        event = EventDatabase.findEvent(eventMessageID)
+        event = EventDatabase.getEventByMessage(eventMessageID)
         if event is not None:
             eventchannel = ctx.bot.get_channel(cfg.EVENT_CHANNEL)
             try:
@@ -387,25 +401,27 @@ class CommandListener(Cog):
             except NotFound:
                 await ctx.send("No message found with that message ID")
                 return
-            await EventDatabase.removeEvent(eventMessage)
+            EventDatabase.removeEvent(event)
             await ctx.send("Removed event from events")
         else:
-            event = EventDatabase.findEventInArchive(eventMessageID)
+            event = EventDatabase.getArchivedEventByMessage(eventMessageID)
             if event is not None:
                 eventMessage = await self.getMessageFromArchive(eventMessageID,
                                                                 ctx)
-                await EventDatabase.removeEventFromArchive(eventMessage)
+                EventDatabase.removeEventFromArchive(event)
                 await ctx.send("Removed event from events archive")
             else:
                 await ctx.send("No event found with that message ID")
+                return
 
+        await eventMessage.delete()
         EventDatabase.toJson()  # Update JSON file
 
     # sort events command
     @command()
     async def sort(self, ctx: Context):
         """Sort events (manually)."""
-        await self.sortEvents(ctx)
+        await sortEventMessages(ctx)
         await ctx.send("Events sorted")
 
     # export to json
@@ -457,7 +473,8 @@ class CommandListener(Cog):
             await ctx.send("Unexpected error occured: ```{}```".format(error))
             print(error)
 
-    async def getMessageFromArchive(self, messageID: int, ctx: Context):
+    async def getMessageFromArchive(self, messageID: int, ctx: Context) \
+            -> Message:
         """Return a message from the archive based on a message id."""
         # Get channels
         eventarchivechannel = ctx.bot.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
@@ -468,28 +485,6 @@ class CommandListener(Cog):
         except Exception:
             await ctx.send("No message found in archive with that message ID")
             return
-
-    async def getEvent(self, messageID, ctx: Context) -> Event:
-        eventToUpdate = EventDatabase.findEvent(messageID)
-        if eventToUpdate is None:
-            await ctx.send("No event found with that message ID")
-            return None
-        return eventToUpdate
-
-    async def sortEvents(self, ctx: Context):
-        """Sort events in event database"""
-        EventDatabase.sortEvents()
-
-        for messageID, event_ in EventDatabase.events.items():
-            eventchannel = ctx.bot.get_channel(cfg.EVENT_CHANNEL)
-            try:
-                eventMessage = await eventchannel.fetch_message(messageID)
-            except NotFound:
-                await ctx.send("No message found with that message ID")
-                return
-            await EventDatabase.updateReactions(eventMessage, event_,
-                                                     self.bot)
-            await EventDatabase.updateEvent(eventMessage, event_)
 
 
 def setup(bot):
