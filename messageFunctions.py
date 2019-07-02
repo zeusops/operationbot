@@ -7,17 +7,22 @@ import config as cfg
 from event import Event
 
 
-async def getEventMessage(bot: Bot, event: Event) -> Optional[Message]:
-    # Get channels
-    eventchannel = bot.get_channel(cfg.EVENT_CHANNEL)
+async def getEventMessage(bot: Bot, event: Event, archived=False) -> \
+        Optional[Message]:
+    """Get a message related to an event."""
+    if archived:
+        channel = bot.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
+    else:
+        channel = bot.get_channel(cfg.EVENT_CHANNEL)
 
-    # Get message
     try:
-        return await eventchannel.fetch_message(event.messageID)
+        return await channel.fetch_message(event.messageID)
     except NotFound:
         return None
 
+
 async def getEvent(messageID, ctx: Context) -> Optional[Event]:
+    """Get an event by a message id."""
     from eventDatabase import EventDatabase
     eventToUpdate = EventDatabase.getEventByMessage(messageID)
     if eventToUpdate is None:
@@ -27,7 +32,7 @@ async def getEvent(messageID, ctx: Context) -> Optional[Event]:
 
 
 async def sortEventMessages(ctx: Context):
-    """Sort events in event database"""
+    """Sort events in event database."""
     from eventDatabase import EventDatabase
     EventDatabase.sortEvents()
     print(EventDatabase.events)
@@ -42,4 +47,3 @@ async def sortEventMessages(ctx: Context):
             return
         await EventDatabase.updateReactions(eventMessage, event, ctx.bot)
         await EventDatabase.updateEvent(eventMessage, event)
-

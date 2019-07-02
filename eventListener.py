@@ -68,7 +68,7 @@ class EventListener(Cog):
 
                     # Update event
                     await EventDatabase.updateEvent(reaction.message,
-                                                         reactedEvent)
+                                                    reactedEvent)
                     EventDatabase.toJson()
             elif signup.emoji == emoji:
                 # undo signup
@@ -76,7 +76,7 @@ class EventListener(Cog):
 
                 # Update event
                 await EventDatabase.updateEvent(reaction.message,
-                                                     reactedEvent)
+                                                reactedEvent)
                 EventDatabase.toJson()
 
 

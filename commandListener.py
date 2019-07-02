@@ -3,9 +3,8 @@ import sys
 import traceback
 from datetime import datetime
 from io import StringIO
-from typing import Optional
 
-from discord import Member, Message, NotFound
+from discord import Member, Message
 from discord.ext.commands import (BadArgument, Bot, Cog, Context, Converter,
                                   MissingRequiredArgument, command)
 
@@ -43,9 +42,6 @@ class EventMessage(Converter):
             raise BadArgument("Invalid message ID, needs to be an "
                               "integer")
 
-        # Get channels
-
-        # Get message
         event = EventDatabase.getEventByID(eventID)
         if event is None:
             raise BadArgument("No event found with that ID")
@@ -54,6 +50,36 @@ class EventMessage(Converter):
             raise BadArgument("No message found with that event ID")
 
         return message
+
+
+class EventEvent(Converter):
+    async def convert(self, ctx: Context, arg: str) -> Event:
+        try:
+            eventID = int(arg)
+        except ValueError:
+            raise BadArgument("Invalid message ID, needs to be an "
+                              "integer")
+
+        event = EventDatabase.getEventByID(eventID)
+        if event is None:
+            raise BadArgument("No event found with that ID")
+
+        return event
+
+
+class ArchivedEvent(Converter):
+    async def convert(self, ctx: Context, arg: str) -> Event:
+        try:
+            eventID = int(arg)
+        except ValueError:
+            raise BadArgument("Invalid message ID, needs to be an "
+                              "integer")
+
+        event = EventDatabase.getArchivedEventByID(eventID)
+        if event is None:
+            raise BadArgument("No event found with that ID")
+
+        return event
 
 
 class CommandListener(Cog):
@@ -116,7 +142,7 @@ class CommandListener(Cog):
         """
         Add a new additional role to the event.
 
-        Example: addrole 530481556083441684 Y1 (Bradley) Driver
+        Example: addrole 1 Y1 (Bradley) Driver
         """
         eventToUpdate = await getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
@@ -135,9 +161,9 @@ class CommandListener(Cog):
         """
         Remove an additional role from the event.
 
-        Example: removerole 530481556083441684 Y1 (Bradley) Driver
+        Example: removerole 1 Y1 (Bradley) Driver
         """
-        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        eventToUpdate = await getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -163,9 +189,9 @@ class CommandListener(Cog):
         """
         Remove a role group from the event.
 
-        Example: removegroup 530481556083441684 Bravo
+        Example: removegroup 1 Bravo
         """
-        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        eventToUpdate = await getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -188,9 +214,9 @@ class CommandListener(Cog):
         """
         Set event title.
 
-        Example: settitle 530481556083441684 Operation Striker
+        Example: settitle 1 Operation Striker
         """
-        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        eventToUpdate = await getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -209,9 +235,9 @@ class CommandListener(Cog):
         """
         Set event date.
 
-        Example: setdate 530481556083441684 2019-01-01
+        Example: setdate 1 2019-01-01
         """
-        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        eventToUpdate = await getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -231,9 +257,9 @@ class CommandListener(Cog):
         """
         Set event time.
 
-        Example: settime 530481556083441684 18:45
+        Example: settime 1 18:45
         """
-        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        eventToUpdate = await getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -253,9 +279,9 @@ class CommandListener(Cog):
         """
         Set event terrain.
 
-        Example: settime 530481556083441684 Takistan
+        Example: settime 1 Takistan
         """
-        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        eventToUpdate = await getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -272,9 +298,9 @@ class CommandListener(Cog):
         """
         Set event faction.
 
-        Example: setfaction 530481556083441684 Insurgents
+        Example: setfaction 1 Insurgents
         """
-        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        eventToUpdate = await getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -291,9 +317,9 @@ class CommandListener(Cog):
         """
         Set event description.
 
-        Example: setdescription 530481556083441684 Extra mods required
+        Example: setdescription 1 Extra mods required
         """
-        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        eventToUpdate = await getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -313,7 +339,7 @@ class CommandListener(Cog):
         <user> can either be: ID, mention, nickname in quotes, username or username#discriminator
         <roleName> is case-insensitive
 
-        Example: signup 530481556083441684 "S. Gehock" Y1 (Bradley) Gunner
+        Example: signup 1 "S. Gehock" Y1 (Bradley) Gunner
         """  # NOQA
         eventToUpdate = await getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
@@ -340,9 +366,9 @@ class CommandListener(Cog):
 
         <user> can either be: ID, mention, nickname in quotes, username or username#discriminator
 
-        Example: removesignup 530481556083441684 "S. Gehock"
+        Example: removesignup 1 "S. Gehock"
         """  # NOQA
-        eventToUpdate = await self.getEvent(eventMessage.id, ctx)
+        eventToUpdate = await getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -354,16 +380,12 @@ class CommandListener(Cog):
 
     # Archive event command
     @command()
-    async def archive(self, ctx: Context, eventID: str):
+    async def archive(self, ctx: Context, event: EventEvent):
         """
         Archive event.
 
-        Example: archive 530481556083441684
+        Example: archive 1
         """
-        event = await self.getEvent(eventID, ctx)
-        if event is None:
-            return
-
         # eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
         eventarchivechannel = self.bot.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
 
@@ -383,39 +405,30 @@ class CommandListener(Cog):
 
     # Delete event command
     @command()
-    async def delete(self, ctx: Context, eventMessage: EventMessage):
+    async def delete(self, ctx: Context, event: EventEvent):
         """
         Delete event.
 
-        Example: delete 530481556083441684
+        Example: delete 1
         """
-        # Get message ID
-        eventMessageID = eventMessage.id
-
-        # Delete event
-        event = EventDatabase.getEventByMessage(eventMessageID)
-        if event is not None:
-            eventchannel = ctx.bot.get_channel(cfg.EVENT_CHANNEL)
-            try:
-                eventMessage = await eventchannel.fetch_message(eventMessageID)
-            except NotFound:
-                await ctx.send("No message found with that message ID")
-                return
-            EventDatabase.removeEvent(event)
-            await ctx.send("Removed event from events")
-        else:
-            event = EventDatabase.getArchivedEventByMessage(eventMessageID)
-            if event is not None:
-                eventMessage = await self.getMessageFromArchive(eventMessageID,
-                                                                ctx)
-                EventDatabase.removeEventFromArchive(event)
-                await ctx.send("Removed event from events archive")
-            else:
-                await ctx.send("No event found with that message ID")
-                return
-
+        eventMessage = await getEventMessage(self.bot, event)
+        EventDatabase.removeEvent(event)
+        await ctx.send("Removed event from events")
         await eventMessage.delete()
-        EventDatabase.toJson()  # Update JSON file
+        EventDatabase.toJson()
+
+    @command()
+    async def deletearchived(self, ctx: Context, event: ArchivedEvent):
+        """
+        Delete archived event.
+
+        Example: deletearchived 1
+        """
+        eventMessage = await getEventMessage(self.bot, event, archived=True)
+        EventDatabase.removeEvent(event, archived=True)
+        await ctx.send("Removed event from events")
+        await eventMessage.delete()
+        EventDatabase.toJson()
 
     # sort events command
     @command()
@@ -472,19 +485,6 @@ class CommandListener(Cog):
         else:
             await ctx.send("Unexpected error occured: ```{}```".format(error))
             print(error)
-
-    async def getMessageFromArchive(self, messageID: int, ctx: Context) \
-            -> Message:
-        """Return a message from the archive based on a message id."""
-        # Get channels
-        eventarchivechannel = ctx.bot.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
-
-        # Get message
-        try:
-            return await eventarchivechannel.fetch_message(messageID)
-        except Exception:
-            await ctx.send("No message found in archive with that message ID")
-            return
 
 
 def setup(bot):

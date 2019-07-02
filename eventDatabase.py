@@ -10,6 +10,8 @@ import config as cfg
 from event import Event
 from messageFunctions import getEventMessage
 
+DATABASE_VERSION = 1
+
 
 class EventDatabase:
     """Represents a database containing current events."""
@@ -21,7 +23,7 @@ class EventDatabase:
     @staticmethod
     async def createEvent(date: datetime, channel: TextChannel,
                           importing=False, eventID=-1) \
-                              -> Tuple[Message, Event]:
+            -> Tuple[Message, Event]:
         """Create a new event and store it."""
         if eventID == -1:
             eventID = EventDatabase.nextID
@@ -44,8 +46,8 @@ class EventDatabase:
 
     # Create a new event message
     @staticmethod
-    async def createEventMessage(event: Event,
-                                 channel: TextChannel) -> Message:
+    async def createEventMessage(event: Event, channel: TextChannel) \
+            -> Message:
         # Create embed and message
         embed = event.createEmbed()
         embed.set_footer(text="Event ID: " + str(event.id))
@@ -55,9 +57,11 @@ class EventDatabase:
 
     @staticmethod
     def archiveEvent(event: Event):
-        """Move event to archive.
+        """
+        Move event to archive.
 
-        Does not remove or create messages."""
+        Does not remove or create messages.
+        """
         # Remove event from events
         EventDatabase.removeEvent(event)
 
@@ -76,27 +80,20 @@ class EventDatabase:
         EventDatabase.events[updatedEvent.id] = updatedEvent
 
     @staticmethod
-    def removeEvent(event: Event) -> bool:
+    def removeEvent(event: Event, archived=False) -> bool:
         """
         Remove event.
 
         Does not remove the message associated with the event.
         """
-        if event.id in EventDatabase.events.keys():
-            del EventDatabase.events[event.id]
-            return True
-        return False
-
-    @staticmethod
-    def removeEventFromArchive(event: Event):
-        """
-        Remove event from archive.
-
-        Does not remove the message associated with the event.
-        """
-        if event.id in EventDatabase.eventsArchive.keys():
-            del EventDatabase.eventsArchive[event.id]
-            return True
+        if archived:
+            if event.id in EventDatabase.eventsArchive.keys():
+                del EventDatabase.eventsArchive[event.id]
+                return True
+        else:
+            if event.id in EventDatabase.events.keys():
+                del EventDatabase.events[event.id]
+                return True
         return False
 
     # was: findEvent
@@ -140,7 +137,6 @@ class EventDatabase:
         # Sort events based on date and time
         sortedEvents.sort(key=lambda event: event.date, reverse=True)
         messageIDs.sort(reverse=True)
-        print("messageIDs:", messageIDs)
 
         # Fill events again
         EventDatabase.events: Dict[int, Event] = {}
@@ -193,6 +189,7 @@ class EventDatabase:
 
         # Store data and return
         data = {}
+        data['version'] = DATABASE_VERSION
         data['nextID'] = EventDatabase.nextID
         data['events'] = eventsData
         data['eventsArchive'] = eventsArchiveData
@@ -224,11 +221,21 @@ class EventDatabase:
             print("JSON not found, creating")
             with open(cfg.JSON_FILEPATH, "w") as jsonFile:
                 # Create a new file with empty JSON structure inside
-                json.dump({"nextID": 0, "events": {}, "eventsArchive": {}}, jsonFile,
-                          indent=2)
+                json.dump({"version": DATABASE_VERSION, "nextID": 0,
+                           "events": {}, "eventsArchive": {}},
+                          jsonFile, indent=2)
             # Try to import again
             await EventDatabase.fromJson(bot)
             return
+
+        databaseVersion: int = int(data.get('version', 0))
+        if databaseVersion != DATABASE_VERSION:
+            msg = "Incorrect database version. Expected: {}, got: {}." \
+                  .format(DATABASE_VERSION, databaseVersion)
+            commandchannel = bot.get_channel(cfg.COMMAND_CHANNEL)
+            print(msg)
+            await commandchannel.send(msg)
+            await bot.logout()
 
         EventDatabase.events = {}
         EventDatabase.eventsArchive = {}
@@ -246,8 +253,9 @@ class EventDatabase:
             # Create event
             date = datetime.strptime(eventData['date'],
                                      '%Y-%m-%d')
-            eventMessage, event = await EventDatabase.createEvent(date,
-                    eventchannel, importing=True)
+            eventMessage, event = \
+                await EventDatabase.createEvent(date, eventchannel,
+                                                importing=True)
             event.fromJson(eventID, eventData, eventchannel.guild)
             await EventDatabase.updateEvent(eventMessage, event)
 
