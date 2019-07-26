@@ -12,7 +12,7 @@ import config as cfg
 from event import Event
 from eventDatabase import EventDatabase
 from messageFunctions import getEvent, getEventMessage, sortEventMessages
-from secret import ADMINS
+from secret import ADMIN, ADMINS
 from secret import COMMAND_CHAR as CMD
 
 
@@ -148,7 +148,13 @@ class CommandListener(Cog):
         if eventToUpdate is None:
             return
 
-        reaction = eventToUpdate.addAdditionalRole(rolename)
+        try:
+            reaction = eventToUpdate.addAdditionalRole(rolename)
+        except IndexError:
+            user = self.bot.get_user(ADMIN)
+            await ctx.send("Too many additional roles. Nag at {}"
+                           .format(user.mention))
+            return
         await EventDatabase.updateEvent(eventMessage, eventToUpdate)
         await eventMessage.add_reaction(reaction)
         EventDatabase.toJson()  # Update JSON file
@@ -414,6 +420,7 @@ class CommandListener(Cog):
         eventMessage = await getEventMessage(self.bot, event)
         EventDatabase.removeEvent(event)
         await ctx.send("Removed event from events")
+        # TODO: handle missing events
         await eventMessage.delete()
         EventDatabase.toJson()
 
@@ -427,6 +434,7 @@ class CommandListener(Cog):
         eventMessage = await getEventMessage(self.bot, event, archived=True)
         EventDatabase.removeEvent(event, archived=True)
         await ctx.send("Removed event from events")
+        # TODO: handle missing events
         await eventMessage.delete()
         EventDatabase.toJson()
 
