@@ -71,6 +71,7 @@ class Event:
     # Add an additional role to the event
     def addAdditionalRole(self, name: str) -> str:
         # Find next emoji for additional role
+
         emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additionalRoleCount]
 
         # Create role
@@ -228,6 +229,7 @@ class Event:
         data["faction"] = self.faction
         data["color"] = self.color
         data["roleGroups"] = roleGroupsData
+        data["additionalRoleCount"] = self.additionalRoleCount
         return data
 
     def fromJson(self, eventID, data, guild):
@@ -239,6 +241,7 @@ class Event:
         self.faction = data.get("faction", FACTION)
         self.description = data.get("description", DESCRIPTION)
         self.color = data.get("color", COLOR)
+        self.additionalRoleCount = data.get("additionalRoleCount", 0)
         # TODO: Handle missing roleGroups
         for groupName, roleGroupData in data["roleGroups"].items():
             roleGroup = RoleGroup(groupName)

@@ -10,7 +10,7 @@ import config as cfg
 from event import Event
 from messageFunctions import getEventMessage
 
-DATABASE_VERSION = 1
+DATABASE_VERSION = 2
 
 
 class EventDatabase:
