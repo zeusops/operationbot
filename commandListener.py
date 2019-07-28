@@ -144,21 +144,30 @@ class CommandListener(Cog):
 
         Example: addrole 1 Y1 (Bradley) Driver
         """
-        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
-        if eventToUpdate is None:
+        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        if event is None:
             return
 
         try:
-            reaction = eventToUpdate.addAdditionalRole(rolename)
+            reaction = event.addAdditionalRole(rolename)
         except IndexError:
             user = self.bot.get_user(ADMIN)
-            await ctx.send("Too many additional roles. Nag at {}"
-                           .format(user.mention))
+            await ctx.send("Too many additional roles. This should not happen. "
+                           "Nag at {}".format(user.mention))
             return
-        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        try:
         await eventMessage.add_reaction(reaction)
+        except Forbidden as e:
+            if e.code == 30010:
+                await ctx.send("Too many reactions, not adding role {}"
+                               .format(rolename))
+                event.removeAdditionalRole(rolename)
+                return
+
+        await EventDatabase.updateEvent(eventMessage, event)
+
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Role added")
+        await ctx.send("Role {} added to event {}".format(rolename, event))
 
     # Remove additional role from event command
     @command()
