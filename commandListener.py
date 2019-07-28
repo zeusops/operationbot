@@ -11,7 +11,7 @@ from discord.ext.commands import (BadArgument, Bot, Cog, Context, Converter,
 import config as cfg
 from event import Event
 from eventDatabase import EventDatabase
-from messageFunctions import getEvent, getEventMessage, sortEventMessages
+import messageFunctions as msgFnc
 from secret import ADMIN, ADMINS
 from secret import COMMAND_CHAR as CMD
 
@@ -45,7 +45,7 @@ class EventMessage(Converter):
         event = EventDatabase.getEventByID(eventID)
         if event is None:
             raise BadArgument("No event found with that ID")
-        message = await getEventMessage(ctx.bot, event)
+        message = await msgFnc.getEventMessage(ctx.bot, event)
         if message is None:
             raise BadArgument("No message found with that event ID")
 
@@ -131,7 +131,7 @@ class CommandListener(Cog):
         # Create event and sort events, export
         msg, event = await EventDatabase.createEvent(date, eventchannel)
         await EventDatabase.updateReactions(msg, event, self.bot)
-        await sortEventMessages(ctx)
+        await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Created event {} with id {}".format(event, event.id))
 
@@ -144,7 +144,7 @@ class CommandListener(Cog):
 
         Example: addrole 1 Y1 (Bradley) Driver
         """
-        eventToUpdate = await getEvent(eventMessage.id, ctx)
+        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -169,7 +169,7 @@ class CommandListener(Cog):
 
         Example: removerole 1 Y1 (Bradley) Driver
         """
-        eventToUpdate = await getEvent(eventMessage.id, ctx)
+        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -197,7 +197,7 @@ class CommandListener(Cog):
 
         Example: removegroup 1 Bravo
         """
-        eventToUpdate = await getEvent(eventMessage.id, ctx)
+        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -222,7 +222,7 @@ class CommandListener(Cog):
 
         Example: settitle 1 Operation Striker
         """
-        eventToUpdate = await getEvent(eventMessage.id, ctx)
+        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -243,7 +243,7 @@ class CommandListener(Cog):
 
         Example: setdate 1 2019-01-01
         """
-        eventToUpdate = await getEvent(eventMessage.id, ctx)
+        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -252,7 +252,7 @@ class CommandListener(Cog):
 
         # Update event and sort events, export
         await EventDatabase.updateEvent(eventMessage, eventToUpdate)
-        await sortEventMessages(ctx)
+        await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Date set")
 
@@ -265,7 +265,7 @@ class CommandListener(Cog):
 
         Example: settime 1 18:45
         """
-        eventToUpdate = await getEvent(eventMessage.id, ctx)
+        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -274,7 +274,7 @@ class CommandListener(Cog):
 
         # Update event and sort events, export
         await EventDatabase.updateEvent(eventMessage, eventToUpdate)
-        await sortEventMessages(ctx)
+        await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Time set")
 
@@ -287,7 +287,7 @@ class CommandListener(Cog):
 
         Example: settime 1 Takistan
         """
-        eventToUpdate = await getEvent(eventMessage.id, ctx)
+        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -306,7 +306,7 @@ class CommandListener(Cog):
 
         Example: setfaction 1 Insurgents
         """
-        eventToUpdate = await getEvent(eventMessage.id, ctx)
+        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -325,7 +325,7 @@ class CommandListener(Cog):
 
         Example: setdescription 1 Extra mods required
         """
-        eventToUpdate = await getEvent(eventMessage.id, ctx)
+        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -347,7 +347,7 @@ class CommandListener(Cog):
 
         Example: signup 1 "S. Gehock" Y1 (Bradley) Gunner
         """  # NOQA
-        eventToUpdate = await getEvent(eventMessage.id, ctx)
+        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -374,7 +374,7 @@ class CommandListener(Cog):
 
         Example: removesignup 1 "S. Gehock"
         """  # NOQA
-        eventToUpdate = await getEvent(eventMessage.id, ctx)
+        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
         if eventToUpdate is None:
             return
 
@@ -397,7 +397,7 @@ class CommandListener(Cog):
 
         # Archive event and export
         EventDatabase.archiveEvent(event)
-        eventMessage = await getEventMessage(self.bot, event)
+        eventMessage = await msgFnc.getEventMessage(self.bot, event)
         if eventMessage:
             await eventMessage.delete()
         else:
@@ -417,7 +417,7 @@ class CommandListener(Cog):
 
         Example: delete 1
         """
-        eventMessage = await getEventMessage(self.bot, event)
+        eventMessage = await msgFnc.getEventMessage(self.bot, event)
         EventDatabase.removeEvent(event)
         await ctx.send("Removed event from events")
         # TODO: handle missing events
@@ -431,7 +431,8 @@ class CommandListener(Cog):
 
         Example: deletearchived 1
         """
-        eventMessage = await getEventMessage(self.bot, event, archived=True)
+        eventMessage = await msgFnc.getEventMessage(
+            self.bot, event, archived=True)
         EventDatabase.removeEvent(event, archived=True)
         await ctx.send("Removed event from events")
         # TODO: handle missing events
@@ -442,7 +443,7 @@ class CommandListener(Cog):
     @command()
     async def sort(self, ctx: Context):
         """Sort events (manually)."""
-        await sortEventMessages(ctx)
+        await msgFnc.sortEventMessages(ctx)
         await ctx.send("Events sorted")
 
     # export to json
