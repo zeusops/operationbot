@@ -155,8 +155,8 @@ class CommandListener(Cog):
             reaction = event.addAdditionalRole(rolename)
         except IndexError:
             user = self.bot.get_user(ADMIN)
-            await ctx.send("Too many additional roles. This should not happen. "
-                           "Nag at {}".format(user.mention))
+            await ctx.send("Too many additional roles. This should not "
+                           "happen. Nag at {}".format(user.mention))
             return
         try:
         await eventMessage.add_reaction(reaction)
@@ -214,7 +214,8 @@ class CommandListener(Cog):
             return
 
         if not event.hasRoleGroup:
-            await ctx.send("No role group found with name {}".format(groupName))
+            await ctx.send("No role group found with name {}"
+                           .format(groupName))
             return
 
         # Remove reactions, remove role, update event, add reactions, export

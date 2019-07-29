@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 
 from discord import Emoji
 
@@ -11,7 +11,7 @@ class Role:
         self.name = name
         self.emoji = emoji
         self.displayName = displayName
-        self.userID: Union[int, None] = None
+        self.userID: Optional[int] = None
         self.userName = ""
 
     def __str__(self):
