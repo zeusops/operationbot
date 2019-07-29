@@ -8,7 +8,7 @@ from role import Role
 
 class RoleGroup:
 
-    def __init__(self, name: str, isInline: bool):
+    def __init__(self, name: str, isInline: bool = True):
         self.name = name
         self.isInline = isInline
         self.roles: List[Role] = []

@@ -2,19 +2,17 @@
 from discord.ext.commands import Bot
 
 import config as cfg
-from eventDatabase import EventDatabase
 from secret import COMMAND_CHAR, TOKEN
 
-CONFIG_VERSION = 4
+CONFIG_VERSION = 5
 if cfg.VERSION != CONFIG_VERSION:
     raise Exception(
-        "Outdated config file, expecting version {}, found version {}"
+        "Incompatible config file, expecting version {}, found version {}"
         .format(CONFIG_VERSION, cfg.VERSION))
 
 initial_extensions = ['commandListener', 'eventListener']
 bot = Bot(command_prefix=COMMAND_CHAR)
 # bot.remove_command("help")
-eventDatabase = EventDatabase()
 
 if __name__ == '__main__':
     bot.load_extension('reload')

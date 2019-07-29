@@ -1,111 +1,152 @@
 import json
 import os
 from datetime import datetime
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 from discord import Message, TextChannel
 from discord.ext.commands import Bot
 
 import config as cfg
 from event import Event
+from messageFunctions import getEventMessage
+
+DATABASE_VERSION = 2
 
 
 class EventDatabase:
+    """Represents a database containing current events."""
 
-    def __init__(self):
-        self.events: Dict[int, Event] = {}
-        self.eventsArchive: Dict[int, Event] = {}
+    events: Dict[int, Event] = {}
+    eventsArchive: Dict[int, Event] = {}
+    nextID: int = 0
 
-    async def createEvent(self, date: datetime,
-                          channel: TextChannel,
-                          importing=False) -> Tuple[Message, Event]:
+    @staticmethod
+    async def createEvent(date: datetime, channel: TextChannel,
+                          importing=False, eventID=-1) \
+            -> Tuple[Message, Event]:
         """Create a new event and store it."""
+        if eventID == -1:
+            eventID = EventDatabase.nextID
+
         # Create event
-        newEvent = Event(date, channel.guild.emojis, importing)
+        event = Event(date, channel.guild.emojis, eventID=eventID,
+                      importing=importing)
 
         # Create message
-        newEventMessage = await self.createEventMessage(newEvent, channel)
+        message = await EventDatabase.createEventMessage(event, channel)
+        event.messageID = message.id
 
         # Store event
-        self.events[newEventMessage.id] = newEvent
+        EventDatabase.events[event.id] = event
 
-        return newEventMessage, newEvent
+        if not importing:
+            EventDatabase.nextID += 1
+
+        return message, event
 
     # Create a new event message
-    async def createEventMessage(self, event: Event,
-                                 channel: TextChannel) -> Message:
+    @staticmethod
+    async def createEventMessage(event: Event, channel: TextChannel) \
+            -> Message:
         # Create embed and message
-        newEventEmbed = event.createEmbed()
-        newEventMessage = await channel.send(embed=newEventEmbed)
+        embed = event.createEmbed()
+        embed.set_footer(text="Event ID: " + str(event.id))
+        message = await channel.send(embed=embed)
 
-        # Put message ID in footer
-        newEventEmbed = newEventMessage.embeds[0]
-        newEventEmbed.set_footer(text="Message ID: " + str(newEventMessage.id))
-        await newEventMessage.edit(embed=newEventEmbed)
+        return message
 
-        return newEventMessage
+    @staticmethod
+    def archiveEvent(event: Event):
+        """
+        Move event to archive.
 
-    # Move event to archive
-    async def archiveEvent(self, eventmessage: Message, event: Event,
-                           eventarchivechannel: TextChannel):
+        Does not remove or create messages.
+        """
         # Remove event from events
-        await self.removeEvent(eventmessage)
-
-        # Create new message
-        newEventMessage = await self.createEventMessage(event,
-                                                        eventarchivechannel)
+        EventDatabase.removeEvent(event)
 
         # Add event to eventsArchive
-        self.eventsArchive[newEventMessage.id] = event
+        EventDatabase.eventsArchive[event.id] = event
 
-    # Update an existing event and store it
-    async def updateEvent(self, eventMessage: Message, updatedEvent: Event):
+    @staticmethod
+    async def updateEvent(eventMessage: Message, updatedEvent: Event):
+        """Update an existing event and store it."""
         newEventEmbed = updatedEvent.createEmbed()
-        newEventEmbed.set_footer(text="Message ID: " + str(eventMessage.id))
+        newEventEmbed.set_footer(text="Event ID: " + str(updatedEvent.id))
+        updatedEvent.messageID = eventMessage.id
         await eventMessage.edit(embed=newEventEmbed)
 
         # Store event
-        self.events[eventMessage.id] = updatedEvent
+        EventDatabase.events[updatedEvent.id] = updatedEvent
 
-    # Remove event
-    async def removeEvent(self, eventmessage: Message):
-        if eventmessage.id in self.events.keys():
-            del self.events[eventmessage.id]
-            await eventmessage.delete()
+    @staticmethod
+    def removeEvent(event: Event, archived=False) -> bool:
+        """
+        Remove event.
 
-    # Remove event from archive
-    async def removeEventFromArchive(self, eventmessage: Message):
-        if eventmessage.id in self.eventsArchive.keys():
-            del self.eventsArchive[eventmessage.id]
-            await eventmessage.delete()
+        Does not remove the message associated with the event.
+        """
+        if archived:
+            if event.id in EventDatabase.eventsArchive.keys():
+                del EventDatabase.eventsArchive[event.id]
+                return True
+        else:
+            if event.id in EventDatabase.events.keys():
+                del EventDatabase.events[event.id]
+                return True
+        return False
 
-    # Find an event with it's message ID
-    def findEvent(self, messageID: int) -> Event:
-        return self.events.get(messageID)
+    # was: findEvent
+    @staticmethod
+    def getEventByMessage(messageID: int) -> Optional[Event]:
+        """Find an event with it's message ID."""
+        event: Event
+        for event in EventDatabase.events.values():
+            if event.messageID == messageID:
+                return event
+        return None
 
-    def findEventInArchive(self, messageID: int):
-        return self.eventsArchive.get(messageID)
+    @staticmethod
+    def getEventByID(eventID: int) -> Optional[Event]:
+        """Find an event with it's ID."""
+        return EventDatabase.events.get(eventID)
 
-    def sortEvents(self):
+    @staticmethod
+    def getArchivedEventByMessage(messageID: int) -> Optional[Event]:
+        # return EventDatabase.eventsArchive.get(messageID)
+        for event in EventDatabase.eventsArchive.values():
+            if event.messageID == messageID:
+                return event
+        return None
+
+    # was: findEventInArchiveeventid
+    @staticmethod
+    def getArchivedEventByID(eventID: int):
+        return EventDatabase.eventsArchive.get(eventID)
+
+    @staticmethod
+    def sortEvents():
+        sortedEvents = []
         messageIDs = []
-        events = []
 
         # Store existing events
-        for messageID, event in self.events.items():
-            messageIDs.append(messageID)
-            events.append(event)
+        for event in EventDatabase.events.values():
+            sortedEvents.append(event)
+            messageIDs.append(event.messageID)
 
         # Sort events based on date and time
-        events.sort(key=lambda event: event.date, reverse=True)
+        sortedEvents.sort(key=lambda event: event.date, reverse=True)
+        messageIDs.sort(reverse=True)
 
         # Fill events again
-        index = 0
-        self.events = {}
-        for messageID in messageIDs:
-            self.events[messageID] = events[index]
-            index += 1
+        EventDatabase.events: Dict[int, Event] = {}
+        for event in sortedEvents:
+            # event = sortedEvents[index]
+            event.messageID = messageIDs.pop()
+            EventDatabase.events[event.id] = event
 
-    async def updateReactions(self, message: Message, event: Event, bot: Bot):
+    @staticmethod
+    async def updateReactions(message: Message, event: Event, bot: Bot):
         reactionEmojisIntended = event.getReactions()
         reactionsCurrent = message.reactions
         reactionEmojisCurrent = {}
@@ -134,27 +175,31 @@ class EventDatabase:
         for emoji in reactionEmojisToAdd:
             await message.add_reaction(emoji)
 
-    def toJson(self):
+    @staticmethod
+    def toJson():
         # Get eventsData
         eventsData = {}
-        for messageID, event in self.events.items():
+        for messageID, event in EventDatabase.events.items():
             eventsData[messageID] = event.toJson()
 
         # Get eventsArchiveData
         eventsArchiveData = {}
-        for messageID, event in self.eventsArchive.items():
+        for messageID, event in EventDatabase.eventsArchive.items():
             eventsArchiveData[messageID] = event.toJson()
 
         # Store data and return
         data = {}
-        data["events"] = eventsData
-        data["eventsArchive"] = eventsArchiveData
+        data['version'] = DATABASE_VERSION
+        data['nextID'] = EventDatabase.nextID
+        data['events'] = eventsData
+        data['eventsArchive'] = eventsArchiveData
 
-        with open(cfg.JSON_FILEPATH, "w") as jsonFile:
+        with open(cfg.JSON_FILEPATH, 'w') as jsonFile:
             json.dump(data, jsonFile, indent=2)
 
-    # Fills events and eventsArchive with data from JSON
-    async def fromJson(self, bot: Bot):
+    @staticmethod
+    async def fromJson(bot: Bot):
+        """Fill events and eventsArchive with data from JSON."""
         # Import
         try:
             try:
@@ -176,45 +221,56 @@ class EventDatabase:
             print("JSON not found, creating")
             with open(cfg.JSON_FILEPATH, "w") as jsonFile:
                 # Create a new file with empty JSON structure inside
-                json.dump({"events": {}, "eventsArchive": {}}, jsonFile,
-                          indent=2)
+                json.dump({"version": DATABASE_VERSION, "nextID": 0,
+                           "events": {}, "eventsArchive": {}},
+                          jsonFile, indent=2)
             # Try to import again
-            await self.fromJson(bot)
+            await EventDatabase.fromJson(bot)
             return
 
-        self.events = {}
-        self.eventsArchive = {}
-        eventsData = data["events"]
-        eventsArchiveData = data["eventsArchive"]
+        databaseVersion: int = int(data.get('version', 0))
+        if databaseVersion != DATABASE_VERSION:
+            msg = "Incorrect database version. Expected: {}, got: {}." \
+                  .format(DATABASE_VERSION, databaseVersion)
+            commandchannel = bot.get_channel(cfg.COMMAND_CHANNEL)
+            print(msg)
+            await commandchannel.send(msg)
+            await bot.logout()
+
+        EventDatabase.events = {}
+        EventDatabase.eventsArchive = {}
+        EventDatabase.nextID = data['nextID']
+        eventsData = data['events']
+        eventsArchiveData = data['eventsArchive']
         eventchannel = bot.get_channel(cfg.EVENT_CHANNEL)
 
         # Clear events channel
-        if cfg.PURGE:
+        if cfg.PURGE_ON_CONNECT:
             await eventchannel.purge(limit=100)
 
         # Add events
-        for messageID, eventData in eventsData.items():
+        for eventID, eventData in eventsData.items():
             # Create event
-            date = datetime.strptime(eventData["date"],
+            date = datetime.strptime(eventData['date'],
                                      '%Y-%m-%d')
-            eventMessage, event = await self.createEvent(date,
-                                                         eventchannel,
-                                                         importing=True)
-            event.fromJson(eventData, eventchannel.guild)
-            await self.updateEvent(eventMessage, event)
+            eventMessage, event = \
+                await EventDatabase.createEvent(date, eventchannel,
+                                                importing=True)
+            event.fromJson(eventID, eventData, eventchannel.guild)
+            await EventDatabase.updateEvent(eventMessage, event)
 
         # Add reactions to events
-        for messageID, event in self.events.items():
-            eventmessage = await eventchannel.fetch_message(messageID)
-            await self.updateReactions(eventmessage, event, bot)
+        for event in EventDatabase.events.values():
+            eventmessage = await getEventMessage(bot, event)
+            await EventDatabase.updateReactions(eventmessage, event, bot)
 
         # Add archived events
-        for messageID, eventData in eventsArchiveData.items():
+        for eventID, eventData in eventsArchiveData.items():
             # Create event
-            date = datetime.strptime(eventData["date"], "%Y-%m-%d")
+            date = datetime.strptime(eventData['date'], "%Y-%m-%d")
             event = Event(date, eventchannel.guild.emojis)
-            event.fromJson(eventData, eventchannel.guild)
-            self.eventsArchive[messageID] = event
+            event.fromJson(eventID, eventData, eventchannel.guild)
+            EventDatabase.eventsArchive[eventID] = event
 
-        for messageID, event in self.events.items():
-            print(messageID, event)
+        for eventID, event in EventDatabase.events.items():
+            print(eventID, event)
