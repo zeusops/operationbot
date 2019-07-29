@@ -34,7 +34,11 @@ class RoleGroup:
     def toJson(self):
         rolesData = {}
         for role in self.roles:
-            rolesData[role.name] = role.toJson()
+            if (type(role.emoji) is str):
+                emoji = cfg.ADDITIONAL_ROLE_EMOJIS.index(role.emoji)
+            else:
+                emoji = role.emoji.name
+            rolesData[emoji] = role.toJson()
 
         data = {}
         data["name"] = self.name
@@ -45,15 +49,14 @@ class RoleGroup:
     def fromJson(self, data: dict, guild: Guild):
         self.name = data["name"]
         self.isInline = data["isInline"]
-        for roleName, roleData in data["roles"].items():
-            roleEmoji = None
-            if (type(roleData["emoji"]) is str):
+        for roleEmoji, roleData in data["roles"].items():
+            try:
+                roleEmoji = cfg.ADDITIONAL_ROLE_EMOJIS[int(roleEmoji)]
+            except ValueError:
                 for emoji in guild.emojis:
-                    if emoji.name == roleData["emoji"]:
+                    if emoji.name == roleEmoji:
                         roleEmoji = emoji
                         break
-            else:
-                roleEmoji = cfg.ADDITIONAL_ROLE_EMOJIS[roleData["emoji"]]
             role = Role(roleData["name"], roleEmoji, roleData["displayName"])
             role.fromJson(roleData)
             self.roles.append(role)

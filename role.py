@@ -2,8 +2,6 @@ from typing import Union, Optional
 
 from discord import Emoji
 
-import config as cfg
-
 
 class Role:
 
@@ -29,11 +27,6 @@ class Role:
         data["displayName"] = self.displayName
         data["userID"] = self.userID
         data["userName"] = self.userName
-
-        if (type(self.emoji) is str):
-            data["emoji"] = cfg.ADDITIONAL_ROLE_EMOJIS.index(self.emoji)
-        else:
-            data["emoji"] = self.emoji.name
         return data
 
     def fromJson(self, data: dict):
