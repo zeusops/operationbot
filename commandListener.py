@@ -178,22 +178,22 @@ class CommandListener(Cog):
 
         Example: removerole 1 Y1 (Bradley) Driver
         """
-        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
-        if eventToUpdate is None:
+        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        if event is None:
             return
 
         # Find role
-        role = eventToUpdate.findRoleWithName(rolename)
+        role = event.findRoleWithName(rolename)
         if role is None:
             await ctx.send("No role found with that name")
             return
 
         # Remove reactions, remove role, update event, add reactions, export
-        for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
+        for reaction in event.getReactionsOfGroup("Additional"):
             await eventMessage.remove_reaction(reaction, self.bot.user)
-        eventToUpdate.removeAdditionalRole(rolename)
-        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
-        for reaction in eventToUpdate.getReactionsOfGroup("Additional"):
+        event.removeAdditionalRole(rolename)
+        await EventDatabase.updateEvent(eventMessage, event)
+        for reaction in event.getReactionsOfGroup("Additional"):
             await eventMessage.add_reaction(reaction)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Role removed")
@@ -206,19 +206,19 @@ class CommandListener(Cog):
 
         Example: removegroup 1 Bravo
         """
-        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
-        if eventToUpdate is None:
+        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        if event is None:
             return
 
-        if not eventToUpdate.hasRoleGroup:
+        if not event.hasRoleGroup:
             await ctx.send("No role group found with that name")
             return
 
         # Remove reactions, remove role, update event, add reactions, export
-        for reaction in eventToUpdate.getReactionsOfGroup(groupName):
+        for reaction in event.getReactionsOfGroup(groupName):
             await eventMessage.remove_reaction(reaction, self.bot.user)
-        eventToUpdate.removeRoleGroup(groupName)
-        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        event.removeRoleGroup(groupName)
+        await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Group removed")
 
@@ -231,15 +231,15 @@ class CommandListener(Cog):
 
         Example: settitle 1 Operation Striker
         """
-        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
-        if eventToUpdate is None:
+        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        if event is None:
             return
 
         # Change title, update event, export
         # NOTE: Does not check for too long input. Will result in an API error
         # and a bot crash
-        eventToUpdate.setTitle(title)
-        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        event.setTitle(title)
+        await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Title set")
 
@@ -252,15 +252,15 @@ class CommandListener(Cog):
 
         Example: setdate 1 2019-01-01
         """
-        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
-        if eventToUpdate is None:
+        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        if event is None:
             return
 
         # Change date
-        eventToUpdate.setDate(date)
+        event.setDate(date)
 
         # Update event and sort events, export
-        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await EventDatabase.updateEvent(eventMessage, event)
         await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Date set")
@@ -274,15 +274,15 @@ class CommandListener(Cog):
 
         Example: settime 1 18:45
         """
-        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
-        if eventToUpdate is None:
+        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        if event is None:
             return
 
         # Change time
-        eventToUpdate.setTime(time)
+        event.setTime(time)
 
         # Update event and sort events, export
-        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        await EventDatabase.updateEvent(eventMessage, event)
         await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Time set")
@@ -296,13 +296,13 @@ class CommandListener(Cog):
 
         Example: settime 1 Takistan
         """
-        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
-        if eventToUpdate is None:
+        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        if event is None:
             return
 
         # Change terrain, update event, export
-        eventToUpdate.setTerrain(terrain)
-        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        event.setTerrain(terrain)
+        await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Terrain set")
 
@@ -315,13 +315,13 @@ class CommandListener(Cog):
 
         Example: setfaction 1 Insurgents
         """
-        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
-        if eventToUpdate is None:
+        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        if event is None:
             return
 
         # Change faction, update event, export
-        eventToUpdate.setFaction(faction)
-        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        event.setFaction(faction)
+        await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Faction set")
 
@@ -334,13 +334,13 @@ class CommandListener(Cog):
 
         Example: setdescription 1 Extra mods required
         """
-        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
-        if eventToUpdate is None:
+        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        if event is None:
             return
 
         # Change description, update event, export
-        eventToUpdate.description = description
-        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        event.description = description
+        await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Description set")
 
@@ -356,19 +356,19 @@ class CommandListener(Cog):
 
         Example: signup 1 "S. Gehock" Y1 (Bradley) Gunner
         """  # NOQA
-        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
-        if eventToUpdate is None:
+        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        if event is None:
             return
 
         # Find role
-        role = eventToUpdate.findRoleWithName(roleName)
+        role = event.findRoleWithName(roleName)
         if role is None:
             await ctx.send("No role found with that name")
             return
 
         # Sign user up, update event, export
-        eventToUpdate.signup(role, user)
-        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        event.signup(role, user)
+        await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("User signed up")
 
@@ -383,13 +383,13 @@ class CommandListener(Cog):
 
         Example: removesignup 1 "S. Gehock"
         """  # NOQA
-        eventToUpdate = await msgFnc.getEvent(eventMessage.id, ctx)
-        if eventToUpdate is None:
+        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        if event is None:
             return
 
         # Remove signup, update event, export
-        eventToUpdate.undoSignup(user)
-        await EventDatabase.updateEvent(eventMessage, eventToUpdate)
+        event.undoSignup(user)
+        await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("User signup removed")
 
