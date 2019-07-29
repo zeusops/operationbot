@@ -4,7 +4,7 @@ import traceback
 from datetime import datetime
 from io import StringIO
 
-from discord import Member, Message
+from discord import Member, Message, Forbidden
 from discord.ext.commands import (BadArgument, Bot, Cog, Context, Converter,
                                   MissingRequiredArgument, command)
 
@@ -21,7 +21,8 @@ class EventDate(Converter):
         try:
             date = datetime.strptime(arg, '%Y-%m-%d')
         except ValueError:
-            raise BadArgument("Invalid date format")
+            raise BadArgument("Invalid date format {}. Has to be YYYY-MM-DD"
+                              .format(arg))
         return date.replace(hour=18, minute=45)
 
 
@@ -30,7 +31,8 @@ class EventTime(Converter):
         try:
             time = datetime.strptime(arg, '%H:%M')
         except ValueError:
-            raise BadArgument("Invalid time format")
+            raise BadArgument("Invalid time format {}. Has to be HH:MM"
+                              .format(arg))
         return time
 
 
@@ -39,15 +41,16 @@ class EventMessage(Converter):
         try:
             eventID = int(arg)
         except ValueError:
-            raise BadArgument("Invalid message ID, needs to be an "
-                              "integer")
+            raise BadArgument("Invalid message ID {}, needs to be an "
+                              "integer".format(arg))
 
         event = EventDatabase.getEventByID(eventID)
         if event is None:
-            raise BadArgument("No event found with that ID")
+            raise BadArgument("No event found with ID {}".format(eventID))
         message = await msgFnc.getEventMessage(ctx.bot, event)
         if message is None:
-            raise BadArgument("No message found with that event ID")
+            raise BadArgument("No message found with event ID {}"
+                              .format(eventID))
 
         return message
 
@@ -57,12 +60,12 @@ class EventEvent(Converter):
         try:
             eventID = int(arg)
         except ValueError:
-            raise BadArgument("Invalid message ID, needs to be an "
-                              "integer")
+            raise BadArgument("Invalid message ID {}, needs to be an "
+                              "integer".format(arg))
 
         event = EventDatabase.getEventByID(eventID)
         if event is None:
-            raise BadArgument("No event found with that ID")
+            raise BadArgument("No event found with ID {}".format(eventID))
 
         return event
 
@@ -72,12 +75,12 @@ class ArchivedEvent(Converter):
         try:
             eventID = int(arg)
         except ValueError:
-            raise BadArgument("Invalid message ID, needs to be an "
-                              "integer")
+            raise BadArgument("Invalid message ID {}, needs to be an "
+                              "integer".format(arg))
 
         event = EventDatabase.getArchivedEventByID(eventID)
         if event is None:
-            raise BadArgument("No event found with that ID")
+            raise BadArgument("No event found with ID {}".format(eventID))
 
         return event
 
@@ -185,7 +188,7 @@ class CommandListener(Cog):
         # Find role
         role = event.findRoleWithName(rolename)
         if role is None:
-            await ctx.send("No role found with that name")
+            await ctx.send("No role found with name {}".format(rolename))
             return
 
         # Remove reactions, remove role, update event, add reactions, export
@@ -196,7 +199,7 @@ class CommandListener(Cog):
         for reaction in event.getReactionsOfGroup("Additional"):
             await eventMessage.add_reaction(reaction)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Role removed")
+        await ctx.send("Role {} removed from {}".format(rolename, event))
 
     @command()
     async def removegroup(self, ctx: Context, eventMessage: EventMessage, *,
@@ -211,7 +214,7 @@ class CommandListener(Cog):
             return
 
         if not event.hasRoleGroup:
-            await ctx.send("No role group found with that name")
+            await ctx.send("No role group found with name {}".format(groupName))
             return
 
         # Remove reactions, remove role, update event, add reactions, export
@@ -220,7 +223,7 @@ class CommandListener(Cog):
         event.removeRoleGroup(groupName)
         await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Group removed")
+        await ctx.send("Group {} removed from {}".format(groupName, event))
 
     # Set title of event command
     @command()
@@ -241,7 +244,8 @@ class CommandListener(Cog):
         event.setTitle(title)
         await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Title set")
+        await ctx.send("Title {} set for operation ID {} at {}"
+                       .format(event.title, event.id, event.date))
 
     # Set date of event command
     @command()
@@ -263,7 +267,8 @@ class CommandListener(Cog):
         await EventDatabase.updateEvent(eventMessage, event)
         await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Date set")
+        await ctx.send("Date {} set for operation {} ID {}"
+                       .format(event.date, event.title, event.id))
 
     # Set time of event command
     @command()
@@ -285,7 +290,8 @@ class CommandListener(Cog):
         await EventDatabase.updateEvent(eventMessage, event)
         await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Time set")
+        await ctx.send("Time set for operation {}"
+                       .format(event))
 
     # Set terrain of event command
     @command()
@@ -304,7 +310,8 @@ class CommandListener(Cog):
         event.setTerrain(terrain)
         await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Terrain set")
+        await ctx.send("Terrain {} set for operation {}}"
+                       .format(event.terrain, event))
 
     # Set faction of event command
     @command()
@@ -323,7 +330,8 @@ class CommandListener(Cog):
         event.setFaction(faction)
         await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Faction set")
+        await ctx.send("Faction {} set for operation {}"
+                       .format(event.faction, event))
 
     # Set faction of event command
     @command()
@@ -342,7 +350,8 @@ class CommandListener(Cog):
         event.description = description
         await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Description set")
+        await ctx.send("Description \"{}\" set for operation {}"
+                       .format(event.description, event))
 
     # Sign user up to event command
     @command()
@@ -363,14 +372,15 @@ class CommandListener(Cog):
         # Find role
         role = event.findRoleWithName(roleName)
         if role is None:
-            await ctx.send("No role found with that name")
+            await ctx.send("No role found with name {}".format(roleName))
             return
 
         # Sign user up, update event, export
         event.signup(role, user)
         await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("User signed up")
+        await ctx.send("User {} signed up to event {} as {}"
+                       .format(user.nick, event, roleName))
 
     # Remove signup on event of user command
     @command()
@@ -391,7 +401,8 @@ class CommandListener(Cog):
         event.undoSignup(user)
         await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("User signup removed")
+        await ctx.send("User {} removed from event {}"
+                       .format(user.nick, event))
 
     # Archive event command
     @command()
@@ -416,7 +427,7 @@ class CommandListener(Cog):
         await EventDatabase.createEventMessage(event, eventarchivechannel)
 
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Event archived")
+        await ctx.send("Event {} archived".format(event))
 
     # Delete event command
     @command()
@@ -428,10 +439,10 @@ class CommandListener(Cog):
         """
         eventMessage = await msgFnc.getEventMessage(self.bot, event)
         EventDatabase.removeEvent(event)
-        await ctx.send("Removed event from events")
         # TODO: handle missing events
         await eventMessage.delete()
         EventDatabase.toJson()
+        await ctx.send("Event {} removed".format(event))
 
     @command()
     async def deletearchived(self, ctx: Context, event: ArchivedEvent):
@@ -443,10 +454,11 @@ class CommandListener(Cog):
         eventMessage = await msgFnc.getEventMessage(
             self.bot, event, archived=True)
         EventDatabase.removeEvent(event, archived=True)
-        await ctx.send("Removed event from events")
         # TODO: handle missing events
+        # TODO: Check if archived message can be deleted
         await eventMessage.delete()
         EventDatabase.toJson()
+        await ctx.send("Event {} removed from archive".format(event))
 
     # sort events command
     @command()
@@ -483,7 +495,9 @@ class CommandListener(Cog):
     @create.error
     @addrole.error
     @removerole.error
+    @removegroup.error
     @settitle.error
+    @setdate.error
     @settime.error
     @setterrain.error
     @setfaction.error
@@ -491,8 +505,11 @@ class CommandListener(Cog):
     @removesignup.error
     @archive.error
     @delete.error
-    @importJson.error
+    @deletearchived.error
+    @sort.error
     @export.error
+    @importJson.error
+    @shutdown.error
     async def command_error(self, ctx: Context, error):
         if isinstance(error, MissingRequiredArgument):
             await ctx.send("Missing argument. See: {}help {}"
