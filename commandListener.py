@@ -311,7 +311,7 @@ class CommandListener(Cog):
         event.setTerrain(terrain)
         await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Terrain {} set for operation {}}"
+        await ctx.send("Terrain {} set for operation {}"
                        .format(event.terrain, event))
 
     # Set faction of event command
