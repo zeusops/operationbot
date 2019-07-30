@@ -159,7 +159,7 @@ class CommandListener(Cog):
                            "happen. Nag at {}".format(user.mention))
             return
         try:
-        await eventMessage.add_reaction(reaction)
+            await eventMessage.add_reaction(reaction)
         except Forbidden as e:
             if e.code == 30010:
                 await ctx.send("Too many reactions, not adding role {}"
