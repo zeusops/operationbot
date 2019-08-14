@@ -26,7 +26,8 @@ async def getEvent(messageID, ctx: Context) -> Optional[Event]:
     from eventDatabase import EventDatabase
     eventToUpdate = EventDatabase.getEventByMessage(messageID)
     if eventToUpdate is None:
-        await ctx.send("getEvent: No event found with that message ID")
+        await ctx.send("getEvent: No event found with that message ID: {}"
+                       .format(messageID))
         return None
     return eventToUpdate
 
@@ -44,7 +45,8 @@ async def sortEventMessages(ctx: Context):
             eventMessage = await eventchannel.fetch_message(messageID)
         except NotFound:
             await ctx.send(
-                "sortEventMessages: No message found with that message ID")
+                "sortEventMessages: No message found with that message ID: {}"
+                .format(messageID))
             return
         await EventDatabase.updateReactions(eventMessage, event, ctx.bot)
         await EventDatabase.updateEvent(eventMessage, event)
