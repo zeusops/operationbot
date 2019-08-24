@@ -15,11 +15,13 @@ bot = Bot(command_prefix=COMMAND_CHAR)
 # bot.remove_command("help")
 
 if __name__ == '__main__':
+    print("Starting up")
     bot.load_extension('reload')
+    print("Loading extensions")
     for extension in initial_extensions:
         # try:
         bot.load_extension(extension)
         # except Exception:
         #     print(f'failed to load extension {extension}')
-
+    print("Running")
     bot.run(TOKEN)

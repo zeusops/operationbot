@@ -380,6 +380,7 @@ class CommandListener(Cog):
         event.signup(role, user)
         await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
+        # TODO: handle users without separate nickname
         await ctx.send("User {} signed up to event {} as {}"
                        .format(user.nick, event, roleName))
 
@@ -402,6 +403,7 @@ class CommandListener(Cog):
         event.undoSignup(user)
         await EventDatabase.updateEvent(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
+        # TODO: handle users without separate nickname
         await ctx.send("User {} removed from event {}"
                        .format(user.nick, event))
 
