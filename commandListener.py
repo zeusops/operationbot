@@ -451,7 +451,8 @@ class CommandListener(Cog):
         if eventMessage:
             await eventMessage.delete()
         else:
-            ctx.send("Internal error: event without a message found")
+            await ctx.send("Internal error: event {} without a message found"
+                           .format(event))
 
         # Create new message
         await EventDatabase.createEventMessage(event, eventarchivechannel)
