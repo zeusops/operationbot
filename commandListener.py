@@ -91,6 +91,23 @@ class CommandListener(Cog):
         self.bot = bot
 
     @command()
+    async def reloadreload(self, ctx: Context):
+        self.bot.unload_extension('reload')
+        self.bot.load_extension('reload')
+        await ctx.send("Reloaded reload")
+
+    @command()
+    async def impreload(self, ctx: Context, moduleName: str):
+        try:
+            module = importlib.import_module(moduleName)
+            importlib.reload(module)
+        except ImportError as e:
+            await ctx.send("Failed to reload module {}: {}"
+                           .format(moduleName, str(e)))
+        await ctx.send("Reloaded {}".format(moduleName))
+
+    # @command()
+    @command()
     async def exec(self, ctx: Context, flag: str, *, cmd: str):
         """
         Execute arbitrary code.
