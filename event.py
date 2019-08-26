@@ -213,7 +213,8 @@ class Event:
         return "{} at {}".format(self.title, self.date)
 
     def __repr__(self):
-        return self.__str__()
+        return "<Event title='{}' id={} date='{}'>".format(
+            self.title, self.id, self.date)
 
     def toJson(self):
         roleGroupsData = {}
