@@ -1,6 +1,7 @@
 import traceback
 
-from discord.ext.commands import Bot, Cog, Context, command
+from discord.ext.commands import (Bot, Cog, Context, command,
+                                  ExtensionNotLoaded)
 
 from main import initial_extensions
 
@@ -13,10 +14,16 @@ class Reload(Cog):
     async def reload(self, ctx: Context):
         print("Reloading extensions")
         for extension in initial_extensions:
+            try:
             self.bot.unload_extension(extension)
+                print("unloaded", extension)
+            except ExtensionNotLoaded:
+                await ctx.send("Ignoring not loaded extension {}"
+                               .format(extension))
         try:
             for extension in initial_extensions:
                 self.bot.load_extension(extension)
+                print("loaded", extension)
         except Exception:
             await ctx.send("An error occured while reloading: ```{}```"
                            .format(traceback.format_exc()))
