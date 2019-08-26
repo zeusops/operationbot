@@ -113,6 +113,7 @@ class CommandListener(Cog):
         Execute arbitrary code.
 
         If <flag> is p, the result gets wrapped in a print() statement
+        If <flag> is c, the result gets printed in console
 
         Example: exec a variable = 1
         Example: exec p variable
@@ -128,13 +129,22 @@ class CommandListener(Cog):
             if flag == 'p':
                 cmd = "print({})".format(cmd)
                 exec(cmd)
-                msg = "```{}```".format(redirected_output.getvalue())
+                sys.stdout = old_stdout
+                msg = "```py\n{}```".format(redirected_output.getvalue())
+            elif flag == 'c':
+                cmd = "print({})".format(cmd)
+                exec(cmd)
+                sys.stdout = old_stdout
+                print("cmd: {}\noutput: {}".format(
+                      cmd, redirected_output.getvalue()))
+                msg = "Printed in console"
             else:
                 exec(cmd)
-                msg = "Executed"
             sys.stdout = old_stdout
+                msg = "Executed"
+            # sys.stdout = old_stdout
         except Exception:
-            msg = "An error occured while executing: ```{}```" \
+            msg = "An error occured while executing: ```py\n{}```" \
                   .format(traceback.format_exc())
         await ctx.send(msg)
 
