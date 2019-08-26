@@ -10,7 +10,7 @@ if cfg.VERSION != CONFIG_VERSION:
         "Incompatible config file, expecting version {}, found version {}"
         .format(CONFIG_VERSION, cfg.VERSION))
 
-initial_extensions = ['commandListener', 'eventListener']
+initial_extensions = ['commandListener', 'eventListener', 'cogs.repl']
 bot = Bot(command_prefix=COMMAND_CHAR)
 # bot.remove_command("help")
 
