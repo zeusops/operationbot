@@ -140,7 +140,7 @@ class CommandListener(Cog):
                 msg = "Printed in console"
             else:
                 exec(cmd)
-            sys.stdout = old_stdout
+                sys.stdout = old_stdout
                 msg = "Executed"
             # sys.stdout = old_stdout
         except Exception:
