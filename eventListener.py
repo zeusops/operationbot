@@ -1,9 +1,10 @@
 import importlib
 
-from discord import Game, Member, Reaction
+from discord import Game, Member, Reaction, Message
 from discord.ext.commands import Bot, Cog
 
 import config as cfg
+from secret import ADMIN
 from eventDatabase import EventDatabase
 
 
@@ -80,6 +81,15 @@ class EventListener(Cog):
             await EventDatabase.updateEvent(reaction.message,
                                             reactedEvent)
             EventDatabase.toJson()
+
+    @Cog.listener()
+    async def on_message(self, message: Message):
+        if message.author == self.bot.user:
+            return
+        if message.guild is None:
+            owner = self.bot.get_user(ADMIN)
+            await owner.send("DM: [{}]: {}".format(
+                message.author, message.content))
 
 
 def setup(bot: Bot):
