@@ -1,10 +1,10 @@
 import importlib
 
-from discord import Game, Member, Reaction
+from discord import Game, Member, Reaction, Message
 from discord.ext.commands import Bot, Cog
 
 import config as cfg
-import event
+from secret import ADMIN
 from eventDatabase import EventDatabase
 
 
@@ -24,7 +24,7 @@ class EventListener(Cog):
         print("Imported")
         await commandchannel.send("Events imported")
         await self.bot.change_presence(activity=Game(name=cfg.GAME,
-                                                        type=2))
+                                                     type=2))
         print('Logged in as', self.bot.user.name, self.bot.user.id)
 
     # Create event command
@@ -35,6 +35,8 @@ class EventListener(Cog):
                 or reaction.message.channel.id != cfg.EVENT_CHANNEL:
             return
 
+        log_channel = self.bot.get_channel(cfg.LOG_CHANNEL)
+
         # Remove the reaction
         await reaction.message.remove_reaction(reaction, user)
 
@@ -43,6 +45,10 @@ class EventListener(Cog):
                 reaction.message.id)
         if reactedEvent is None:
             print("No event found with that id", reaction.message.id)
+            await log_channel.send("NOTE: reaction to a non-existent event. "
+                                   "msg: {} role: {} user: {}#{}"
+                                   .format(reaction.message.id, reaction.emoji,
+                                           user.name, user.discriminator))
             return
 
         # Get emoji string
@@ -73,6 +79,9 @@ class EventListener(Cog):
                 await EventDatabase.updateEvent(reaction.message,
                                                 reactedEvent)
                 EventDatabase.toJson()
+            await log_channel.send("Signup: event: {} role: {} user: {}#{}"
+                                   .format(reactedEvent, reaction.emoji,
+                                           user.name, user.discriminator))
         elif signup.emoji == emoji:
             # undo signup
             reactedEvent.undoSignup(user)
@@ -81,9 +90,20 @@ class EventListener(Cog):
             await EventDatabase.updateEvent(reaction.message,
                                             reactedEvent)
             EventDatabase.toJson()
+            await log_channel.send("Signoff: event: {} role: {} user: {}#{}"
+                                   .format(reactedEvent, reaction.emoji,
+                                           user.name, user.discriminator))
+
+    @Cog.listener()
+    async def on_message(self, message: Message):
+        if message.author == self.bot.user:
+            return
+        if message.guild is None:
+            owner = self.bot.get_user(ADMIN)
+            await owner.send("DM: [{}]: {}".format(
+                message.author, message.content))
 
 
 def setup(bot: Bot):
-    importlib.reload(event)
     importlib.reload(cfg)
     bot.add_cog(EventListener(bot))

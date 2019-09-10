@@ -90,6 +90,10 @@ class CommandListener(Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
 
+        @bot.check
+        async def globally_block_dms(ctx: Context):
+            return ctx.guild is not None
+
     @command()
     async def reloadreload(self, ctx: Context):
         self.bot.unload_extension('reload')
@@ -165,7 +169,6 @@ class CommandListener(Cog):
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Created event {} with id {}".format(event, event.id))
 
-    # Add additional role to event command
     @command()
     async def addrole(self, ctx: Context, eventMessage: EventMessage, *,
                       rolename: str):
@@ -554,6 +557,6 @@ class CommandListener(Cog):
 
 
 def setup(bot):
-    # importlib.reload(event)
+    # importlib.reload(Event)
     importlib.reload(cfg)
     bot.add_cog(CommandListener(bot))
