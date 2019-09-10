@@ -1,7 +1,7 @@
 import importlib
 import sys
 import traceback
-from datetime import datetime
+from datetime import date, datetime, timedelta, time
 from io import StringIO
 
 from discord import Forbidden, Member, Message
@@ -17,7 +17,7 @@ from secret import ADMIN, ADMINS
 from secret import COMMAND_CHAR as CMD
 
 
-class EventDate(Converter):
+class EventDateTime(Converter):
     async def convert(self, ctx: Context, arg: str) -> datetime:
         try:
             date = datetime.strptime(arg, '%Y-%m-%d')
@@ -25,6 +25,16 @@ class EventDate(Converter):
             raise BadArgument("Invalid date format {}. Has to be YYYY-MM-DD"
                               .format(arg))
         return date.replace(hour=18, minute=45)
+
+
+class EventDate(Converter):
+    async def convert(self, ctx: Context, arg: str) -> date:
+        try:
+            _date = date.fromisoformat(arg)
+        except ValueError:
+            raise BadArgument("Invalid date format {}. Has to be YYYY-MM-DD"
+                              .format(arg))
+        return _date
 
 
 class EventTime(Converter):
@@ -95,6 +105,13 @@ class CommandListener(Cog):
         async def globally_block_dms(ctx: Context):
             return ctx.guild is not None
 
+        @bot.check
+        async def await_reply(ctx: Context):
+            if self.bot.awaiting_reply:
+                await ctx.send("Please answer the previous prompt first.")
+                return False
+            return True
+
     @command()
     async def reloadreload(self, ctx: Context):
         self.bot.unload_extension('reload')
@@ -153,25 +170,95 @@ class CommandListener(Cog):
                   .format(traceback.format_exc())
         await ctx.send(msg)
 
-    # Create event command
-    @command()
-    async def create(self, ctx: Context, date: EventDate):
-        """
-        Create a new event.
-
-        Example: create 2019-01-01
-        """
+    async def _create_event(self, ctx: Context, date: EventDateTime,
+                            batch=False):
         # TODO: Optionally specify sideop -> hide 1PLT and Bravo
+        # TODO: Check for duplicate event dates?
         # Create event and sort events, export
         msg: Message
         event: Event
         msg, event = await EventDatabase.createEvent(
             date, self.bot.eventchannel)
-        reactions = event.getReactions()
-        await EventDatabase.updateReactions(msg, reactions, self.bot.user)
-        await msgFnc.sortEventMessages(ctx)
-        EventDatabase.toJson()  # Update JSON file
+        if not batch:
+            reactions = event.getReactions()
+            await EventDatabase.updateReactions(msg, reactions, self.bot.user)
+            await msgFnc.sortEventMessages(ctx)
+            EventDatabase.toJson()  # Update JSON file
         await ctx.send("Created event {} with id {}".format(event, event.id))
+
+    # Create event command
+    @command()
+    async def create(self, ctx: Context, date: EventDateTime):
+        """
+        Create a new event.
+
+        Example: create 2019-01-01
+        """
+        await self._create_event(ctx, date)
+
+    @command()
+    async def multicreate(self, ctx: Context, start: EventDate,
+                          end: EventDate = None):
+        """Create events for all weekends within specified range.
+
+        Example: multicreate 2019-01-01 2019-02-01
+        """
+
+        delta = end - start
+        days = []
+        weekend = [5, 6, 7]
+        for i in range(delta.days + 1):
+            day = start + timedelta(days=i)
+            if day.isoweekday() in weekend:
+                days.append(day)
+
+        event_time = time(hour=18, minute=45)
+        with_time = [datetime.combine(day, event_time) for day in days]
+
+        strdays = " ".join([day.isoformat() for day in days])
+        message = "Creating events for following days:\n```{0}```\n" \
+                  "Reply with `ok` or `cancel`." \
+                  .format(strdays, CMD)
+        await ctx.send(message)
+
+        self.bot.awaiting_reply = True
+
+        def pred(m):
+            return m.author == ctx.message.author \
+                   and m.channel == ctx.channel
+
+        async def createtest(ctx: Context, day: datetime):
+            from time import sleep
+            await ctx.send("Sleeping: {}".format(day))
+            sleep(2)
+            await ctx.send("Done sleeping: {}".format(day))
+
+        try:
+            while True:
+                response = await self.bot.wait_for('message', check=pred)
+                reply = response.content.lower()
+
+                if reply == 'ok':
+                    await ctx.send("Creating events")
+                    for day in with_time:
+                        # await createtest(ctx, day)
+                        await self._create_event(ctx, day, batch=True)
+                    await msgFnc.sortEventMessages(ctx)
+                    EventDatabase.toJson()
+                    await ctx.send("{} Done creating events"
+                                   .format(ctx.author.mention))
+                    self.bot.awaiting_reply = False
+                    return
+                elif reply == 'cancel':
+                    await ctx.send("Canceling")
+                    self.bot.awaiting_reply = False
+                    return
+                else:
+                    await ctx.send("Please reply with `ok` or `cancel`.")
+        except Exception:
+            await ctx.send('```py\n{}\n```'
+                           .format(traceback.format_exc()))
+            self.bot.awaiting_reply = False
 
     @command()
     async def addrole(self, ctx: Context, eventMessage: EventMessage, *,
@@ -285,7 +372,7 @@ class CommandListener(Cog):
     # Set date of event command
     @command()
     async def setdate(self, ctx: Context, eventMessage: EventMessage,
-                      date: EventDate):
+                      date: EventDateTime):
         """
         Set event date.
 

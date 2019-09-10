@@ -14,6 +14,7 @@ class OperationBot(Bot):
         self.eventarchivechannel: TextChannel
         self.owner: User
         self.signoff_notify_user: User
+        self.awaiting_reply = False
 
     def fetch_data(self) -> None:
         self.commandchannel      = self.get_channel(cfg.COMMAND_CHANNEL)
