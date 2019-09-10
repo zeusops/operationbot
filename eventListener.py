@@ -4,7 +4,6 @@ from discord import Game, Member, Reaction
 from discord.ext.commands import Bot, Cog
 
 import config as cfg
-import event
 from eventDatabase import EventDatabase
 
 
@@ -24,7 +23,7 @@ class EventListener(Cog):
         print("Imported")
         await commandchannel.send("Events imported")
         await self.bot.change_presence(activity=Game(name=cfg.GAME,
-                                                        type=2))
+                                                     type=2))
         print('Logged in as', self.bot.user.name, self.bot.user.id)
 
     # Create event command
@@ -84,6 +83,5 @@ class EventListener(Cog):
 
 
 def setup(bot: Bot):
-    importlib.reload(event)
     importlib.reload(cfg)
     bot.add_cog(EventListener(bot))

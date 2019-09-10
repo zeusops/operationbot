@@ -15,7 +15,7 @@ class Reload(Cog):
         print("Reloading extensions")
         for extension in initial_extensions:
             try:
-            self.bot.unload_extension(extension)
+                self.bot.unload_extension(extension)
                 print("unloaded", extension)
             except ExtensionNotLoaded:
                 await ctx.send("Ignoring not loaded extension {}"

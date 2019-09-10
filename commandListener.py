@@ -140,7 +140,7 @@ class CommandListener(Cog):
                 msg = "Printed in console"
             else:
                 exec(cmd)
-            sys.stdout = old_stdout
+                sys.stdout = old_stdout
                 msg = "Executed"
             # sys.stdout = old_stdout
         except Exception:
@@ -165,7 +165,6 @@ class CommandListener(Cog):
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Created event {} with id {}".format(event, event.id))
 
-    # Add additional role to event command
     @command()
     async def addrole(self, ctx: Context, eventMessage: EventMessage, *,
                       rolename: str):
@@ -554,6 +553,6 @@ class CommandListener(Cog):
 
 
 def setup(bot):
-    # importlib.reload(event)
+    # importlib.reload(Event)
     importlib.reload(cfg)
     bot.add_cog(CommandListener(bot))

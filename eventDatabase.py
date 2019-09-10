@@ -271,6 +271,8 @@ class EventDatabase:
             event = Event(date, eventchannel.guild.emojis)
             event.fromJson(eventID, eventData, eventchannel.guild)
             EventDatabase.eventsArchive[eventID] = event
+            # TODO: test
+            # EventDatabase.eventsArchive[int(eventID)] = event
 
         for eventID, event in EventDatabase.events.items():
             print(eventID, event)
