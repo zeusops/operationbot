@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-from discord.ext.commands import Bot
-
 import config as cfg
+from operationbot import OperationBot
 from secret import COMMAND_CHAR, TOKEN
 
 CONFIG_VERSION = 5
@@ -11,7 +10,7 @@ if cfg.VERSION != CONFIG_VERSION:
         .format(CONFIG_VERSION, cfg.VERSION))
 
 initial_extensions = ['commandListener', 'eventListener', 'cogs.repl']
-bot = Bot(command_prefix=COMMAND_CHAR)
+bot = OperationBot(command_prefix=COMMAND_CHAR)
 # bot.remove_command("help")
 
 if __name__ == '__main__':
