@@ -6,12 +6,14 @@ if secret.DEBUG:
     EVENT_CHANNEL = _test_channel
     EVENT_ARCHIVE_CHANNEL = _test_channel
     COMMAND_CHANNEL = _test_channel
+    LOG_CHANNEL = _test_channel
     PURGE_ON_CONNECT = False
     GAME = 'with bugs'
 else:
     EVENT_CHANNEL = 502824760036818964
     EVENT_ARCHIVE_CHANNEL = 528914471700267029
     COMMAND_CHANNEL = 528980590930821131
+    LOG_CHANNEL = 621066917339201547
     PURGE_ON_CONNECT = True
     GAME = 'with events'
 

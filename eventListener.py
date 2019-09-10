@@ -35,6 +35,8 @@ class EventListener(Cog):
                 or reaction.message.channel.id != cfg.EVENT_CHANNEL:
             return
 
+        log_channel = self.bot.get_channel(cfg.LOG_CHANNEL)
+
         # Remove the reaction
         await reaction.message.remove_reaction(reaction, user)
 
@@ -43,6 +45,10 @@ class EventListener(Cog):
                 reaction.message.id)
         if reactedEvent is None:
             print("No event found with that id", reaction.message.id)
+            await log_channel.send("NOTE: reaction to a non-existent event. "
+                                   "msg: {} role: {} user: {}#{}"
+                                   .format(reaction.message.id, reaction.emoji,
+                                           user.name, user.discriminator))
             return
 
         # Get emoji string
@@ -73,6 +79,9 @@ class EventListener(Cog):
                 await EventDatabase.updateEvent(reaction.message,
                                                 reactedEvent)
                 EventDatabase.toJson()
+            await log_channel.send("Signup: event: {} role: {} user: {}#{}"
+                                   .format(reactedEvent, reaction.emoji,
+                                           user.name, user.discriminator))
         elif signup.emoji == emoji:
             # undo signup
             reactedEvent.undoSignup(user)
@@ -81,6 +90,9 @@ class EventListener(Cog):
             await EventDatabase.updateEvent(reaction.message,
                                             reactedEvent)
             EventDatabase.toJson()
+            await log_channel.send("Signoff: event: {} role: {} user: {}#{}"
+                                   .format(reactedEvent, reaction.emoji,
+                                           user.name, user.discriminator))
 
     @Cog.listener()
     async def on_message(self, message: Message):
