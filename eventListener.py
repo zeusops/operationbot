@@ -18,6 +18,7 @@ class EventListener(Cog):
     async def on_ready(self):
         print("Waiting until ready")
         await self.bot.wait_until_ready()
+        self.bot.fetch_data()
         commandchannel = self.bot.commandchannel
         print("Ready, importing")
         await commandchannel.send("Importing events")
