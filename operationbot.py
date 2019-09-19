@@ -2,7 +2,7 @@ from discord import TextChannel, User
 from discord.ext.commands import Bot
 
 import config as cfg
-from secret import ADMIN
+from secret import ADMIN, SIGNOFF_NOTIFY_USER
 
 
 class OperationBot(Bot):
@@ -13,6 +13,7 @@ class OperationBot(Bot):
         self.eventchannel: TextChannel
         self.eventarchivechannel: TextChannel
         self.owner: User
+        self.signoff_notify_user: User
 
     def fetch_data(self) -> None:
         self.commandchannel      = self.get_channel(cfg.COMMAND_CHANNEL)
@@ -20,3 +21,4 @@ class OperationBot(Bot):
         self.eventchannel        = self.get_channel(cfg.EVENT_CHANNEL)
         self.eventarchivechannel = self.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
         self.owner = self.get_user(ADMIN)
+        self.signoff_notify_user = self.get_user(SIGNOFF_NOTIFY_USER)
