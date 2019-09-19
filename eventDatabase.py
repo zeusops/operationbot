@@ -1,10 +1,9 @@
 import json
 import os
 from datetime import datetime
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, List
 
-from discord import Message, TextChannel
-from discord.ext.commands import Bot
+from discord import Message, TextChannel, ClientUser, Emoji
 
 import config as cfg
 from event import Event
@@ -64,7 +63,7 @@ class EventDatabase:
         Does not remove or create messages.
         """
         # Remove event from events
-        EventDatabase.removeEvent(event)
+        EventDatabase.removeEvent(event.id)
 
         # Add event to eventsArchive
         EventDatabase.eventsArchive[event.id] = event
@@ -81,19 +80,19 @@ class EventDatabase:
         EventDatabase.events[updatedEvent.id] = updatedEvent
 
     @staticmethod
-    def removeEvent(event: Event, archived=False) -> bool:
+    def removeEvent(eventID: int, archived=False) -> bool:
         """
         Remove event.
 
         Does not remove the message associated with the event.
         """
         if archived:
-            if event.id in EventDatabase.eventsArchive.keys():
-                del EventDatabase.eventsArchive[event.id]
+            if eventID in EventDatabase.eventsArchive.keys():
+                del EventDatabase.eventsArchive[eventID]
                 return True
         else:
-            if event.id in EventDatabase.events.keys():
-                del EventDatabase.events[event.id]
+            if eventID in EventDatabase.events.keys():
+                del EventDatabase.events[eventID]
                 return True
         return False
 
@@ -147,8 +146,9 @@ class EventDatabase:
             EventDatabase.events[event.id] = event
 
     @staticmethod
-    async def updateReactions(message: Message, event: Event, bot: Bot):
-        reactionEmojisIntended = event.getReactions()
+    async def updateReactions(message: Message, reactions: List[Emoji],
+                              user: ClientUser):
+        reactionEmojisIntended = reactions
         reactionsCurrent = message.reactions
         reactionEmojisCurrent = {}
         reactionsToRemove = []
@@ -170,7 +170,7 @@ class EventDatabase:
 
         # Remove existing unintended reactions
         for reaction in reactionsToRemove:
-            await message.remove_reaction(reaction, bot.user)
+            await message.remove_reaction(reaction, user)
 
         # Add not existing intended emojis
         for emoji in reactionEmojisToAdd:
@@ -261,8 +261,10 @@ class EventDatabase:
 
         # Add reactions to events
         for event in EventDatabase.events.values():
-            eventmessage = await getEventMessage(bot, event)
-            await EventDatabase.updateReactions(eventmessage, event, bot)
+            eventmessage: Message = await getEventMessage(bot, event)
+            reactions = event.getReactions()
+            await EventDatabase.updateReactions(eventmessage, reactions,
+                                                bot.user)
 
         # Add archived events
         for eventID, eventData in eventsArchiveData.items():

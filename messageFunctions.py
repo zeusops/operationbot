@@ -9,8 +9,8 @@ import config as cfg
 from event import Event
 
 
-async def getEventMessage(bot: OperationBot, event: Event, archived=False) -> \
-        Optional[Message]:
+async def getEventMessage(bot: OperationBot, event: Event, archived=False) \
+        -> Optional[Message]:
     """Get a message related to an event."""
     if archived:
         channel = bot.eventarchivechannel
@@ -40,6 +40,7 @@ async def sortEventMessages(ctx: Context):
     EventDatabase.sortEvents()
     print(EventDatabase.events)
 
+    event: Event
     for event in EventDatabase.events.values():
         messageID = event.messageID
         eventchannel = ctx.bot.get_channel(cfg.EVENT_CHANNEL)
@@ -50,5 +51,7 @@ async def sortEventMessages(ctx: Context):
                 "sortEventMessages: No message found with that message ID: {}"
                 .format(messageID))
             return
-        await EventDatabase.updateReactions(eventMessage, event, ctx.bot)
+        reactions = event.getReactions()
+        await EventDatabase.updateReactions(eventMessage, reactions,
+                                            ctx.bot.user)
         await EventDatabase.updateEvent(eventMessage, event)

@@ -163,9 +163,12 @@ class CommandListener(Cog):
         """
         # TODO: Optionally specify sideop -> hide 1PLT and Bravo
         # Create event and sort events, export
-        msg, event = await EventDatabase.createEvent(date,
-                                                     self.bot.eventchannel)
-        await EventDatabase.updateReactions(msg, event, self.bot)
+        msg: Message
+        event: Event
+        msg, event = await EventDatabase.createEvent(
+            date, self.bot.eventchannel)
+        reactions = event.getReactions()
+        await EventDatabase.updateReactions(msg, reactions, self.bot.user)
         await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Created event {} with id {}".format(event, event.id))
@@ -472,7 +475,7 @@ class CommandListener(Cog):
         Example: delete 1
         """
         eventMessage = await msgFnc.getEventMessage(self.bot, event)
-        EventDatabase.removeEvent(event)
+        EventDatabase.removeEvent(event.id)
         # TODO: handle missing events
         await eventMessage.delete()
         EventDatabase.toJson()
@@ -487,7 +490,7 @@ class CommandListener(Cog):
         """
         eventMessage = await msgFnc.getEventMessage(
             self.bot, event, archived=True)
-        EventDatabase.removeEvent(event, archived=True)
+        EventDatabase.removeEvent(event.id, archived=True)
         # TODO: handle missing events
         # TODO: Check if archived message can be deleted
         await eventMessage.delete()
