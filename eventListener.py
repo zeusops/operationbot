@@ -33,7 +33,7 @@ class EventListener(Cog):
     async def on_reaction_add(self, reaction: Reaction, user: Member):
         # Exit if reaction is from the bot or not in the event channel
         if user == self.bot.user \
-                or reaction.message.channel.id != cfg.EVENT_CHANNEL:
+                or reaction.message.channel != self.bot.eventchannel:
             return
 
         log_channel = self.bot.log_channel
@@ -41,8 +41,7 @@ class EventListener(Cog):
         await reaction.message.remove_reaction(reaction, user)
 
         # Get event from database with message ID
-        reactedEvent = EventDatabase.getEventByMessage(
-                reaction.message.id)
+        reactedEvent = EventDatabase.getEventByMessage(reaction.message.id)
         if reactedEvent is None:
             print("No event found with that id", reaction.message.id)
             await log_channel.send("NOTE: reaction to a non-existent event. "

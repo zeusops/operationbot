@@ -184,7 +184,7 @@ class Event:
         """Check if a role group with given name exists in the event."""
         return groupName in self.roleGroups
 
-    def signup(self, roleToSet, user):
+    def signup(self, roleToSet, user) -> None:
         """Add username to role."""
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:

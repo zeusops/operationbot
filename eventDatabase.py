@@ -69,7 +69,7 @@ class EventDatabase:
         EventDatabase.eventsArchive[event.id] = event
 
     @staticmethod
-    async def updateEvent(eventMessage: Message, updatedEvent: Event):
+    async def updateEvent(eventMessage: Message, updatedEvent: Event) -> None:
         """Update an existing event and store it."""
         newEventEmbed = updatedEvent.createEmbed()
         newEventEmbed.set_footer(text="Event ID: " + str(updatedEvent.id))
