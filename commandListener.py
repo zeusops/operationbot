@@ -188,7 +188,7 @@ class CommandListener(Cog):
         try:
             reaction = event.addAdditionalRole(rolename)
         except IndexError:
-            user = self.bot.get_user(ADMIN)
+            user = self.bot.owner
             await ctx.send("Too many additional roles. This should not "
                            "happen. Nag at {}".format(user.mention))
             return

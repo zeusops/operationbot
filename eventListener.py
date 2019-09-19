@@ -104,7 +104,7 @@ class EventListener(Cog):
         if message.author == self.bot.user:
             return
         if message.guild is None:
-            owner = self.bot.get_user(ADMIN)
+            owner = self.bot.owner
             await owner.send("DM: [{}]: {}".format(
                 message.author, message.content))
 
