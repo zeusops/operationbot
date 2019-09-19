@@ -31,7 +31,7 @@ class EventListener(Cog):
     # Create event command
     @Cog.listener()
     async def on_reaction_add(self, reaction: Reaction, user: Member):
-        # Exit if reaction is from bot or not in event channel
+        # Exit if reaction is from the bot or not in the event channel
         if user == self.bot.user \
                 or reaction.message.channel.id != cfg.EVENT_CHANNEL:
             return
@@ -57,10 +57,12 @@ class EventListener(Cog):
         # Find signup of user
         signup = reactedEvent.findSignup(user.id)
 
-        # if user is not signed up, and the role is free, signup
-        # if user is not signed up, and the role is not free, do nothing
-        # if user is signed up, and he selects the same role, signoff
-        # if user is signed up, and he selects a different role, do nothing
+        """
+        if user is not signed up and the role is     free, sign up
+        if user is not signed up and the role is not free, do nothing
+        if user is     signed up and they select    the same role, sign off
+        if user is     signed up and they select a different role, do nothing
+        """
         if signup is None:
             # Get role with the emoji
             role = reactedEvent.findRoleWithEmoji(emoji)
