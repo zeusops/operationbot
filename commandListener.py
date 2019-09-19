@@ -4,14 +4,15 @@ import traceback
 from datetime import datetime
 from io import StringIO
 
-from discord import Member, Message, Forbidden
-from discord.ext.commands import (BadArgument, Bot, Cog, Context, Converter,
+from discord import Forbidden, Member, Message
+from discord.ext.commands import (BadArgument, Cog, Context, Converter,
                                   MissingRequiredArgument, command)
 
 import config as cfg
+import messageFunctions as msgFnc
 from event import Event
 from eventDatabase import EventDatabase
-import messageFunctions as msgFnc
+from operationbot import OperationBot
 from secret import ADMIN, ADMINS
 from secret import COMMAND_CHAR as CMD
 
@@ -87,7 +88,7 @@ class ArchivedEvent(Converter):
 
 class CommandListener(Cog):
 
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: OperationBot):
         self.bot = bot
 
         @bot.check
@@ -160,10 +161,10 @@ class CommandListener(Cog):
 
         Example: create 2019-01-01
         """
-        eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
         # TODO: Optionally specify sideop -> hide 1PLT and Bravo
         # Create event and sort events, export
-        msg, event = await EventDatabase.createEvent(date, eventchannel)
+        msg, event = await EventDatabase.createEvent(date,
+                                                     self.bot.eventchannel)
         await EventDatabase.updateReactions(msg, event, self.bot)
         await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
@@ -445,8 +446,6 @@ class CommandListener(Cog):
 
         Example: archive 1
         """
-        # eventchannel = self.bot.get_channel(cfg.EVENT_CHANNEL)
-        eventarchivechannel = self.bot.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
 
         # Archive event and export
         EventDatabase.archiveEvent(event)
@@ -458,7 +457,8 @@ class CommandListener(Cog):
                            .format(event))
 
         # Create new message
-        await EventDatabase.createEventMessage(event, eventarchivechannel)
+        await EventDatabase.createEventMessage(event,
+                                               self.bot.eventarchivechannel)
 
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Event {} archived".format(event))

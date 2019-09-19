@@ -9,6 +9,7 @@ from discord.ext.commands import Bot
 import config as cfg
 from event import Event
 from messageFunctions import getEventMessage
+from operationbot import OperationBot
 
 DATABASE_VERSION = 3
 
@@ -198,7 +199,7 @@ class EventDatabase:
             json.dump(data, jsonFile, indent=2)
 
     @staticmethod
-    async def fromJson(bot: Bot):
+    async def fromJson(bot: OperationBot):
         """Fill events and eventsArchive with data from JSON."""
         # Import
         try:
@@ -232,9 +233,8 @@ class EventDatabase:
         if databaseVersion != DATABASE_VERSION:
             msg = "Incorrect database version. Expected: {}, got: {}." \
                   .format(DATABASE_VERSION, databaseVersion)
-            commandchannel = bot.get_channel(cfg.COMMAND_CHANNEL)
             print(msg)
-            await commandchannel.send(msg)
+            await bot.commandchannel.send(msg)
             await bot.logout()
 
         EventDatabase.events = {}
@@ -242,7 +242,7 @@ class EventDatabase:
         EventDatabase.nextID = data['nextID']
         eventsData = data['events']
         eventsArchiveData = data['eventsArchive']
-        eventchannel = bot.get_channel(cfg.EVENT_CHANNEL)
+        eventchannel = bot.eventchannel
 
         # Clear events channel
         if cfg.PURGE_ON_CONNECT:

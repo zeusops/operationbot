@@ -1,19 +1,21 @@
 from typing import Optional
 
 from discord import Message, NotFound
-from discord.ext.commands import Bot, Context
+from discord.ext.commands import Context
+
+from operationbot import OperationBot
 
 import config as cfg
 from event import Event
 
 
-async def getEventMessage(bot: Bot, event: Event, archived=False) -> \
+async def getEventMessage(bot: OperationBot, event: Event, archived=False) -> \
         Optional[Message]:
     """Get a message related to an event."""
     if archived:
-        channel = bot.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
+        channel = bot.eventarchivechannel
     else:
-        channel = bot.get_channel(cfg.EVENT_CHANNEL)
+        channel = bot.eventchannel
 
     try:
         return await channel.fetch_message(event.messageID)

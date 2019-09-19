@@ -1,23 +1,24 @@
 import importlib
 
 from discord import Game, Member, Reaction, Message
-from discord.ext.commands import Bot, Cog
+from discord.ext.commands import Cog
 
 import config as cfg
 from secret import ADMIN
 from eventDatabase import EventDatabase
+from operationbot import OperationBot
 
 
 class EventListener(Cog):
 
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: OperationBot):
         self.bot = bot
 
     @Cog.listener()
     async def on_ready(self):
         print("Waiting until ready")
         await self.bot.wait_until_ready()
-        commandchannel = self.bot.get_channel(cfg.COMMAND_CHANNEL)
+        commandchannel = self.bot.commandchannel
         print("Ready, importing")
         await commandchannel.send("Importing events")
         await EventDatabase.fromJson(self.bot)
@@ -35,8 +36,7 @@ class EventListener(Cog):
                 or reaction.message.channel.id != cfg.EVENT_CHANNEL:
             return
 
-        log_channel = self.bot.get_channel(cfg.LOG_CHANNEL)
-
+        log_channel = self.bot.log_channel
         # Remove the reaction
         await reaction.message.remove_reaction(reaction, user)
 
@@ -104,6 +104,6 @@ class EventListener(Cog):
                 message.author, message.content))
 
 
-def setup(bot: Bot):
+def setup(bot: OperationBot):
     importlib.reload(cfg)
     bot.add_cog(EventListener(bot))
