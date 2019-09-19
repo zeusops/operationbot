@@ -1,7 +1,6 @@
 import traceback
 
-from discord.ext.commands import (Bot, Cog, Context, command,
-                                  ExtensionNotLoaded)
+from discord.ext.commands import Bot, Cog, Context, ExtensionNotLoaded, command
 
 from main import initial_extensions
 

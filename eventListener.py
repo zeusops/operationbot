@@ -1,12 +1,12 @@
 import importlib
 
-from discord import Game, Member, Reaction, Message
+from discord import Game, Member, Message, Reaction
 from discord.ext.commands import Cog
 
 import config as cfg
-from secret import ADMIN
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
+from secret import ADMIN
 
 
 class EventListener(Cog):

@@ -1,9 +1,9 @@
 import json
 import os
 from datetime import datetime
-from typing import Dict, Optional, Tuple, List
+from typing import Dict, List, Optional, Tuple
 
-from discord import Message, TextChannel, ClientUser, Emoji
+from discord import ClientUser, Emoji, Message, TextChannel
 
 import config as cfg
 from event import Event

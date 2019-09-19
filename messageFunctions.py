@@ -3,10 +3,9 @@ from typing import Optional
 from discord import Message, NotFound
 from discord.ext.commands import Context
 
-from operationbot import OperationBot
-
 import config as cfg
 from event import Event
+from operationbot import OperationBot
 
 
 async def getEventMessage(bot: OperationBot, event: Event, archived=False) \
