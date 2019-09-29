@@ -1,3 +1,4 @@
+import calendar
 import importlib
 import sys
 import traceback
@@ -203,6 +204,9 @@ class CommandListener(Cog):
 
         Example: multicreate 2019-01-01 2019-02-01
         """
+        if end is None:
+            last_day = calendar.monthrange(start.year, start.month)[1]
+            end = start.replace(day=last_day)
 
         delta = end - start
         days = []
