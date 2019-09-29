@@ -171,7 +171,7 @@ class CommandListener(Cog):
                   .format(traceback.format_exc())
         await ctx.send(msg)
 
-    async def _create_event(self, ctx: Context, date: EventDateTime,
+    async def _create_event(self, ctx: Context, date: datetime,
                             batch=False):
         # TODO: Optionally specify sideop -> hide 1PLT and Bravo
         # TODO: Check for duplicate event dates?
@@ -211,6 +211,7 @@ class CommandListener(Cog):
         delta = end - start
         days = []
         weekend = [5, 6, 7]
+        day: date
         for i in range(delta.days + 1):
             day = start + timedelta(days=i)
             if day.isoweekday() in weekend:
@@ -231,12 +232,6 @@ class CommandListener(Cog):
             return m.author == ctx.message.author \
                    and m.channel == ctx.channel
 
-        async def createtest(ctx: Context, day: datetime):
-            from time import sleep
-            await ctx.send("Sleeping: {}".format(day))
-            sleep(2)
-            await ctx.send("Done sleeping: {}".format(day))
-
         try:
             while True:
                 response = await self.bot.wait_for('message', check=pred)
@@ -245,7 +240,6 @@ class CommandListener(Cog):
                 if reply == 'ok':
                     await ctx.send("Creating events")
                     for day in with_time:
-                        # await createtest(ctx, day)
                         await self._create_event(ctx, day, batch=True)
                     await msgFnc.sortEventMessages(ctx)
                     EventDatabase.toJson()
