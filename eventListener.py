@@ -1,4 +1,5 @@
 import importlib
+from datetime import datetime
 
 from discord import Game, Member, Message, Reaction
 from discord.ext.commands import Cog
@@ -6,7 +7,7 @@ from discord.ext.commands import Cog
 import config as cfg
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
-from secret import ADMIN
+from secret import SIGNOFF_NOTIFY_USER
 
 
 class EventListener(Cog):
@@ -18,6 +19,7 @@ class EventListener(Cog):
     async def on_ready(self):
         print("Waiting until ready")
         await self.bot.wait_until_ready()
+        self.bot.fetch_data()
         commandchannel = self.bot.commandchannel
         print("Ready, importing")
         await commandchannel.send("Importing events")
@@ -36,15 +38,15 @@ class EventListener(Cog):
                 or reaction.message.channel != self.bot.eventchannel:
             return
 
-        log_channel = self.bot.log_channel
+        logchannel = self.bot.logchannel
         # Remove the reaction
         await reaction.message.remove_reaction(reaction, user)
 
         # Get event from database with message ID
-        reactedEvent = EventDatabase.getEventByMessage(reaction.message.id)
-        if reactedEvent is None:
+        event = EventDatabase.getEventByMessage(reaction.message.id)
+        if event is None:
             print("No event found with that id", reaction.message.id)
-            await log_channel.send("NOTE: reaction to a non-existent event. "
+            await logchannel.send("NOTE: reaction to a non-existent event. "
                                    "msg: {} role: {} user: {}#{}"
                                    .format(reaction.message.id, reaction.emoji,
                                            user.name, user.discriminator))
@@ -54,7 +56,18 @@ class EventListener(Cog):
         emoji = reaction.emoji
 
         # Find signup of user
-        signup = reactedEvent.findSignup(user.id)
+        signup = event.findSignup(user.id)
+
+        # Get role with the emoji
+        role = event.findRoleWithEmoji(emoji)
+        if role is None or role.name == "ZEUS":
+            # No role found, or somebody with Nitro added the ZEUS
+            # reaction by hand
+            print("No role found with that emoji {} in event {}"
+                    "by user {}#{}"
+                    .format(emoji, event,
+                            user.name, user.discriminator))
+            return
 
         """
         if user is not signed up and the role is     free, sign up
@@ -63,47 +76,73 @@ class EventListener(Cog):
         if user is     signed up and they select a different role, do nothing
         """
         if signup is None:
-            # Get role with the emoji
-            role = reactedEvent.findRoleWithEmoji(emoji)
-            if role is None or role.name == "ZEUS":
-                # No role found, or somebody with Nitro added the ZEUS
-                # reaction by hand
-                print("No role found with that emoji {} in event {}"
-                      "by user {}#{}"
-                      .format(emoji, reactedEvent,
-                              user.name, user.discriminator))
-                return
 
             # Sign up if role is free
             if role.userID is None:
                 # signup
-                reactedEvent.signup(role, user)
+                event.signup(role, user)
 
                 # Update event
                 await EventDatabase.updateEvent(reaction.message,
-                                                reactedEvent)
+                                                event)
                 EventDatabase.toJson()
-            await log_channel.send("Signup: event: {} role: {} user: {}#{}"
-                                   .format(reactedEvent, reaction.emoji,
+            await logchannel.send("Signup: event: {} role: {} user: {}#{}"
+                                   .format(event, reaction.emoji,
                                            user.name, user.discriminator))
         elif signup.emoji == emoji:
             # undo signup
-            reactedEvent.undoSignup(user)
+            event.undoSignup(user)
 
             # Update event
             await EventDatabase.updateEvent(reaction.message,
-                                            reactedEvent)
+                                            event)
             EventDatabase.toJson()
-            await log_channel.send("Signoff: event: {} role: {} user: {}#{}"
-                                   .format(reactedEvent, reaction.emoji,
-                                           user.name, user.discriminator))
+
+            message = "Signoff: event: {} role: {} user: {}#{}" \
+                      .format(event, reaction.emoji,
+                              user.name, user.discriminator)
+
+            print("Signed off role name:", role.name)
+            if role.name in cfg.SIGNOFF_NOTIFY_ROLES:
+                print("Signoff in to be notified")
+                date = event.date
+                print("Event date:", date)
+                timedelta = date - datetime.today()
+                days_str = ""
+                hours_str = ""
+                minutes_str = ""
+                days = timedelta.days
+                hours = timedelta.seconds // (60 * 60)
+                minutes = (timedelta.seconds - hours * 60 * 60) // 60
+                if timedelta.days > 0:
+                    days_str = "{} days ".format(timedelta.days)
+                if hours > 0:
+                    hours_str = "{} hours ".format(hours)
+                if minutes > 0:
+                    minutes_str = "{} minutes".format(minutes)
+
+                timestring = "{}{}{}".format(days_str, hours_str, minutes_str)
+
+                if timedelta < cfg.SIGNOFF_NOTIFY_TIME:
+                    print("Delta:", timedelta)
+                    print("Date delta smaller than notify period")
+                    message = "{}: User {} signed off from {} role {} " \
+                              "{} before the operation." \
+                              .format(self.bot.signoff_notify_user.mention,
+                                      user.nick,
+                                      event,
+                                      role.emoji,
+                                      timestring)
+
+
+            await logchannel.send(message)
 
     @Cog.listener()
     async def on_message(self, message: Message):
         if message.author == self.bot.user:
             return
         if message.guild is None:
-            owner = self.bot.get_user(ADMIN)
+            owner = self.bot.owner
             await owner.send("DM: [{}]: {}".format(
                 message.author, message.content))
 

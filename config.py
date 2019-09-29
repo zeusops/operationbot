@@ -1,4 +1,5 @@
 import secret
+from datetime import timedelta
 
 VERSION = 5
 _test_channel = 530411066585382912
@@ -54,3 +55,9 @@ DEFAULT_ROLES = {  # NOTE: role name equals emote name
     "B1": "Bravo",
     "B2": "Bravo",
 }
+
+# If a user signs off from a role listed in SIGNOFF_NOTIFY_ROLES when
+# there is less than SIGNOFF_NOTIFY_TIME left until the operation start,
+# a user defined in secrets.py gets notified about that.
+SIGNOFF_NOTIFY_TIME = timedelta(days=1)
+SIGNOFF_NOTIFY_ROLES = ["HQ", "ASL", "BSL"]
