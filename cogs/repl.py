@@ -9,9 +9,11 @@ from typing import Set
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import Bot, Context
+from discord.ext.commands import (BadArgument, Bot, Cog, Context,
+                                  MissingRequiredArgument, command)
 
 from eventDatabase import EventDatabase  # noqa
+from secret import COMMAND_CHAR as CMD
 
 
 class REPL(commands.Cog):
@@ -171,6 +173,19 @@ class REPL(commands.Cog):
                 pass
             except discord.HTTPException as e:
                 await ctx.send('Unexpected error: `{}`'.format(e))
+
+    @repl.error
+    @_eval.error
+    async def command_error(self, ctx: Context, error):
+        if isinstance(error, MissingRequiredArgument):
+            await ctx.send("Missing argument. See: {}help {}"
+                           .format(CMD, ctx.command))
+        elif isinstance(error, BadArgument):
+            await ctx.send("Invalid argument: {}. See: {}help {}"
+                           .format(error, CMD, ctx.command))
+        else:
+            await ctx.send("Unexpected error occured: ```{}```".format(error))
+            print(error)
 
 
 def setup(bot):
