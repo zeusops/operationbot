@@ -613,8 +613,11 @@ class CommandListener(Cog):
         sys.exit()
 
     # TODO: Test commands
+    @reloadreload.error
+    @impreload.error
     @exec.error
     @create.error
+    @multicreate.error
     @addrole.error
     @removerole.error
     @removegroup.error
@@ -623,6 +626,7 @@ class CommandListener(Cog):
     @settime.error
     @setterrain.error
     @setfaction.error
+    @setdescription.error
     @signup.error
     @removesignup.error
     @archive.error
