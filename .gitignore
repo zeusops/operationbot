@@ -1,6 +1,8 @@
-venv
+venv*
 secret.py
 __pycache__
 .vscode
 eventDatabase.json
 .mypy_cache
+backup
+foo
