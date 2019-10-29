@@ -147,7 +147,8 @@ class Event:
                 emoji = role.emoji
                 # Skip the ZEUS reaction. Zeuses can only be signed up using
                 # the signup command
-                if not (isinstance(emoji, Emoji) and emoji.name == "ZEUS"):
+                if not (isinstance(emoji, Emoji) \
+                        and emoji.name == cfg.EMOJI_ZEUS):
                     reactions.append(role.emoji)
 
         return reactions
