@@ -4,6 +4,7 @@ import sys
 import traceback
 from datetime import date, datetime, timedelta, time
 from io import StringIO
+from typing import List
 
 from discord import Forbidden, Member, Message
 from discord.ext.commands import (BadArgument, Cog, Context, Converter,
@@ -189,50 +190,85 @@ class CommandListener(Cog):
 
     # Create event command
     @command()
-    async def create(self, ctx: Context, date: EventDateTime):
+    async def create(self, ctx: Context, date: EventDateTime, force = None):
         """
         Create a new event.
 
+        Use the `force` argument to create past events.
+
         Example: create 2019-01-01
+                 create 2019-01-01 force
         """
-        await self._create_event(ctx, date)
+
+        if date < datetime.today() and not force:
+            await ctx.send("Requested date {} has already passed. "
+                           "Use the `force` argument to override. "
+                           "See `{}help create`"
+                           .format(date, CMD))
+        else:
+            await self._create_event(ctx, date)
 
     @command()
     async def multicreate(self, ctx: Context, start: EventDate,
-                          end: EventDate = None):
+                          end: EventDate = None, force = None):
         """Create events for all weekends within specified range.
 
         If the end date is omitted, events are created for the rest of the month.
+        Use the `force` argument to create past events.
+
         Example: multicreate 2019-01-01
                  multicreate 2019-01-01 2019-01-15
+                 multicreate 2019-01-01 2019-01-10 force
         """
         if end is None:
             last_day = calendar.monthrange(start.year, start.month)[1]
             end = start.replace(day=last_day)
 
         delta = end - start
-        days = []
+        days: List[date] = []
+        past_days: List[date] = []
         weekend = [5, 6, 7]
         day: date
         for i in range(delta.days + 1):
             day = start + timedelta(days=i)
             if day.isoweekday() in weekend:
-                days.append(day)
+                if day < date.today() and not force:
+                    past_days.append(day)
+                else:
+                    days.append(day)
 
-        event_time = time(hour=18, minute=45)
-        with_time = [datetime.combine(day, event_time) for day in days]
+        if len(past_days) > 0:
+            strpastdays = " ".join([day.isoformat() for day in past_days])
+            strpast = (
+                "\nFollowing dates are in the past and will be skipped:\n"
+                "```{}```".format(strpastdays))
+        else:
+            strpast = ""
 
-        strdays = " ".join([day.isoformat() for day in days])
-        message = "Creating events for following days:\n```{0}```\n" \
-                  "Reply with `ok` or `cancel`." \
-                  .format(strdays, CMD)
-        await ctx.send(message)
+        if len(days) > 0:
+            strdays = " ".join([day.isoformat() for day in days])
+            message = (
+                "Creating events for following days:\n```{}``` "
+                "{}"
+                "Reply with `ok` or `cancel`."
+                .format(strdays, strpast))
+            await ctx.send(message)
+        else:
+            message = (
+                "No events to be created.{}"
+                "Use the `force` argument to override. "
+                "See `{}help multicreate`".format(strpast, CMD))
+            await ctx.send(message)
+            return
 
         self.bot.awaiting_reply = True
 
         def pred(m):
             return m.author == ctx.message.author \
                    and m.channel == ctx.channel
+
+        event_time = time(hour=18, minute=45)
+        with_time = [datetime.combine(day, event_time) for day in days]
 
         try:
             while True:
