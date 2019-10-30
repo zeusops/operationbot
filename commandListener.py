@@ -202,7 +202,9 @@ class CommandListener(Cog):
                           end: EventDate = None):
         """Create events for all weekends within specified range.
 
-        Example: multicreate 2019-01-01 2019-02-01
+        If the end date is omitted, events are created for the rest of the month.
+        Example: multicreate 2019-01-01
+                 multicreate 2019-01-01 2019-01-15
         """
         if end is None:
             last_day = calendar.monthrange(start.year, start.month)[1]
@@ -638,10 +640,10 @@ class CommandListener(Cog):
     @shutdown.error
     async def command_error(self, ctx: Context, error):
         if isinstance(error, MissingRequiredArgument):
-            await ctx.send("Missing argument. See: {}help {}"
+            await ctx.send("Missing argument. See: `{}help {}`"
                            .format(CMD, ctx.command))
         elif isinstance(error, BadArgument):
-            await ctx.send("Invalid argument: {}. See: {}help {}"
+            await ctx.send("Invalid argument: {}. See: `{}help {}`"
                            .format(error, CMD, ctx.command))
         else:
             await ctx.send("Unexpected error occured: ```{}```".format(error))
