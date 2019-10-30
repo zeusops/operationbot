@@ -1,5 +1,5 @@
 import importlib
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from discord import Game, Member, Message, Reaction
 from discord.ext.commands import Cog
@@ -107,24 +107,26 @@ class EventListener(Cog):
                 print("Signoff in to be notified")
                 date = event.date
                 print("Event date:", date)
-                timedelta = date - datetime.today()
+                time_delta = date - datetime.today()
+                if time_delta > timedelta(days=0):
                 days_str = ""
                 hours_str = ""
                 minutes_str = ""
-                days = timedelta.days
-                hours = timedelta.seconds // (60 * 60)
-                minutes = (timedelta.seconds - hours * 60 * 60) // 60
-                if timedelta.days > 0:
-                    days_str = "{} days ".format(timedelta.days)
+                    days = time_delta.days
+                    hours = time_delta.seconds // (60 * 60)
+                    minutes = (time_delta.seconds - hours * 60 * 60) // 60
+                    if time_delta.days > 0:
+                        days_str = "{} days ".format(time_delta.days)
                 if hours > 0:
                     hours_str = "{} hours ".format(hours)
                 if minutes > 0:
                     minutes_str = "{} minutes".format(minutes)
 
-                timestring = "{}{}{}".format(days_str, hours_str, minutes_str)
+                    timestring = "{}{}{}".format(days_str, hours_str,
+                                                 minutes_str)
 
-                if timedelta < cfg.SIGNOFF_NOTIFY_TIME:
-                    print("Delta:", timedelta)
+                    if time_delta < cfg.SIGNOFF_NOTIFY_TIME:
+                        print("Delta:", time_delta)
                     print("Date delta smaller than notify period")
                     message = "{}: User {} signed off from {} role {} " \
                               "{} before the operation." \
