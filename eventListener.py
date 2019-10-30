@@ -86,8 +86,8 @@ class EventListener(Cog):
                 await EventDatabase.updateEvent(reaction.message,
                                                 event)
                 EventDatabase.toJson()
-            await logchannel.send("Signup: event: {} role: {} user: {}#{}"
-                                   .format(event, reaction.emoji,
+            await logchannel.send("Signup: event: {} role: {} user: {} ({}#{})"
+                                   .format(event, reaction.emoji, user.nick,
                                            user.name, user.discriminator))
         elif signup.emoji == emoji:
             # undo signup
@@ -98,8 +98,8 @@ class EventListener(Cog):
                                             event)
             EventDatabase.toJson()
 
-            message = "Signoff: event: {} role: {} user: {}#{}" \
-                      .format(event, reaction.emoji,
+            message = "Signoff: event: {} role: {} user: {} ({}#{})" \
+                      .format(event, reaction.emoji, user.nick,
                               user.name, user.discriminator)
 
             print("Signed off role name:", role.name)
@@ -109,32 +109,32 @@ class EventListener(Cog):
                 print("Event date:", date)
                 time_delta = date - datetime.today()
                 if time_delta > timedelta(days=0):
-                days_str = ""
-                hours_str = ""
-                minutes_str = ""
+                    days_str = ""
+                    hours_str = ""
+                    minutes_str = ""
                     days = time_delta.days
                     hours = time_delta.seconds // (60 * 60)
                     minutes = (time_delta.seconds - hours * 60 * 60) // 60
                     if time_delta.days > 0:
                         days_str = "{} days ".format(time_delta.days)
-                if hours > 0:
-                    hours_str = "{} hours ".format(hours)
-                if minutes > 0:
-                    minutes_str = "{} minutes".format(minutes)
+                    if hours > 0:
+                        hours_str = "{} hours ".format(hours)
+                    if minutes > 0:
+                        minutes_str = "{} minutes".format(minutes)
 
                     timestring = "{}{}{}".format(days_str, hours_str,
                                                  minutes_str)
 
                     if time_delta < cfg.SIGNOFF_NOTIFY_TIME:
                         print("Delta:", time_delta)
-                    print("Date delta smaller than notify period")
-                    message = "{}: User {} signed off from {} role {} " \
-                              "{} before the operation." \
-                              .format(self.bot.signoff_notify_user.mention,
-                                      user.nick,
-                                      event,
-                                      role.emoji,
-                                      timestring)
+                        print("Date delta smaller than notify period")
+                        message = "{}: User {} signed off from {} role {} " \
+                                "{} before the operation." \
+                                .format(self.bot.signoff_notify_user.mention,
+                                        user.nick,
+                                        event,
+                                        role.emoji,
+                                        timestring)
 
 
             await logchannel.send(message)
