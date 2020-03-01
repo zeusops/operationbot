@@ -128,7 +128,11 @@ class CommandListener(Cog):
         except ImportError as e:
             await ctx.send("Failed to reload module {}: {}"
                            .format(moduleName, str(e)))
-        await ctx.send("Reloaded {}".format(moduleName))
+        except Exception as e:
+            await ctx.send("An error occured while reloading: ```{}```"
+                           .format(str(e)))
+        else:
+            await ctx.send("Reloaded {}".format(moduleName))
 
     # @command()
     @command()
