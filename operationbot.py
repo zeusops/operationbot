@@ -21,5 +21,6 @@ class OperationBot(Bot):
         self.logchannel          = self.get_channel(cfg.LOG_CHANNEL)
         self.eventchannel        = self.get_channel(cfg.EVENT_CHANNEL)
         self.eventarchivechannel = self.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
-        self.owner = self.get_user(ADMIN)
+        self.owner               = self.get_user(ADMIN)
+        self.owner_id            = ADMIN
         self.signoff_notify_user = self.get_user(SIGNOFF_NOTIFY_USER)
