@@ -37,7 +37,7 @@ class Event:
     # Return an embed for the event
     def createEmbed(self) -> Embed:
         title = "{} ({})".format(
-            self.title, self.date.strftime("%a %Y-%m-%d - %H:%M CET"))
+            self.title, self.date.strftime("%a %Y-%m-%d - %H:%M CEST"))
         description = "Terrain: {} - Faction: {}\n\n{}".format(
             self.terrain, self.faction, self.description)
         eventEmbed = Embed(title=title, description=description,
@@ -59,8 +59,8 @@ class Event:
     def addDefaultRoleGroups(self):
         self.roleGroups["Company"] = RoleGroup("Company")
         self.roleGroups["Platoon"] = RoleGroup("Platoon")
-        # An empty spacer. An embed can only have either one or three items on a
-        # line
+        # An empty spacer. An embed can only have either one or three items on
+        # a line
         self.roleGroups["Dummy"] = RoleGroup("Dummy")
         self.roleGroups["Alpha"] = RoleGroup("Alpha")
         self.roleGroups["Bravo"] = RoleGroup("Bravo")
