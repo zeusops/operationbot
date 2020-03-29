@@ -54,6 +54,9 @@ DEFAULT_ROLES = {  # NOTE: role name equals emote name
     "BSL": "Bravo",
     "B1": "Bravo",
     "B2": "Bravo",
+    "CSL": "Charlie",
+    "C1": "Charlie",
+    "C2": "Charlie",
 }
 
 EMOJI_ZEUS = "ZEUS"
@@ -62,4 +65,4 @@ EMOJI_ZEUS = "ZEUS"
 # there is less than SIGNOFF_NOTIFY_TIME left until the operation start,
 # a user defined in secrets.py gets notified about that.
 SIGNOFF_NOTIFY_TIME = timedelta(days=1)
-SIGNOFF_NOTIFY_ROLES = ["HQ", "ASL", "BSL"]
+SIGNOFF_NOTIFY_ROLES = ["HQ", "ASL", "BSL", "CSL"]

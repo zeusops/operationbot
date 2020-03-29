@@ -48,16 +48,24 @@ class Event:
             if len(group.roles) > 0:
                 eventEmbed.add_field(name=group.name, value=str(group),
                                      inline=group.isInline)
+            elif group.name == "Dummy":
+                eventEmbed.add_field(name="\N{ZERO WIDTH SPACE}",
+                                     value="\N{ZERO WIDTH SPACE}",
+                                     inline=group.isInline)
 
         return eventEmbed
 
     # Add default role groups
     def addDefaultRoleGroups(self):
-        self.roleGroups["Company"] = RoleGroup("Company", isInline=False)
+        self.roleGroups["Company"] = RoleGroup("Company")
         self.roleGroups["Platoon"] = RoleGroup("Platoon")
+        # An empty spacer. An embed can only have either one or three items on a
+        # line
+        self.roleGroups["Dummy"] = RoleGroup("Dummy")
         self.roleGroups["Alpha"] = RoleGroup("Alpha")
         self.roleGroups["Bravo"] = RoleGroup("Bravo")
-        self.roleGroups["Additional"] = RoleGroup("Additional")
+        self.roleGroups["Charlie"] = RoleGroup("Charlie")
+        self.roleGroups["Additional"] = RoleGroup("Additional", isInline=False)
 
     # Add default roles
     def addDefaultRoles(self):
@@ -147,7 +155,7 @@ class Event:
                 emoji = role.emoji
                 # Skip the ZEUS reaction. Zeuses can only be signed up using
                 # the signup command
-                if not (isinstance(emoji, Emoji) \
+                if not (isinstance(emoji, Emoji)
                         and emoji.name == cfg.EMOJI_ZEUS):
                     reactions.append(role.emoji)
 
