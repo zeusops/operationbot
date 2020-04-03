@@ -7,7 +7,6 @@ from discord.ext.commands import Cog
 import config as cfg
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
-from secret import SIGNOFF_NOTIFY_USER
 
 
 class EventListener(Cog):
@@ -47,9 +46,10 @@ class EventListener(Cog):
         if event is None:
             print("No event found with that id", reaction.message.id)
             await logchannel.send("NOTE: reaction to a non-existent event. "
-                                   "msg: {} role: {} user: {}#{}"
-                                   .format(reaction.message.id, reaction.emoji,
-                                           user.name, user.discriminator))
+                                  "msg: {} role: {} user: {} ({}#{})"
+                                  .format(reaction.message.id, reaction.emoji,
+                                          user.display_name,
+                                          user.name, user.discriminator))
             return
 
         # Get emoji string
@@ -63,11 +63,11 @@ class EventListener(Cog):
         if role is None or role.name == "ZEUS":
             # No role found, or somebody with Nitro added the ZEUS
             # reaction by hand
-            print("No role found with that emoji {} in event {}"
-                    "by user {}#{}"
-                    .format(emoji, event,
-                            user.name, user.discriminator))
+            print("No role found with that emoji {} in event {} by user {}#{}"
+                  .format(emoji, event, user.name, user.discriminator))
             return
+
+        late_signoff = False
 
         """
         if user is not signed up and the role is     free, sign up
@@ -83,12 +83,10 @@ class EventListener(Cog):
                 event.signup(role, user)
 
                 # Update event
-                await EventDatabase.updateEvent(reaction.message,
-                                                event)
+                await EventDatabase.updateEvent(reaction.message, event)
                 EventDatabase.toJson()
-            await logchannel.send("Signup: event: {} role: {} user: {} ({}#{})"
-                                   .format(event, reaction.emoji, user.nick,
-                                           user.name, user.discriminator))
+            message_action = "Signup"
+
         elif signup.emoji == emoji:
             # undo signup
             event.undoSignup(user)
@@ -98,9 +96,7 @@ class EventListener(Cog):
                                             event)
             EventDatabase.toJson()
 
-            message = "Signoff: event: {} role: {} user: {} ({}#{})" \
-                      .format(event, reaction.emoji, user.nick,
-                              user.name, user.discriminator)
+            message_action = "Signoff"
 
             print("Signed off role name:", role.name)
             if role.name in cfg.SIGNOFF_NOTIFY_ROLES:
@@ -115,8 +111,8 @@ class EventListener(Cog):
                     days = time_delta.days
                     hours = time_delta.seconds // (60 * 60)
                     minutes = (time_delta.seconds - hours * 60 * 60) // 60
-                    if time_delta.days > 0:
-                        days_str = "{} days ".format(time_delta.days)
+                    if days > 0:
+                        days_str = "{} days ".format(days)
                     if hours > 0:
                         hours_str = "{} hours ".format(hours)
                     if minutes > 0:
@@ -128,16 +124,29 @@ class EventListener(Cog):
                     if time_delta < cfg.SIGNOFF_NOTIFY_TIME:
                         print("Delta:", time_delta)
                         print("Date delta smaller than notify period")
-                        message = "{}: User {} signed off from {} role {} " \
-                                "{} before the operation." \
-                                .format(self.bot.signoff_notify_user.mention,
-                                        user.nick,
-                                        event,
-                                        role.emoji,
-                                        timestring)
+                        late_signoff = True
+        else:
+            # user reacted to another role while signed up
+            return
 
+        if late_signoff:
+            message = "{}: User {} ({}#{}) signed off from {} role {} " \
+                      "{} before the operation." \
+                      .format(self.bot.signoff_notify_user.mention,
+                              user.display_name,
+                              user.name,
+                              user.discriminator,
+                              event,
+                              role.emoji,
+                              timestring)
+        else:
+            message = "{}: event: {} role: {} user: {} ({}#{})" \
+                      .format(message_action, event, reaction.emoji,
+                              user.display_name,
+                              user.name,
+                              user.discriminator)
 
-            await logchannel.send(message)
+        await logchannel.send(message)
 
     @Cog.listener()
     async def on_message(self, message: Message):
