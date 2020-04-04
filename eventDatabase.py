@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 
 from discord import ClientUser, Emoji, Message, TextChannel
 
@@ -22,7 +22,7 @@ class EventDatabase:
 
     @staticmethod
     async def createEvent(date: datetime, channel: TextChannel,
-                          importing=False, eventID=-1) \
+                          importing=False, eventID: int = -1) \
             -> Tuple[Message, Event]:
         """Create a new event and store it."""
         if eventID == -1:
@@ -201,6 +201,8 @@ class EventDatabase:
     @staticmethod
     async def fromJson(bot: OperationBot):
         """Fill events and eventsArchive with data from JSON."""
+        print("Importing")
+
         # Import
         try:
             try:
@@ -240,7 +242,7 @@ class EventDatabase:
         EventDatabase.events = {}
         EventDatabase.eventsArchive = {}
         EventDatabase.nextID = data['nextID']
-        eventsData = data['events']
+        eventsData: Tuple[str, Any] = data['events']
         eventsArchiveData = data['eventsArchive']
         eventchannel = bot.eventchannel
 
@@ -251,11 +253,12 @@ class EventDatabase:
         # Add events
         for eventID, eventData in eventsData.items():
             # Create event
+            eventID = int(eventID)
             date = datetime.strptime(eventData['date'],
                                      '%Y-%m-%d')
             eventMessage, event = \
-                await EventDatabase.createEvent(date, eventchannel,
-                                                importing=True)
+                await EventDatabase.createEvent(
+                    date, eventchannel, importing=True, eventID=eventID)
             event.fromJson(eventID, eventData, eventchannel.guild)
             await EventDatabase.updateEvent(eventMessage, event)
 
@@ -269,12 +272,13 @@ class EventDatabase:
         # Add archived events
         for eventID, eventData in eventsArchiveData.items():
             # Create event
+            eventID = int(eventID)
             date = datetime.strptime(eventData['date'], "%Y-%m-%d")
             event = Event(date, eventchannel.guild.emojis)
             event.fromJson(eventID, eventData, eventchannel.guild)
             EventDatabase.eventsArchive[eventID] = event
-            # TODO: test
-            # EventDatabase.eventsArchive[int(eventID)] = event
 
         for eventID, event in EventDatabase.events.items():
             print(eventID, event)
+
+        print("Import done")
