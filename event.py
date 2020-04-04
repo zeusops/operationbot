@@ -29,7 +29,7 @@ class Event:
         self.messageID = 0
         self.id = eventID
 
-        self.normalEmojis = self.getNormalEmojis(guildEmojis)
+        self.normalEmojis = self._getNormalEmojis(guildEmojis)
         if not importing:
             self.addDefaultRoleGroups()
             self.addDefaultRoles()
@@ -136,7 +136,7 @@ class Event:
         self.faction = newFaction
 
     # Get emojis for normal roles
-    def getNormalEmojis(self, guildEmojis):
+    def _getNormalEmojis(self, guildEmojis) -> Dict[str, Emoji]:
         normalEmojis = {}
 
         for emoji in guildEmojis:

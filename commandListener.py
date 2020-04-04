@@ -15,7 +15,7 @@ import messageFunctions as msgFnc
 from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
-from secret import ADMIN, ADMINS
+from secret import ADMINS
 from secret import COMMAND_CHAR as CMD
 
 
@@ -194,7 +194,7 @@ class CommandListener(Cog):
 
     # Create event command
     @command()
-    async def create(self, ctx: Context, date: EventDateTime, force = None):
+    async def create(self, ctx: Context, date: EventDateTime, force=None):
         """
         Create a new event.
 
@@ -204,6 +204,7 @@ class CommandListener(Cog):
                  create 2019-01-01 force
         """
 
+        # FIXME: take time zone into account
         if date < datetime.today() and not force:
             await ctx.send("Requested date {} has already passed. "
                            "Use the `force` argument to override. "
@@ -214,11 +215,11 @@ class CommandListener(Cog):
 
     @command()
     async def multicreate(self, ctx: Context, start: EventDate,
-                          end: EventDate = None, force = None):
+                          end: EventDate = None, force=None):
         """Create events for all weekends within specified range.
 
-        If the end date is omitted, events are created for the rest of the month.
-        Use the `force` argument to create past events.
+        If the end date is omitted, events are created for the rest of the
+        month. Use the `force` argument to create past events.
 
         Example: multicreate 2019-01-01
                  multicreate 2019-01-01 2019-01-15
