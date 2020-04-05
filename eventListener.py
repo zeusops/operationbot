@@ -103,7 +103,9 @@ class EventListener(Cog):
                 # Update event
                 await msgFnc.updateMessageEmbed(message, event)
                 EventDatabase.toJson()
-            # FIXME: do not add log entry if signup was already taken
+            else:
+                # Role is already taken, ignoring sign up attempt
+                return
             message_action = "Signup"
 
         elif signup.emoji == emoji:
