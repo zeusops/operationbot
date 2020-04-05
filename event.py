@@ -210,7 +210,7 @@ class Event:
                     role.userName = ""
         return None
 
-    def findSignup(self, userID) -> Optional[Role]:
+    def findSignupRole(self, userID) -> Optional[Role]:
         """Check if given user is already signed up."""
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
@@ -238,11 +238,12 @@ class Event:
         data["terrain"] = self.terrain
         data["faction"] = self.faction
         data["color"] = self.color
+        data["messageID"] = self.messageID
         data["roleGroups"] = roleGroupsData
         data["additionalRoleCount"] = self.additionalRoleCount
         return data
 
-    def fromJson(self, eventID, data, guild):
+    def fromJson(self, eventID, data, emojis):
         self.id = int(eventID)
         self.setTitle(data.get("title", TITLE))
         time = datetime.strptime(data.get("time", "00:00"), "%H:%M")
@@ -251,9 +252,10 @@ class Event:
         self.faction = data.get("faction", FACTION)
         self.description = data.get("description", DESCRIPTION)
         self.color = data.get("color", COLOR)
+        self.messageID = data.get("messageID", 0)
         self.additionalRoleCount = data.get("additionalRoleCount", 0)
         # TODO: Handle missing roleGroups
         for groupName, roleGroupData in data["roleGroups"].items():
             roleGroup = RoleGroup(groupName)
-            roleGroup.fromJson(roleGroupData, guild)
+            roleGroup.fromJson(roleGroupData, emojis)
             self.roleGroups[groupName] = roleGroup

@@ -1,14 +1,16 @@
-from typing import Optional
+from typing import Dict, List, Optional
 
-from discord import Message, NotFound
+from discord import ClientUser, Emoji, Message, NotFound, TextChannel
+from discord.abc import Messageable
 from discord.ext.commands import Context
 
 import config as cfg
 from event import Event
-from operationbot import OperationBot
+
+# from operationbot import OperationBot
 
 
-async def getEventMessage(bot: OperationBot, event: Event, archived=False) \
+async def getEventMessage(event: Event, bot, archived=False) \
         -> Optional[Message]:
     """Get a message related to an event."""
     if archived:
@@ -33,24 +35,142 @@ async def getEvent(messageID, ctx: Context) -> Optional[Event]:
     return eventToUpdate
 
 
-async def sortEventMessages(ctx: Context):
+async def sortEventMessages(target: Messageable, bot=None):
     """Sort events in event database."""
+    if bot is None:
+        if isinstance(target, Context):
+            bot = target.bot
+        else:
+            raise ValueError("Requires either the bot argument or context.")
+
     from eventDatabase import EventDatabase
     EventDatabase.sortEvents()
     print(EventDatabase.events)
 
+
     event: Event
     for event in EventDatabase.events.values():
-        messageID = event.messageID
-        eventchannel = ctx.bot.get_channel(cfg.EVENT_CHANNEL)
-        try:
-            eventMessage = await eventchannel.fetch_message(messageID)
-        except NotFound:
-            await ctx.send(
+        message = await getEventMessage(event, bot)
+        if message is None:
+            await target.send(
                 "sortEventMessages: No message found with that message ID: {}"
-                .format(messageID))
+                .format(event.messageID))
             return
-        reactions = event.getReactions()
-        await EventDatabase.updateReactions(eventMessage, reactions,
-                                            ctx.bot.user)
-        await EventDatabase.updateEvent(eventMessage, event)
+        await updateReactions(event, message=message)
+        await updateMessageEmbed(message, event)
+
+
+# from EventDatabase
+async def createEventMessage(event: Event, channel: TextChannel) \
+        -> Message:
+    """Create a new event message."""
+    # Create embed and message
+    embed = event.createEmbed()
+    embed.set_footer(text="Event ID: " + str(event.id))
+    message = await channel.send(embed=embed)
+    event.messageID = message.id
+
+    return message
+
+
+# was: EventDatabase.updateEvent
+async def updateMessageEmbed(eventMessage: Message, updatedEvent: Event) \
+        -> None:
+    """Update the embed and footer of a message."""
+    newEventEmbed = updatedEvent.createEmbed()
+    newEventEmbed.set_footer(text="Event ID: " + str(updatedEvent.id))
+    await eventMessage.edit(embed=newEventEmbed)
+
+
+# from EventDatabase
+async def updateReactions(event: Event, message: Message = None, bot=None):
+    """
+    Update reactions of an event message.
+
+    Requires either the `message` or `bot` argument to be provided.
+    """
+    if message is None:
+        if bot is None:
+            raise ValueError("Requires either the `message` or `bot` argument"
+                             " to be provided")
+        message = await getEventMessage(event, bot)
+
+    reactions: List[Emoji] = event.getReactions()
+    reactionEmojisIntended = reactions
+    reactionsCurrent = message.reactions
+    reactionEmojisCurrent = {}
+    reactionsToRemove = []
+    reactionEmojisToAdd = []
+
+    # Find reaction emojis current
+    for reaction in reactionsCurrent:
+        reactionEmojisCurrent[reaction.emoji] = reaction
+
+    # Find emojis to remove
+    for emoji, reaction in reactionEmojisCurrent.items():
+        if emoji not in reactionEmojisIntended:
+            reactionsToRemove.append(reaction)
+
+    # Find emojis to add
+    for emoji in reactionEmojisIntended:
+        if emoji not in reactionEmojisCurrent.keys():
+            reactionEmojisToAdd.append(emoji)
+
+    # Remove existing unintended reactions
+    for reaction in reactionsToRemove:
+        await message.clear_reaction(reaction)
+
+    # Add not existing intended emojis
+    for emoji in reactionEmojisToAdd:
+        await message.add_reaction(emoji)
+
+
+# async def createMessages(events: Dict[int, Event], bot):
+#     # Update event message contents and add reactions
+
+#     # Clear events channel
+#     if cfg.PURGE_ON_CONNECT:
+#         await bot.eventchannel.purge(limit=100)
+
+#     for event in events.values():
+#         await createEventMessage(event, bot.eventchannel)
+#     for event in events.values():
+#         message = await getEventMessage(event, bot)
+#         await updateMessageEmbed(message, event)
+#         await updateReactions(event, bot=bot)
+
+def messageEventId(message: Message) -> int:
+    footer = message.embeds[0].footer.text
+    return int(footer.split(' ')[-1])
+
+async def syncMessages(events: Dict[int, Event], bot):
+    sorted_events = sorted(list(events.values()), key=lambda event: event.date)
+    print(sorted_events)
+    for event in sorted_events:
+        message = await getEventMessage(event, bot)
+        if message is not None and messageEventId(message) == event.id:
+            print("found message {} for event {}".format(message.id, event))
+        else:
+            print("missing a message for event {}, creating".format(event))
+            message = await createEventMessage(event, bot.eventchannel)
+
+    await sortEventMessages(bot.commandchannel, bot)
+
+
+# async def importMessages(events: Dict[int, Event], bot):
+#     found = 0
+#     async for message in bot.eventchannel.history():
+#         if len(message.embeds) > 0:
+#             print("embeds", message.embeds)
+#             footer = message.embeds[0].footer.text
+#             print("footer", footer)
+#             event_id = int(footer.split(' ')[-1])
+#             if event_id in events:
+#                 events[event_id].messageID = message.id
+#                 found += 1
+#             else:
+#                 print("Found a message {} with unknown event id {}"
+#                       .format(message.id, event_id))
+#             if found >= len(events):
+#                 print("Found all messages")
+#                 break

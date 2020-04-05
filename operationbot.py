@@ -2,6 +2,7 @@ from discord import TextChannel, User
 from discord.ext.commands import Bot
 
 import config as cfg
+from eventDatabase import EventDatabase
 from secret import ADMIN, SIGNOFF_NOTIFY_USER
 
 
@@ -24,3 +25,10 @@ class OperationBot(Bot):
         self.owner_id            = ADMIN
         self.owner               = self.get_user(self.owner_id)
         self.signoff_notify_user = self.get_user(SIGNOFF_NOTIFY_USER)
+
+    async def import_database(self):
+        try:
+            EventDatabase.fromJson(self.commandchannel.guild.emojis)
+        except ValueError as e:
+            await self.commandchannel.send(e)
+            await self.logout()

@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Tuple
 
-from discord import Guild
+from discord import Emoji, Guild
 
 import config as cfg
 from role import Role
@@ -46,14 +46,14 @@ class RoleGroup:
         data["roles"] = rolesData
         return data
 
-    def fromJson(self, data: dict, guild: Guild):
+    def fromJson(self, data: dict, emojis: Tuple[Emoji]):
         self.name = data["name"]
         self.isInline = data["isInline"]
         for roleEmoji, roleData in data["roles"].items():
             try:
                 roleEmoji = cfg.ADDITIONAL_ROLE_EMOJIS[int(roleEmoji)]
             except ValueError:
-                for emoji in guild.emojis:
+                for emoji in emojis:
                     if emoji.name == roleEmoji:
                         roleEmoji = emoji
                         break

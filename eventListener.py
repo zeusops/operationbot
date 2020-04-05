@@ -1,12 +1,15 @@
 import importlib
 from datetime import datetime, timedelta
 
-from discord import Game, Member, Message, Reaction
+from discord import Game, Member, Message, RawReactionActionEvent, Reaction
 from discord.ext.commands import Cog
 
 import config as cfg
+import messageFunctions as msgFnc
+from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
+from role import Role
 
 
 class EventListener(Cog):
@@ -20,43 +23,58 @@ class EventListener(Cog):
         await self.bot.wait_until_ready()
         self.bot.fetch_data()
         commandchannel = self.bot.commandchannel
+        await commandchannel.send("Connected")
         print("Ready, importing")
         await commandchannel.send("Importing events")
-        await EventDatabase.fromJson(self.bot)
-        print("Imported")
-        await commandchannel.send("Events imported")
-        await self.bot.change_presence(activity=Game(name=cfg.GAME,
-                                                     type=2))
+        # await EventDatabase.fromJson(self.bot)
+        await self.bot.import_database()
+        await commandchannel.send("syncing")
+        await msgFnc.syncMessages(EventDatabase.events, self.bot)
+        await commandchannel.send("synced")
+        EventDatabase.toJson()
+        # TODO: add conditional message creation
+        # if debug:
+        #   create messages
+        # else:
+        #   detect existing messages
+        msg = "{} events imported".format(len(EventDatabase.events))
+        print(msg)
+        await commandchannel.send(msg)
+        await self.bot.change_presence(activity=Game(name=cfg.GAME, type=2))
         print('Logged in as', self.bot.user.name, self.bot.user.id)
 
-    # Create event command
     @Cog.listener()
-    async def on_reaction_add(self, reaction: Reaction, user: Member):
-        # Exit if reaction is from the bot or not in the event channel
-        if user == self.bot.user \
-                or reaction.message.channel != self.bot.eventchannel:
+    async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
+        if payload.member == self.bot.user or \
+                payload.channel_id != self.bot.eventchannel.id:
+            # Bot's own reaction, or reaction outside of the event channel
             return
 
-        logchannel = self.bot.logchannel
         # Remove the reaction
-        await reaction.message.remove_reaction(reaction, user)
+        message = await self.bot.eventchannel.fetch_message(payload.message_id)
+        user = payload.member
+        await message.remove_reaction(payload.emoji, user)
 
         # Get event from database with message ID
-        event = EventDatabase.getEventByMessage(reaction.message.id)
+        event: Event = EventDatabase.getEventByMessage(message.id)
         if event is None:
-            print("No event found with that id", reaction.message.id)
-            await logchannel.send("NOTE: reaction to a non-existent event. "
-                                  "msg: {} role: {} user: {} ({}#{})"
-                                  .format(reaction.message.id, reaction.emoji,
-                                          user.display_name,
-                                          user.name, user.discriminator))
+            print("No event found with that id", message.id)
+            await self.bot.logchannel.send(
+                "NOTE: reaction to a non-existent event. "
+                "msg: {} role: {} user: {} ({}#{})"
+                .format(message.id, payload.emoji,
+                        user.display_name,
+                        user.name, user.discriminator))
             return
 
         # Get emoji string
-        emoji = reaction.emoji
+        if payload.emoji.is_custom_emoji():
+            emoji = payload.emoji
+        else:
+            emoji = payload.emoji.name
 
         # Find signup of user
-        signup = event.findSignup(user.id)
+        signup: Role = event.findSignupRole(user.id)
 
         # Get role with the emoji
         role = event.findRoleWithEmoji(emoji)
@@ -83,8 +101,9 @@ class EventListener(Cog):
                 event.signup(role, user)
 
                 # Update event
-                await EventDatabase.updateEvent(reaction.message, event)
+                await msgFnc.updateMessageEmbed(message, event)
                 EventDatabase.toJson()
+            # FIXME: do not add log entry if signup was already taken
             message_action = "Signup"
 
         elif signup.emoji == emoji:
@@ -92,8 +111,7 @@ class EventListener(Cog):
             event.undoSignup(user)
 
             # Update event
-            await EventDatabase.updateEvent(reaction.message,
-                                            event)
+            await msgFnc.updateMessageEmbed(message, event)
             EventDatabase.toJson()
 
             message_action = "Signoff"
@@ -141,12 +159,12 @@ class EventListener(Cog):
                               timestring)
         else:
             message = "{}: event: {} role: {} user: {} ({}#{})" \
-                      .format(message_action, event, reaction.emoji,
+                      .format(message_action, event, emoji,
                               user.display_name,
                               user.name,
                               user.discriminator)
 
-        await logchannel.send(message)
+        await self.bot.logchannel.send(message)
 
     @Cog.listener()
     async def on_message(self, message: Message):

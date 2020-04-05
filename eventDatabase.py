@@ -1,14 +1,12 @@
 import json
 import os
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any, Dict, Optional, Tuple
 
-from discord import ClientUser, Emoji, Message, TextChannel
+from discord import Emoji
 
 import config as cfg
 from event import Event
-from messageFunctions import getEventMessage
-from operationbot import OperationBot
 
 DATABASE_VERSION = 3
 
@@ -21,39 +19,26 @@ class EventDatabase:
     nextID: int = 0
 
     @staticmethod
-    async def createEvent(date: datetime, channel: TextChannel,
-                          importing=False, eventID: int = -1) \
-            -> Tuple[Message, Event]:
-        """Create a new event and store it."""
+    def createEvent(date: datetime, emojis: Tuple[Emoji], eventID: int = -1) \
+            -> Event:
+        """Create a new event and store it.
+
+        Does not create a message for the event.
+        """
         if eventID == -1:
             eventID = EventDatabase.nextID
+            EventDatabase.nextID += 1
+            importing = False
+        else:
+            importing = True
 
         # Create event
-        event = Event(date, channel.guild.emojis, eventID=eventID,
-                      importing=importing)
-
-        # Create message
-        message = await EventDatabase.createEventMessage(event, channel)
-        event.messageID = message.id
+        event = Event(date, emojis, eventID=eventID, importing=importing)
 
         # Store event
-        EventDatabase.events[event.id] = event
+        EventDatabase.events[eventID] = event
 
-        if not importing:
-            EventDatabase.nextID += 1
-
-        return message, event
-
-    # Create a new event message
-    @staticmethod
-    async def createEventMessage(event: Event, channel: TextChannel) \
-            -> Message:
-        # Create embed and message
-        embed = event.createEmbed()
-        embed.set_footer(text="Event ID: " + str(event.id))
-        message = await channel.send(embed=embed)
-
-        return message
+        return event
 
     @staticmethod
     def archiveEvent(event: Event):
@@ -67,17 +52,6 @@ class EventDatabase:
 
         # Add event to eventsArchive
         EventDatabase.eventsArchive[event.id] = event
-
-    @staticmethod
-    async def updateEvent(eventMessage: Message, updatedEvent: Event) -> None:
-        """Update an existing event and store it."""
-        newEventEmbed = updatedEvent.createEmbed()
-        newEventEmbed.set_footer(text="Event ID: " + str(updatedEvent.id))
-        updatedEvent.messageID = eventMessage.id
-        await eventMessage.edit(embed=newEventEmbed)
-
-        # Store event
-        EventDatabase.events[updatedEvent.id] = updatedEvent
 
     @staticmethod
     def removeEvent(eventID: int, archived=False) -> bool:
@@ -146,37 +120,6 @@ class EventDatabase:
             EventDatabase.events[event.id] = event
 
     @staticmethod
-    async def updateReactions(message: Message, reactions: List[Emoji],
-                              user: ClientUser):
-        reactionEmojisIntended = reactions
-        reactionsCurrent = message.reactions
-        reactionEmojisCurrent = {}
-        reactionsToRemove = []
-        reactionEmojisToAdd = []
-
-        # Find reaction emojis current
-        for reaction in reactionsCurrent:
-            reactionEmojisCurrent[reaction.emoji] = reaction
-
-        # Find emojis to remove
-        for emoji, reaction in reactionEmojisCurrent.items():
-            if emoji not in reactionEmojisIntended:
-                reactionsToRemove.append(reaction)
-
-        # Find emojis to add
-        for emoji in reactionEmojisIntended:
-            if emoji not in reactionEmojisCurrent.keys():
-                reactionEmojisToAdd.append(emoji)
-
-        # Remove existing unintended reactions
-        for reaction in reactionsToRemove:
-            await message.remove_reaction(reaction, user)
-
-        # Add not existing intended emojis
-        for emoji in reactionEmojisToAdd:
-            await message.add_reaction(emoji)
-
-    @staticmethod
     def toJson():
         # Get eventsData
         eventsData = {}
@@ -199,7 +142,7 @@ class EventDatabase:
             json.dump(data, jsonFile, indent=2)
 
     @staticmethod
-    async def fromJson(bot: OperationBot):
+    def fromJson(emojis: Tuple[Emoji]):
         """Fill events and eventsArchive with data from JSON."""
         print("Importing")
 
@@ -228,7 +171,7 @@ class EventDatabase:
                            "events": {}, "eventsArchive": {}},
                           jsonFile, indent=2)
             # Try to import again
-            await EventDatabase.fromJson(bot)
+            EventDatabase.fromJson(emojis)
             return
 
         databaseVersion: int = int(data.get('version', 0))
@@ -236,19 +179,13 @@ class EventDatabase:
             msg = "Incorrect database version. Expected: {}, got: {}." \
                   .format(DATABASE_VERSION, databaseVersion)
             print(msg)
-            await bot.commandchannel.send(msg)
-            await bot.logout()
+            raise ValueError(msg)
 
         EventDatabase.events = {}
         EventDatabase.eventsArchive = {}
         EventDatabase.nextID = data['nextID']
-        eventsData: Tuple[str, Any] = data['events']
+        eventsData: Dict[str, Any] = data['events']
         eventsArchiveData = data['eventsArchive']
-        eventchannel = bot.eventchannel
-
-        # Clear events channel
-        if cfg.PURGE_ON_CONNECT:
-            await eventchannel.purge(limit=100)
 
         # Add events
         for eventID, eventData in eventsData.items():
@@ -256,26 +193,17 @@ class EventDatabase:
             eventID = int(eventID)
             date = datetime.strptime(eventData['date'],
                                      '%Y-%m-%d')
-            eventMessage, event = \
-                await EventDatabase.createEvent(
-                    date, eventchannel, importing=True, eventID=eventID)
-            event.fromJson(eventID, eventData, eventchannel.guild)
-            await EventDatabase.updateEvent(eventMessage, event)
-
-        # Add reactions to events
-        for event in EventDatabase.events.values():
-            eventmessage: Message = await getEventMessage(bot, event)
-            reactions = event.getReactions()
-            await EventDatabase.updateReactions(eventmessage, reactions,
-                                                bot.user)
+            event = EventDatabase.createEvent(date, emojis, eventID=eventID)
+            event.fromJson(eventID, eventData, emojis)
+            EventDatabase.events[event.id] = event
 
         # Add archived events
         for eventID, eventData in eventsArchiveData.items():
             # Create event
             eventID = int(eventID)
             date = datetime.strptime(eventData['date'], "%Y-%m-%d")
-            event = Event(date, eventchannel.guild.emojis)
-            event.fromJson(eventID, eventData, eventchannel.guild)
+            event = Event(date, emojis)
+            event.fromJson(eventID, eventData, emojis)
             EventDatabase.eventsArchive[eventID] = event
 
         for eventID, event in EventDatabase.events.items():
