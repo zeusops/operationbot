@@ -283,8 +283,7 @@ class CommandListener(Cog):
                         await self._create_event(ctx, day, batch=True)
                     await msgFnc.sortEventMessages(ctx)
                     EventDatabase.toJson()
-                    await ctx.send("{} Done creating events"
-                                   .format(ctx.author.mention))
+                    await ctx.send("Done creating events")
                     self.bot.awaiting_reply = False
                     return
                 elif reply == 'cancel':
