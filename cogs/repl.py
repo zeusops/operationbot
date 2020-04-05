@@ -97,6 +97,7 @@ class REPL(commands.Cog):
             'guild': msg.guild,
             'channel': msg.channel,
             'author': msg.author,
+            'db': EventDatabase,
             '_': None,
         }
 
