@@ -43,20 +43,29 @@ ADDITIONAL_ROLE_EMOJIS = [
 ]
 
 DEFAULT_ROLES = {  # NOTE: role name equals emote name
-    "ZEUS": "Company",
-    "MOD": "Company",
-    "HQ": "Platoon",
-    "FAC": "Platoon",
-    "RTO": "Platoon",
+    "ZEUS": "Battalion",
+    "MOD": "Battalion",
+    "CO": "Company",
+    "FAC": "Company",
+    "RTO": "Company",
+    "1PLT": "1st Platoon",
     "ASL": "Alpha",
     "A1": "Alpha",
-    "A2": "Alpha",
     "BSL": "Bravo",
     "B1": "Bravo",
-    "B2": "Bravo",
     "CSL": "Charlie",
     "C1": "Charlie",
-    "C2": "Charlie",
+    "DSL": "Delta",
+    "D1": "Delta",
+    "2PLT": "2nd Platoon",
+    "ESL": "Echo",
+    "E1": "Echo",
+    "FSL": "Foxtrot",
+    "F1": "Foxtrot",
+    "GSL": "Golf",
+    "G1": "Golf",
+    "HSL": "Hotel",
+    "H1": "Hotel",
 }
 
 EMOJI_ZEUS = "ZEUS"
@@ -65,4 +74,6 @@ EMOJI_ZEUS = "ZEUS"
 # there is less than SIGNOFF_NOTIFY_TIME left until the operation start,
 # a user defined in secrets.py gets notified about that.
 SIGNOFF_NOTIFY_TIME = timedelta(days=1)
-SIGNOFF_NOTIFY_ROLES = ["HQ", "ASL", "BSL", "CSL"]
+SIGNOFF_NOTIFY_ROLES = [
+    "HQ", "ASL", "BSL", "CSL", "DSL", "ESL", "FSL", "GSL", "HSL",
+]

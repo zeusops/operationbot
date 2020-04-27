@@ -57,14 +57,17 @@ class Event:
 
     # Add default role groups
     def addDefaultRoleGroups(self):
+        self.roleGroups["Battalion"] = RoleGroup("Battalion")
         self.roleGroups["Company"] = RoleGroup("Company")
-        self.roleGroups["Platoon"] = RoleGroup("Platoon")
         # An empty spacer. An embed can only have either one or three items on
         # a line
         self.roleGroups["Dummy"] = RoleGroup("Dummy")
+        self.roleGroups["1st Platoon"] = RoleGroup("1st Platoon")
         self.roleGroups["Alpha"] = RoleGroup("Alpha")
         self.roleGroups["Bravo"] = RoleGroup("Bravo")
-        self.roleGroups["Charlie"] = RoleGroup("Charlie")
+        self.roleGroups["2nd Platoon"] = RoleGroup("2nd Platoon")
+        self.roleGroups["Echo"] = RoleGroup("Echo")
+        self.roleGroups["Foxtrot"] = RoleGroup("Foxtrot")
         self.roleGroups["Additional"] = RoleGroup("Additional", isInline=False)
 
     # Add default roles
