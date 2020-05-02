@@ -57,27 +57,19 @@ class Event:
 
     # Add default role groups
     def addDefaultRoleGroups(self):
-        self.roleGroups["Battalion"] = RoleGroup("Battalion")
-        self.roleGroups["Company"] = RoleGroup("Company")
-        # An empty spacer. An embed can only have either one or three items on
-        # a line
-        self.roleGroups["Dummy"] = RoleGroup("Dummy")
-        self.roleGroups["1st Platoon"] = RoleGroup("1st Platoon")
-        self.roleGroups["Alpha"] = RoleGroup("Alpha")
-        self.roleGroups["Bravo"] = RoleGroup("Bravo")
-        self.roleGroups["2nd Platoon"] = RoleGroup("2nd Platoon")
-        self.roleGroups["Echo"] = RoleGroup("Echo")
-        self.roleGroups["Foxtrot"] = RoleGroup("Foxtrot")
+        for group in cfg.DEFAULT_GROUPS:
+            self.roleGroups[group] = RoleGroup(group)
         self.roleGroups["Additional"] = RoleGroup("Additional", isInline=False)
 
     # Add default roles
     def addDefaultRoles(self):
-        for name, groupName in cfg.DEFAULT_ROLES.items():
+        for groupName, roles in cfg.DEFAULT_ROLES.items():
             # Only add role if the group exists
             if groupName in self.roleGroups.keys():
-                emoji = self.normalEmojis[name]
-                newRole = Role(name, emoji, False)
-                self.roleGroups[groupName].addRole(newRole)
+                for role in roles:
+                    emoji = self.normalEmojis[role]
+                    newRole = Role(role, emoji, displayName=False)
+                    self.roleGroups[groupName].addRole(newRole)
 
     # Add an additional role to the event
     def addAdditionalRole(self, name: str) -> str:
@@ -86,7 +78,7 @@ class Event:
         emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additionalRoleCount]
 
         # Create role
-        newRole = Role(name, emoji, True)
+        newRole = Role(name, emoji, displayName=True)
 
         # Add role to additional roles
         self.roleGroups["Additional"].addRole(newRole)
@@ -142,8 +134,14 @@ class Event:
     def _getNormalEmojis(self, guildEmojis) -> Dict[str, Emoji]:
         normalEmojis = {}
 
+        allRoles = [
+            role
+            for roles in cfg.DEFAULT_ROLES.values()
+            for role in roles
+        ]
+
         for emoji in guildEmojis:
-            if emoji.name in cfg.DEFAULT_ROLES:
+            if emoji.name in allRoles:
                 normalEmojis[emoji.name] = emoji
 
         return normalEmojis

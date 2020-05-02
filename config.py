@@ -42,31 +42,34 @@ ADDITIONAL_ROLE_EMOJIS = [
     "\N{REGIONAL INDICATOR SYMBOL LETTER J}",
 ]
 
-DEFAULT_ROLES = {  # NOTE: role name equals emote name
-    "ZEUS": "Battalion",
-    "MOD": "Battalion",
-    "CO": "Company",
-    "FAC": "Company",
-    "RTO": "Company",
-    "1PLT": "1st Platoon",
-    "ASL": "Alpha",
-    "A1": "Alpha",
-    "BSL": "Bravo",
-    "B1": "Bravo",
-    "CSL": "Charlie",
-    "C1": "Charlie",
-    "DSL": "Delta",
-    "D1": "Delta",
-    "2PLT": "2nd Platoon",
-    "ESL": "Echo",
-    "E1": "Echo",
-    "FSL": "Foxtrot",
-    "F1": "Foxtrot",
-    "GSL": "Golf",
-    "G1": "Golf",
-    "HSL": "Hotel",
-    "H1": "Hotel",
+# NOTE: role name equals emote name
+DEFAULT_ROLES = {
+    "Battalion": ["ZEUS", "MOD"],
+    "Company": ["CO", "FAC", "RTO"],
+    "Dummy": [],
+    "1st Platoon": ["1PLT", "FAC", "RTO"],
+    "Alpha": ["ASL", "A1"],
+    "Bravo": ["BSL", "B1"],
+
+    "Charlie": ["CSL", "C1"],
+    "Delta": ["DSL", "D1"],
+
+    "2nd Platoon": ["2PLT", "FAC", "RTO"],
+    "Echo": ["ESL", "E1"],
+    "Foxtrot": ["FSL", "F1"],
+
+    "Golf": ["GSL", "G1"],
+    "Hotel": ["HSL", "H1"],
 }
+
+# A list of groups to add to an event by default
+DEFAULT_GROUPS = [
+    # Dummy: an empty spacer. An embed can only have either one or three items
+    # on a line
+    "Battalion", "Company", "Dummy",
+    "1st Platoon", "Alpha", "Bravo",
+    "2nd Platoon", "Echo", "Foxtrot",
+]
 
 EMOJI_ZEUS = "ZEUS"
 
