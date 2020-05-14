@@ -19,7 +19,7 @@ from secret import ADMINS
 from secret import COMMAND_CHAR as CMD
 
 
-class EventDateTime(Converter):
+class ArgDateTime(Converter):
     async def convert(self, ctx: Context, arg: str) -> datetime:
         try:
             date = datetime.strptime(arg, '%Y-%m-%d')
@@ -29,7 +29,7 @@ class EventDateTime(Converter):
         return date.replace(hour=18, minute=45)
 
 
-class EventDate(Converter):
+class ArgDate(Converter):
     async def convert(self, ctx: Context, arg: str) -> date:
         try:
             _date = date.fromisoformat(arg)
@@ -39,7 +39,7 @@ class EventDate(Converter):
         return _date
 
 
-class EventTime(Converter):
+class ArgTime(Converter):
     async def convert(self, ctx: Context, arg: str) -> datetime:
         try:
             time = datetime.strptime(arg, '%H:%M')
@@ -49,7 +49,7 @@ class EventTime(Converter):
         return time
 
 
-class EventMessage(Converter):
+class ArgMessage(Converter):
     async def convert(self, ctx: Context, arg: str) -> Message:
         try:
             eventID = int(arg)
@@ -68,7 +68,7 @@ class EventMessage(Converter):
         return message
 
 
-class EventEvent(Converter):
+class ArgEvent(Converter):
     async def convert(self, ctx: Context, arg: str) -> Event:
         try:
             eventID = int(arg)
@@ -83,7 +83,7 @@ class EventEvent(Converter):
         return event
 
 
-class ArchivedEvent(Converter):
+class ArgArchivedEvent(Converter):
     async def convert(self, ctx: Context, arg: str) -> Event:
         try:
             eventID = int(arg)
@@ -191,7 +191,7 @@ class CommandListener(Cog):
 
     # Create event command
     @command()
-    async def create(self, ctx: Context, date: EventDateTime, force=None):
+    async def create(self, ctx: Context, date: ArgDateTime, force=None):
         """
         Create a new event.
 
@@ -211,8 +211,8 @@ class CommandListener(Cog):
             await self._create_event(ctx, date)
 
     @command()
-    async def multicreate(self, ctx: Context, start: EventDate,
-                          end: EventDate = None, force=None):
+    async def multicreate(self, ctx: Context, start: ArgDate,
+                          end: ArgDate = None, force=None):
         """Create events for all weekends within specified range.
 
         If the end date is omitted, events are created for the rest of the
@@ -298,14 +298,14 @@ class CommandListener(Cog):
             self.bot.awaiting_reply = False
 
     @command()
-    async def addrole(self, ctx: Context, eventMessage: EventMessage, *,
+    async def addrole(self, ctx: Context, argMessage: ArgMessage, *,
                       rolename: str):
         """
         Add a new additional role to the event.
 
         Example: addrole 1 Y1 (Bradley) Driver
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        event = await msgFnc.getEvent(argMessage.id, ctx)
         if event is None:
             return
 
@@ -317,7 +317,7 @@ class CommandListener(Cog):
                            "happen. Nag at {}".format(user.mention))
             return
         try:
-            await eventMessage.add_reaction(reaction)
+            await argMessage.add_reaction(reaction)
         except Forbidden as e:
             if e.code == 30010:
                 await ctx.send("Too many reactions, not adding role {}"
@@ -325,21 +325,21 @@ class CommandListener(Cog):
                 event.removeAdditionalRole(rolename)
                 return
 
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateMessageEmbed(argMessage, event)
 
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Role {} added to event {}".format(rolename, event))
 
     # Remove additional role from event command
     @command()
-    async def removerole(self, ctx: Context, eventMessage: EventMessage, *,
+    async def removerole(self, ctx: Context, argMessage: ArgMessage, *,
                          rolename: str):
         """
         Remove an additional role from the event.
 
         Example: removerole 1 Y1 (Bradley) Driver
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        event = await msgFnc.getEvent(argMessage.id, ctx)
         if event is None:
             return
 
@@ -351,23 +351,23 @@ class CommandListener(Cog):
 
         # Remove reactions, remove role, update event, add reactions, export
         for reaction in event.getReactionsOfGroup("Additional"):
-            await eventMessage.remove_reaction(reaction, self.bot.user)
+            await argMessage.remove_reaction(reaction, self.bot.user)
         event.removeAdditionalRole(rolename)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateMessageEmbed(argMessage, event)
         for reaction in event.getReactionsOfGroup("Additional"):
-            await eventMessage.add_reaction(reaction)
+            await argMessage.add_reaction(reaction)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Role {} removed from {}".format(rolename, event))
 
     @command()
-    async def removegroup(self, ctx: Context, eventMessage: EventMessage, *,
+    async def removegroup(self, ctx: Context, argMessage: ArgMessage, *,
                           groupName: str):
         """
         Remove a role group from the event.
 
         Example: removegroup 1 Bravo
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        event = await msgFnc.getEvent(argMessage.id, ctx)
         if event is None:
             return
 
@@ -378,22 +378,22 @@ class CommandListener(Cog):
 
         # Remove reactions, remove role, update event, add reactions, export
         for reaction in event.getReactionsOfGroup(groupName):
-            await eventMessage.remove_reaction(reaction, self.bot.user)
+            await argMessage.remove_reaction(reaction, self.bot.user)
         event.removeRoleGroup(groupName)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateMessageEmbed(argMessage, event)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Group {} removed from {}".format(groupName, event))
 
     # Set title of event command
     @command()
-    async def settitle(self, ctx: Context, eventMessage: EventMessage, *,
+    async def settitle(self, ctx: Context, argMessage: ArgMessage, *,
                        title: str):
         """
         Set event title.
 
         Example: settitle 1 Operation Striker
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        event = await msgFnc.getEvent(argMessage.id, ctx)
         if event is None:
             return
 
@@ -401,21 +401,21 @@ class CommandListener(Cog):
         # NOTE: Does not check for too long input. Will result in an API error
         # and a bot crash
         event.setTitle(title)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateMessageEmbed(argMessage, event)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Title {} set for operation ID {} at {}"
                        .format(event.title, event.id, event.date))
 
     # Set date of event command
     @command()
-    async def setdate(self, ctx: Context, eventMessage: EventMessage,
-                      date: EventDateTime):
+    async def setdate(self, ctx: Context, argMessage: ArgMessage,
+                      date: ArgDateTime):
         """
         Set event date.
 
         Example: setdate 1 2019-01-01
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        event = await msgFnc.getEvent(argMessage.id, ctx)
         if event is None:
             return
 
@@ -423,7 +423,7 @@ class CommandListener(Cog):
         event.setDate(date)
 
         # Update event and sort events, export
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateMessageEmbed(argMessage, event)
         await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Date {} set for operation {} ID {}"
@@ -431,14 +431,14 @@ class CommandListener(Cog):
 
     # Set time of event command
     @command()
-    async def settime(self, ctx: Context, eventMessage: EventMessage,
-                      time: EventTime):
+    async def settime(self, ctx: Context, argMessage: ArgMessage,
+                      time: ArgTime):
         """
         Set event time.
 
         Example: settime 1 18:45
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        event = await msgFnc.getEvent(argMessage.id, ctx)
         if event is None:
             return
 
@@ -446,7 +446,7 @@ class CommandListener(Cog):
         event.setTime(time)
 
         # Update event and sort events, export
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateMessageEmbed(argMessage, event)
         await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Time set for operation {}"
@@ -454,67 +454,67 @@ class CommandListener(Cog):
 
     # Set terrain of event command
     @command()
-    async def setterrain(self, ctx: Context, eventMessage: EventMessage, *,
+    async def setterrain(self, ctx: Context, argMessage: ArgMessage, *,
                          terrain: str):
         """
         Set event terrain.
 
         Example: settime 1 Takistan
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        event = await msgFnc.getEvent(argMessage.id, ctx)
         if event is None:
             return
 
         # Change terrain, update event, export
         event.setTerrain(terrain)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateMessageEmbed(argMessage, event)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Terrain {} set for operation {}"
                        .format(event.terrain, event))
 
     # Set faction of event command
     @command()
-    async def setfaction(self, ctx: Context, eventMessage: EventMessage, *,
+    async def setfaction(self, ctx: Context, argMessage: ArgMessage, *,
                          faction: str):
         """
         Set event faction.
 
         Example: setfaction 1 Insurgents
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        event = await msgFnc.getEvent(argMessage.id, ctx)
         if event is None:
             return
 
         # Change faction, update event, export
         event.setFaction(faction)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateMessageEmbed(argMessage, event)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Faction {} set for operation {}"
                        .format(event.faction, event))
 
     # Set faction of event command
     @command()
-    async def setdescription(self, ctx: Context, eventMessage: EventMessage, *,
+    async def setdescription(self, ctx: Context, argMessage: ArgMessage, *,
                              description: str):
         """
         Set event description.
 
         Example: setdescription 1 Extra mods required
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        event = await msgFnc.getEvent(argMessage.id, ctx)
         if event is None:
             return
 
         # Change description, update event, export
         event.description = description
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateMessageEmbed(argMessage, event)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Description \"{}\" set for operation {}"
                        .format(event.description, event))
 
     # Sign user up to event command
     @command()
-    async def signup(self, ctx: Context, eventMessage: EventMessage,
+    async def signup(self, ctx: Context, argMessage: ArgMessage,
                      user: Member, *, roleName: str):
         """
         Sign user up (manually).
@@ -524,7 +524,7 @@ class CommandListener(Cog):
 
         Example: signup 1 "S. Gehock" Y1 (Bradley) Gunner
         """  # NOQA
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        event = await msgFnc.getEvent(argMessage.id, ctx)
         if event is None:
             return
 
@@ -536,7 +536,7 @@ class CommandListener(Cog):
 
         # Sign user up, update event, export
         event.signup(role, user)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateMessageEmbed(argMessage, event)
         EventDatabase.toJson()  # Update JSON file
         # TODO: handle users without separate nickname
         await ctx.send("User {} signed up to event {} as {}"
@@ -544,7 +544,7 @@ class CommandListener(Cog):
 
     # Remove signup on event of user command
     @command()
-    async def removesignup(self, ctx: Context, eventMessage: EventMessage,
+    async def removesignup(self, ctx: Context, argMessage: ArgMessage,
                            user: Member):
         """
         Undo user signup (manually).
@@ -553,13 +553,13 @@ class CommandListener(Cog):
 
         Example: removesignup 1 "S. Gehock"
         """  # NOQA
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        event = await msgFnc.getEvent(argMessage.id, ctx)
         if event is None:
             return
 
         # Remove signup, update event, export
         event.undoSignup(user)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateMessageEmbed(argMessage, event)
         EventDatabase.toJson()  # Update JSON file
         # TODO: handle users without separate nickname
         await ctx.send("User {} removed from event {}"
@@ -567,7 +567,7 @@ class CommandListener(Cog):
 
     # Archive event command
     @command()
-    async def archive(self, ctx: Context, event: EventEvent):
+    async def archive(self, ctx: Context, event: ArgEvent):
         """
         Archive event.
 
@@ -591,7 +591,7 @@ class CommandListener(Cog):
 
     # Delete event command
     @command()
-    async def delete(self, ctx: Context, event: EventEvent):
+    async def delete(self, ctx: Context, event: ArgEvent):
         """
         Delete event.
 
@@ -605,7 +605,7 @@ class CommandListener(Cog):
         await ctx.send("Event {} removed".format(event))
 
     @command()
-    async def deletearchived(self, ctx: Context, event: ArchivedEvent):
+    async def deletearchived(self, ctx: Context, event: ArgArchivedEvent):
         """
         Delete archived event.
 
