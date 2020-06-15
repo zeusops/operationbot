@@ -74,5 +74,5 @@ EMOJI_ZEUS = "ZEUS"
 # a user defined in secrets.py gets notified about that.
 SIGNOFF_NOTIFY_TIME = timedelta(days=1)
 SIGNOFF_NOTIFY_ROLES = [
-    "HQ", "ASL", "BSL", "CSL", "DSL", "ESL", "FSL", "GSL", "HSL",
+    "CO", "HQ", "ASL", "BSL", "CSL", "DSL", "ESL", "FSL", "GSL", "HSL",
 ]
