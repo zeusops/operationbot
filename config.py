@@ -44,7 +44,6 @@ ADDITIONAL_ROLE_EMOJIS = [
 
 DEFAULT_ROLES = {  # NOTE: role name equals emote name
     "ZEUS": "Battalion",
-    "MOD": "Battalion",
     "CO": "Company",
     "FAC": "Company",
     "RTO": "Company",
