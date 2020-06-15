@@ -177,11 +177,12 @@ class CommandListener(Cog):
         await ctx.send(msg)
 
     async def _create_event(self, ctx: Context, date: datetime,
-                            batch=False):
+                            batch=False, sideop=False):
         # TODO: Optionally specify sideop -> hide 1PLT and Bravo
         # TODO: Check for duplicate event dates?
         # Create event and sort events, export
-        event: Event = EventDatabase.createEvent(date, ctx.guild.emojis)
+        event: Event = EventDatabase.createEvent(date, ctx.guild.emojis,
+                                                 sideop=sideop)
         message = await msgFnc.createEventMessage(event, self.bot.eventchannel)
         if not batch:
             await msgFnc.updateReactions(event, message=message)
@@ -209,6 +210,26 @@ class CommandListener(Cog):
                            .format(date, CMD))
         else:
             await self._create_event(ctx, date)
+
+    @command()
+    async def createside(self, ctx: Context, date: EventDateTime, force=None):
+        """
+        Create a new side op event.
+
+        Use the `force` argument to create past events.
+
+        Example: create 2019-01-01
+                 create 2019-01-01 force
+        """
+
+        # FIXME: take time zone into account
+        if date < datetime.today() and not force:
+            await ctx.send("Requested date {} has already passed. "
+                           "Use the `force` argument to override. "
+                           "See `{}help create`"
+                           .format(date, CMD))
+        else:
+            await self._create_event(ctx, date, sideop=True)
 
     @command()
     async def multicreate(self, ctx: Context, start: EventDate,

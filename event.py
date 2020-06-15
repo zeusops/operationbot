@@ -8,22 +8,24 @@ from role import Role
 from roleGroup import RoleGroup
 
 TITLE = "Operation"
+SIDEOP_TITLE = "Side Operation"
 TERRAIN = "unknown"
 FACTION = "unknown"
 DESCRIPTION = ""
 COLOR = 0xFF4500
+SIDEOP_COLOR = 0x0045FF
 
 
 class Event:
 
     def __init__(self, date: datetime, guildEmojis: Tuple[Emoji],
-                 eventID=0, importing=False):
-        self.title = TITLE
+                 eventID=0, importing=False, sideop=False):
+        self.title = TITLE if not sideop else SIDEOP_TITLE
         self.date = date
         self.terrain = TERRAIN
         self.faction = FACTION
         self.description = DESCRIPTION
-        self.color = COLOR
+        self.color = COLOR if not sideop else SIDEOP_COLOR
         self.roleGroups: Dict[str, RoleGroup] = {}
         self.additionalRoleCount = 0
         self.messageID = 0
@@ -31,7 +33,7 @@ class Event:
 
         self.normalEmojis = self._getNormalEmojis(guildEmojis)
         if not importing:
-            self.addDefaultRoleGroups()
+            self.addDefaultRoleGroups(sideop=sideop)
             self.addDefaultRoles()
 
     # Return an embed for the event
@@ -56,19 +58,26 @@ class Event:
         return eventEmbed
 
     # Add default role groups
-    def addDefaultRoleGroups(self):
-        self.roleGroups["Battalion"] = RoleGroup("Battalion")
-        self.roleGroups["Company"] = RoleGroup("Company")
-        # An empty spacer. An embed can only have either one or three items on
-        # a line
-        self.roleGroups["Dummy"] = RoleGroup("Dummy")
-        self.roleGroups["1st Platoon"] = RoleGroup("1st Platoon")
-        self.roleGroups["Alpha"] = RoleGroup("Alpha")
-        self.roleGroups["Bravo"] = RoleGroup("Bravo")
-        self.roleGroups["2nd Platoon"] = RoleGroup("2nd Platoon")
-        self.roleGroups["Echo"] = RoleGroup("Echo")
-        self.roleGroups["Foxtrot"] = RoleGroup("Foxtrot")
-        self.roleGroups["Additional"] = RoleGroup("Additional", isInline=False)
+    def addDefaultRoleGroups(self, sideop=False):
+        if sideop:
+            self.roleGroups["Battalion"] = RoleGroup("Battalion")
+            self.roleGroups["Alpha"] = RoleGroup("Alpha")
+            self.roleGroups["Additional"] = RoleGroup("Additional",
+                                                       isInline=False)
+        else:
+            self.roleGroups["Battalion"] = RoleGroup("Battalion")
+            self.roleGroups["Company"] = RoleGroup("Company")
+            # An empty spacer. An embed can only have either one or three items on
+            # a line
+            self.roleGroups["Dummy"] = RoleGroup("Dummy")
+            self.roleGroups["1st Platoon"] = RoleGroup("1st Platoon")
+            self.roleGroups["Alpha"] = RoleGroup("Alpha")
+            self.roleGroups["Bravo"] = RoleGroup("Bravo")
+            self.roleGroups["2nd Platoon"] = RoleGroup("2nd Platoon")
+            self.roleGroups["Echo"] = RoleGroup("Echo")
+            self.roleGroups["Foxtrot"] = RoleGroup("Foxtrot")
+            self.roleGroups["Additional"] = RoleGroup("Additional",
+                                                       isInline=False)
 
     # Add default roles
     def addDefaultRoles(self):

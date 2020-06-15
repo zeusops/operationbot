@@ -19,8 +19,8 @@ class EventDatabase:
     nextID: int = 0
 
     @staticmethod
-    def createEvent(date: datetime, emojis: Tuple[Emoji], eventID: int = -1) \
-            -> Event:
+    def createEvent(date: datetime, emojis: Tuple[Emoji], eventID: int = -1,
+                    sideop=False) -> Event:
         """Create a new event and store it.
 
         Does not create a message for the event.
@@ -33,7 +33,8 @@ class EventDatabase:
             importing = True
 
         # Create event
-        event = Event(date, emojis, eventID=eventID, importing=importing)
+        event = Event(date, emojis, eventID=eventID, importing=importing,
+                      sideop=sideop)
 
         # Store event
         EventDatabase.events[eventID] = event
