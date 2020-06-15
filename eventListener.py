@@ -149,7 +149,7 @@ class EventListener(Cog):
             # user reacted to another role while signed up
             return
 
-        if late_signoff:
+        if late_signoff and not event.sideop:
             message = "{}: User {} ({}#{}) signed off from {} role {} " \
                       "{} before the operation." \
                       .format(self.bot.signoff_notify_user.mention,

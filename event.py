@@ -30,6 +30,7 @@ class Event:
         self.additionalRoleCount = 0
         self.messageID = 0
         self.id = eventID
+        self.sideop = sideop
 
         self.normalEmojis = self._getNormalEmojis(guildEmojis)
         if not importing:
