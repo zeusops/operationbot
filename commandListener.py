@@ -191,7 +191,7 @@ class CommandListener(Cog):
         await ctx.send("Created event {} with id {}".format(event, event.id))
 
     # Create event command
-    @command()
+    @command(aliases=['c'])
     async def create(self, ctx: Context, date: EventDateTime, force=None):
         """
         Create a new event.
@@ -211,7 +211,7 @@ class CommandListener(Cog):
         else:
             await self._create_event(ctx, date)
 
-    @command()
+    @command(aliases=['cs'])
     async def createside(self, ctx: Context, date: EventDateTime, force=None):
         """
         Create a new side op event.
@@ -231,7 +231,7 @@ class CommandListener(Cog):
         else:
             await self._create_event(ctx, date, sideop=True)
 
-    @command()
+    @command(aliases=['mc'])
     async def multicreate(self, ctx: Context, start: EventDate,
                           end: EventDate = None, force=None):
         """Create events for all weekends within specified range.
@@ -318,7 +318,7 @@ class CommandListener(Cog):
                            .format(traceback.format_exc()))
             self.bot.awaiting_reply = False
 
-    @command()
+    @command(aliases=['ar'])
     async def addrole(self, ctx: Context, eventMessage: EventMessage, *,
                       rolename: str):
         """
@@ -352,7 +352,7 @@ class CommandListener(Cog):
         await ctx.send("Role {} added to event {}".format(rolename, event))
 
     # Remove additional role from event command
-    @command()
+    @command(aliases=['rr'])
     async def removerole(self, ctx: Context, eventMessage: EventMessage, *,
                          rolename: str):
         """
@@ -380,7 +380,7 @@ class CommandListener(Cog):
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Role {} removed from {}".format(rolename, event))
 
-    @command()
+    @command(aliases=['rg'])
     async def removegroup(self, ctx: Context, eventMessage: EventMessage, *,
                           groupName: str):
         """
@@ -406,7 +406,7 @@ class CommandListener(Cog):
         await ctx.send("Group {} removed from {}".format(groupName, event))
 
     # Set title of event command
-    @command()
+    @command(aliases=['stt'])
     async def settitle(self, ctx: Context, eventMessage: EventMessage, *,
                        title: str):
         """
@@ -428,7 +428,7 @@ class CommandListener(Cog):
                        .format(event.title, event.id, event.date))
 
     # Set date of event command
-    @command()
+    @command(aliases=['sdt'])
     async def setdate(self, ctx: Context, eventMessage: EventMessage,
                       date: EventDateTime):
         """
@@ -451,7 +451,7 @@ class CommandListener(Cog):
                        .format(event.date, event.title, event.id))
 
     # Set time of event command
-    @command()
+    @command(aliases=['stm'])
     async def settime(self, ctx: Context, eventMessage: EventMessage,
                       time: EventTime):
         """
@@ -474,7 +474,7 @@ class CommandListener(Cog):
                        .format(event))
 
     # Set terrain of event command
-    @command()
+    @command(aliases=['st'])
     async def setterrain(self, ctx: Context, eventMessage: EventMessage, *,
                          terrain: str):
         """
@@ -494,7 +494,7 @@ class CommandListener(Cog):
                        .format(event.terrain, event))
 
     # Set faction of event command
-    @command()
+    @command(aliases=['sf'])
     async def setfaction(self, ctx: Context, eventMessage: EventMessage, *,
                          faction: str):
         """
@@ -514,7 +514,7 @@ class CommandListener(Cog):
                        .format(event.faction, event))
 
     # Set faction of event command
-    @command()
+    @command(aliases=['sd'])
     async def setdescription(self, ctx: Context, eventMessage: EventMessage, *,
                              description: str):
         """
@@ -534,7 +534,7 @@ class CommandListener(Cog):
                        .format(event.description, event))
 
     # Sign user up to event command
-    @command()
+    @command(aliases=['s'])
     async def signup(self, ctx: Context, eventMessage: EventMessage,
                      user: Member, *, roleName: str):
         """
@@ -564,7 +564,7 @@ class CommandListener(Cog):
                        .format(user.nick, event, roleName))
 
     # Remove signup on event of user command
-    @command()
+    @command(aliases=['rs'])
     async def removesignup(self, ctx: Context, eventMessage: EventMessage,
                            user: Member):
         """
@@ -587,7 +587,7 @@ class CommandListener(Cog):
                        .format(user.nick, event))
 
     # Archive event command
-    @command()
+    @command(aliases=['a'])
     async def archive(self, ctx: Context, event: EventEvent):
         """
         Archive event.
@@ -611,7 +611,7 @@ class CommandListener(Cog):
         await ctx.send("Event {} archived".format(event))
 
     # Delete event command
-    @command()
+    @command(aliases=['d'])
     async def delete(self, ctx: Context, event: EventEvent):
         """
         Delete event.
