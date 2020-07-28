@@ -8,7 +8,7 @@ from discord import Emoji
 import config as cfg
 from event import Event
 
-DATABASE_VERSION = 3
+DATABASE_VERSION = 4
 
 
 class EventDatabase:
@@ -17,6 +17,7 @@ class EventDatabase:
     events: Dict[int, Event] = {}
     eventsArchive: Dict[int, Event] = {}
     nextID: int = 0
+    emojis: Optional[Tuple[Emoji]] = None
 
     @staticmethod
     def createEvent(date: datetime, emojis: Tuple[Emoji], eventID: int = -1,
@@ -53,23 +54,19 @@ class EventDatabase:
 
         # Add event to eventsArchive
         EventDatabase.eventsArchive[event.id] = event
+        EventDatabase.toJson(archive=False)
+        EventDatabase.toJson(archive=True)
 
     @staticmethod
-    def removeEvent(eventID: int, archived=False) -> bool:
+    def removeEvent(eventID: int, archived=False) -> Optional[Event]:
         """
         Remove event.
 
         Does not remove the message associated with the event.
         """
-        if archived:
-            if eventID in EventDatabase.eventsArchive.keys():
-                del EventDatabase.eventsArchive[eventID]
-                return True
-        else:
-            if eventID in EventDatabase.events.keys():
-                del EventDatabase.events[eventID]
-                return True
-        return False
+        events = EventDatabase.events if not archived \
+                else EventDatabase.eventsArchive
+        return events.pop(eventID, None)
 
     # was: findEvent
     @staticmethod
@@ -121,59 +118,77 @@ class EventDatabase:
             EventDatabase.events[event.id] = event
 
     @staticmethod
-    def toJson():
+    def toJson(archive=False):
+        # TODO: rename to saveDatabase
+        events = EventDatabase.events if not archive \
+                else EventDatabase.eventsArchive
+        filename = cfg.JSON_FILEPATH['events' if not archive else 'archive']
+
+        EventDatabase.writeJson(events, filename)
+
+    @staticmethod
+    def writeJson(events: Dict[int, Event], filename: str):
         # Get eventsData
         eventsData = {}
-        for messageID, event in EventDatabase.events.items():
+        for messageID, event in events.items():
             eventsData[messageID] = event.toJson()
 
-        # Get eventsArchiveData
-        eventsArchiveData = {}
-        for messageID, event in EventDatabase.eventsArchive.items():
-            eventsArchiveData[messageID] = event.toJson()
-
         # Store data and return
-        data = {}
+        data: Dict[str, Any] = {}
         data['version'] = DATABASE_VERSION
         data['nextID'] = EventDatabase.nextID
         data['events'] = eventsData
-        data['eventsArchive'] = eventsArchiveData
 
-        with open(cfg.JSON_FILEPATH, 'w') as jsonFile:
+        with open(filename, 'w') as jsonFile:
             json.dump(data, jsonFile, indent=2)
 
     @staticmethod
-    def fromJson(emojis: Tuple[Emoji]):
+    def loadDatabase(emojis: Optional[Tuple[Emoji]] = None):
+        if EventDatabase.emojis is None:
+            EventDatabase.emojis = emojis
+        print("import events")
+        EventDatabase.events, EventDatabase.nextID = \
+            EventDatabase.readJson(cfg.JSON_FILEPATH['events'])
+        print("import archive")
+        EventDatabase.eventsArchive, _ = \
+            EventDatabase.readJson(cfg.JSON_FILEPATH['archive'])
+
+    @staticmethod
+    def readJson(filename=str) -> Tuple[Dict[int, Event], int]:
         """Fill events and eventsArchive with data from JSON."""
         print("Importing")
 
-        # Import
+        emojis = EventDatabase.emojis
+        if emojis is None:
+            raise ValueError("No EventDatabase.emojis set")
+
+        # Import events
         try:
             try:
-                with open(cfg.JSON_FILEPATH) as jsonFile:
+                with open(filename) as jsonFile:
                     data = json.load(jsonFile)
             except json.decoder.JSONDecodeError:
                 print("Malformed JSON file! Backing up and",
                       "creating an empty database")
                 # Backup old file
                 backupName = "{}-{}.bak" \
-                    .format(cfg.JSON_FILEPATH,
-                            datetime.now().strftime(
-                                '%Y-%m-%dT%H-%M-%S'))
-                os.rename(cfg.JSON_FILEPATH, backupName)
+                    .format(filename,
+                            datetime.now().strftime('%Y-%m-%dT%H-%M-%S'))
+                os.rename(filename, backupName)
                 print("Backed up to", backupName)
                 # Let next handler create the file and continue importing
                 raise FileNotFoundError
         except FileNotFoundError:
             print("JSON not found, creating")
-            with open(cfg.JSON_FILEPATH, "w") as jsonFile:
+            with open(filename, "w") as jsonFile:
                 # Create a new file with empty JSON structure inside
-                json.dump({"version": DATABASE_VERSION, "nextID": 0,
-                           "events": {}, "eventsArchive": {}},
-                          jsonFile, indent=2)
+                json.dump({
+                    "version": DATABASE_VERSION,
+                    "nextID": 0,
+                    "events": {},
+                }, jsonFile, indent=2)
             # Try to import again
-            EventDatabase.fromJson(emojis)
-            return
+            return EventDatabase.readJson(filename)
 
         databaseVersion: int = int(data.get('version', 0))
         if databaseVersion != DATABASE_VERSION:
@@ -182,11 +197,9 @@ class EventDatabase:
             print(msg)
             raise ValueError(msg)
 
-        EventDatabase.events = {}
-        EventDatabase.eventsArchive = {}
-        EventDatabase.nextID = data['nextID']
+        events = {}
+        nextID = data['nextID']
         eventsData: Dict[str, Any] = data['events']
-        eventsArchiveData = data['eventsArchive']
 
         # Add events
         for eventID, eventData in [
@@ -195,20 +208,12 @@ class EventDatabase:
             # Create event
             date = datetime.strptime(eventData['date'],
                                      '%Y-%m-%d')
-            event = EventDatabase.createEvent(date, emojis, eventID=eventID)
+            event = Event(date, emojis, importing=True)
             event.fromJson(eventID, eventData, emojis)
-            EventDatabase.events[event.id] = event
+            events[event.id] = event
 
-        # Add archived events
-        for eventID, eventData in eventsArchiveData.items():
-            # Create event
-            eventID = int(eventID)
-            date = datetime.strptime(eventData['date'], "%Y-%m-%d")
-            event = Event(date, emojis)
-            event.fromJson(eventID, eventData, emojis)
-            EventDatabase.eventsArchive[eventID] = event
-
-        for eventID, event in EventDatabase.events.items():
+        for eventID, event in events.items():
             print(eventID, event)
 
         print("Import done")
+        return events, nextID

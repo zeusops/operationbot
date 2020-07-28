@@ -2,7 +2,7 @@ venv*
 secret.py
 __pycache__
 .vscode
-eventDatabase.json
+database/*
 .mypy_cache
 backup
 foo

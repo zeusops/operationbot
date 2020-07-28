@@ -3,7 +3,7 @@ import config as cfg
 from operationbot import OperationBot
 from secret import COMMAND_CHAR, TOKEN
 
-CONFIG_VERSION = 5
+CONFIG_VERSION = 6
 if cfg.VERSION != CONFIG_VERSION:
     raise Exception(
         "Incompatible config file, expecting version {}, found version {}"

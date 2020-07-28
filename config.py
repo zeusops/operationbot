@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import secret
 
-VERSION = 5
+VERSION = 6
 # PURGE_ON_CONNECT = False
 _test_channel = 530411066585382912
 if secret.DEBUG:
@@ -18,7 +18,10 @@ else:
     LOG_CHANNEL = 621066917339201547
     GAME = 'with events'
 
-JSON_FILEPATH = "./eventDatabase.json"
+JSON_FILEPATH = {
+    "events":  "database/events.json",
+    "archive": "database/archive.json",
+}
 ADDITIONAL_ROLE_EMOJIS = [
     "\N{DIGIT ONE}\N{COMBINING ENCLOSING KEYCAP}",
     "\N{DIGIT TWO}\N{COMBINING ENCLOSING KEYCAP}",

@@ -607,7 +607,6 @@ class CommandListener(Cog):
         # Create new message
         await msgFnc.createEventMessage(event, self.bot.eventarchivechannel)
 
-        EventDatabase.toJson()  # Update JSON file
         await ctx.send("Event {} archived".format(event))
 
     # Delete event command
@@ -638,7 +637,7 @@ class CommandListener(Cog):
         # TODO: handle missing events
         # TODO: Check if archived message can be deleted
         await eventMessage.delete()
-        EventDatabase.toJson()
+        EventDatabase.toJson(archive=True)
         await ctx.send("Event {} removed from archive".format(event))
 
     # sort events command

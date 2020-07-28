@@ -76,7 +76,7 @@ class OperationBot(Bot):
 
     async def import_database(self):
         try:
-            EventDatabase.fromJson(self.commandchannel.guild.emojis)
+            EventDatabase.loadDatabase(self.commandchannel.guild.emojis)
         except ValueError as e:
             await self.commandchannel.send(e)
             await self.logout()
