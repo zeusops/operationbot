@@ -83,6 +83,7 @@ class Container():
                                  "`bot` argument to be provided")
 
         reactions: List[Emoji] = self.event.getReactions()
+        reactionEmojisIntended = [cfg.EMOJI_SIGNOFF] + reactions
         reactionsCurrent = message.reactions
         reactionEmojisCurrent = {}
         reactionsToRemove = []

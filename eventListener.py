@@ -73,6 +73,8 @@ class EventListener(Cog):
         else:
             emoji = payload.emoji.name
 
+        print("emoji", emoji)
+        print(emoji == cfg.EMOJI_SIGNOFF)
         # Find signup of user
         signup: Role = event.findSignupRole(user.id)
 

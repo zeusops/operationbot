@@ -73,6 +73,8 @@ DEFAULT_GROUPS = [
 
 EMOJI_ZEUS = "ZEUS"
 
+EMOJI_SIGNOFF = "\N{CROSS MARK}"
+
 # If a user signs off from a role listed in SIGNOFF_NOTIFY_ROLES when
 # there is less than SIGNOFF_NOTIFY_TIME left until the operation start,
 # a user defined in secrets.py gets notified about that.
