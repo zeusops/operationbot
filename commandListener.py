@@ -14,6 +14,7 @@ import config as cfg
 import messageFunctions as msgFnc
 from event import Event
 from eventDatabase import EventDatabase
+from container import Container
 from operationbot import OperationBot
 from secret import ADMINS
 from secret import COMMAND_CHAR as CMD
@@ -60,7 +61,7 @@ class ArgMessage(Converter):
         event = EventDatabase.getEventByID(eventID)
         if event is None:
             raise BadArgument("No event found with ID {}".format(eventID))
-        message = await msgFnc.getEventMessage(event, ctx.bot)
+        message = await event.container.getMessage(ctx.bot)
         if message is None:
             raise BadArgument("No message found with event ID {}"
                               .format(eventID))
@@ -91,7 +92,7 @@ class ArgArchivedEvent(Converter):
             raise BadArgument("Invalid message ID {}, needs to be an "
                               "integer".format(arg))
 
-        event = EventDatabase.getArchivedEventByID(eventID)
+        event = EventDatabase.getEventByID(eventID, archived=True)
         if event is None:
             raise BadArgument("No event found with ID {}".format(eventID))
 
@@ -182,9 +183,9 @@ class CommandListener(Cog):
         # TODO: Check for duplicate event dates?
         # Create event and sort events, export
         event: Event = EventDatabase.createEvent(date, ctx.guild.emojis)
-        message = await msgFnc.createEventMessage(event, self.bot.eventchannel)
+        container: Container = await Container.send(event, self.bot.eventchannel)
         if not batch:
-            await msgFnc.updateReactions(event, message=message)
+            await container.updateReactions()
             await msgFnc.sortEventMessages(ctx)
             EventDatabase.toJson()  # Update JSON file
         await ctx.send("Created event {} with id {}".format(event, event.id))
@@ -325,7 +326,7 @@ class CommandListener(Cog):
                 event.removeAdditionalRole(rolename)
                 return
 
-        await msgFnc.updateMessageEmbed(argMessage, event)
+        await event.container.updateEmbed()
 
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Role {} added to event {}".format(rolename, event))
@@ -353,7 +354,7 @@ class CommandListener(Cog):
         for reaction in event.getReactionsOfGroup("Additional"):
             await argMessage.remove_reaction(reaction, self.bot.user)
         event.removeAdditionalRole(rolename)
-        await msgFnc.updateMessageEmbed(argMessage, event)
+        await event.container.updateEmbed()
         for reaction in event.getReactionsOfGroup("Additional"):
             await argMessage.add_reaction(reaction)
         EventDatabase.toJson()  # Update JSON file
@@ -380,7 +381,7 @@ class CommandListener(Cog):
         for reaction in event.getReactionsOfGroup(groupName):
             await argMessage.remove_reaction(reaction, self.bot.user)
         event.removeRoleGroup(groupName)
-        await msgFnc.updateMessageEmbed(argMessage, event)
+        await event.container.updateEmbed()
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Group {} removed from {}".format(groupName, event))
 
@@ -401,7 +402,7 @@ class CommandListener(Cog):
         # NOTE: Does not check for too long input. Will result in an API error
         # and a bot crash
         event.setTitle(title)
-        await msgFnc.updateMessageEmbed(argMessage, event)
+        await event.container.updateEmbed()
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Title {} set for operation ID {} at {}"
                        .format(event.title, event.id, event.date))
@@ -423,7 +424,7 @@ class CommandListener(Cog):
         event.setDate(date)
 
         # Update event and sort events, export
-        await msgFnc.updateMessageEmbed(argMessage, event)
+        await event.container.updateEmbed()
         await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Date {} set for operation {} ID {}"
@@ -446,7 +447,7 @@ class CommandListener(Cog):
         event.setTime(time)
 
         # Update event and sort events, export
-        await msgFnc.updateMessageEmbed(argMessage, event)
+        await event.container.updateEmbed()
         await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Time set for operation {}"
@@ -467,7 +468,7 @@ class CommandListener(Cog):
 
         # Change terrain, update event, export
         event.setTerrain(terrain)
-        await msgFnc.updateMessageEmbed(argMessage, event)
+        await event.container.updateEmbed()
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Terrain {} set for operation {}"
                        .format(event.terrain, event))
@@ -487,7 +488,7 @@ class CommandListener(Cog):
 
         # Change faction, update event, export
         event.setFaction(faction)
-        await msgFnc.updateMessageEmbed(argMessage, event)
+        await event.container.updateEmbed()
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Faction {} set for operation {}"
                        .format(event.faction, event))
@@ -507,7 +508,7 @@ class CommandListener(Cog):
 
         # Change description, update event, export
         event.description = description
-        await msgFnc.updateMessageEmbed(argMessage, event)
+        await event.container.updateEmbed()
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Description \"{}\" set for operation {}"
                        .format(event.description, event))
@@ -536,7 +537,7 @@ class CommandListener(Cog):
 
         # Sign user up, update event, export
         event.signup(role, user)
-        await msgFnc.updateMessageEmbed(argMessage, event)
+        await event.container.updateEmbed()
         EventDatabase.toJson()  # Update JSON file
         # TODO: handle users without separate nickname
         await ctx.send("User {} signed up to event {} as {}"
@@ -559,7 +560,7 @@ class CommandListener(Cog):
 
         # Remove signup, update event, export
         event.undoSignup(user)
-        await msgFnc.updateMessageEmbed(argMessage, event)
+        await event.container.updateEmbed()
         EventDatabase.toJson()  # Update JSON file
         # TODO: handle users without separate nickname
         await ctx.send("User {} removed from event {}"
@@ -576,15 +577,15 @@ class CommandListener(Cog):
 
         # Archive event and export
         EventDatabase.archiveEvent(event)
-        eventMessage = await msgFnc.getEventMessage(event, self.bot)
-        if eventMessage:
-            await eventMessage.delete()
+        container = await event.container.getMessage(self.bot)
+        if container:
+            await container.delete()
         else:
             await ctx.send("Internal error: event {} without a message found"
                            .format(event))
 
         # Create new message
-        await msgFnc.createEventMessage(event, self.bot.eventarchivechannel)
+        await Container.send(event, self.bot.eventarchivechannel)
 
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Event {} archived".format(event))
@@ -597,28 +598,12 @@ class CommandListener(Cog):
 
         Example: delete 1
         """
-        eventMessage = await msgFnc.getEventMessage(event, self.bot)
-        EventDatabase.removeEvent(event.id)
+        message = event.container.message
+        EventDatabase.removeEvent(event)
         # TODO: handle missing events
-        await eventMessage.delete()
+        await message.delete()
         EventDatabase.toJson()
         await ctx.send("Event {} removed".format(event))
-
-    @command()
-    async def deletearchived(self, ctx: Context, event: ArgArchivedEvent):
-        """
-        Delete archived event.
-
-        Example: deletearchived 1
-        """
-        eventMessage = await msgFnc.getEventMessage(
-            event, self.bot, archived=True)
-        EventDatabase.removeEvent(event.id, archived=True)
-        # TODO: handle missing events
-        # TODO: Check if archived message can be deleted
-        await eventMessage.delete()
-        EventDatabase.toJson()
-        await ctx.send("Event {} removed from archive".format(event))
 
     # sort events command
     @command()
@@ -641,14 +626,6 @@ class CommandListener(Cog):
         # await EventDatabase.fromJson(self.bot)
         await self.bot.import_database()
         await ctx.send("{} events imported".format(len(EventDatabase.events)))
-
-    # @command()
-    # async def createmessages(self, ctx: Context):
-    #     """Import database and (re)create event messages."""
-    #     await self.bot.import_database()
-    #     await msgFnc.createMessages(EventDatabase.events, self.bot)
-    #     EventDatabase.toJson()
-    #     await ctx.send("Event messages created")
 
     @command()
     async def syncmessages(self, ctx: Context):
@@ -686,7 +663,6 @@ class CommandListener(Cog):
     @removesignup.error
     @archive.error
     @delete.error
-    @deletearchived.error
     @sort.error
     @export.error
     @importJson.error

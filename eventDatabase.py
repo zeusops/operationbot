@@ -48,76 +48,52 @@ class EventDatabase:
         Does not remove or create messages.
         """
         # Remove event from events
-        EventDatabase.removeEvent(event.id)
+        EventDatabase.removeEvent(event)
+
+        event.archived = True
 
         # Add event to eventsArchive
         EventDatabase.eventsArchive[event.id] = event
 
     @staticmethod
-    def removeEvent(eventID: int, archived=False) -> bool:
+    def removeEvent(event: Event) -> bool:
         """
         Remove event.
 
         Does not remove the message associated with the event.
         """
-        if archived:
-            if eventID in EventDatabase.eventsArchive.keys():
-                del EventDatabase.eventsArchive[eventID]
+        if event.archived:
+            if event.id in EventDatabase.eventsArchive.keys():
+                del EventDatabase.eventsArchive[event.id]
                 return True
         else:
-            if eventID in EventDatabase.events.keys():
-                del EventDatabase.events[eventID]
+            if event.id in EventDatabase.events.keys():
+                del EventDatabase.events[event.id]
                 return True
         return False
 
     # was: findEvent
     @staticmethod
-    def getEventByMessage(messageID: int) -> Optional[Event]:
+    def getEventByMessage(messageID: int, archived=False) -> Optional[Event]:
         """Find an event with it's message ID."""
         event: Event
-        for event in EventDatabase.events.values():
+        if archived:
+            events = EventDatabase.eventsArchive
+        else:
+            events = EventDatabase.events
+
+        for event in events.values():
             if event.messageID == messageID:
                 return event
         return None
 
     @staticmethod
-    def getEventByID(eventID: int) -> Optional[Event]:
+    def getEventByID(eventID: int, archived=False) -> Optional[Event]:
         """Find an event with it's ID."""
-        return EventDatabase.events.get(eventID)
-
-    @staticmethod
-    def getArchivedEventByMessage(messageID: int) -> Optional[Event]:
-        # return EventDatabase.eventsArchive.get(messageID)
-        for event in EventDatabase.eventsArchive.values():
-            if event.messageID == messageID:
-                return event
-        return None
-
-    # was: findEventInArchiveeventid
-    @staticmethod
-    def getArchivedEventByID(eventID: int):
-        return EventDatabase.eventsArchive.get(eventID)
-
-    @staticmethod
-    def sortEvents():
-        sortedEvents = []
-        messageIDs = []
-
-        # Store existing events
-        for event in EventDatabase.events.values():
-            sortedEvents.append(event)
-            messageIDs.append(event.messageID)
-
-        # Sort events based on date and time
-        sortedEvents.sort(key=lambda event: event.date, reverse=True)
-        messageIDs.sort(reverse=True)
-
-        # Fill events again
-        EventDatabase.events: Dict[int, Event] = {}
-        for event in sortedEvents:
-            # event = sortedEvents[index]
-            event.messageID = messageIDs.pop()
-            EventDatabase.events[event.id] = event
+        if archived:
+            return EventDatabase.eventsArchive.get(eventID)
+        else:
+            return EventDatabase.events.get(eventID)
 
     @staticmethod
     def toJson():

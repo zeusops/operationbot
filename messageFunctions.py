@@ -6,22 +6,25 @@ from discord.ext.commands import Context
 
 import config as cfg
 from event import Event
+from container import Container
 
 # from operationbot import OperationBot
 
-
-async def getEventMessage(event: Event, bot, archived=False) \
+async def getEventMessage(event: Event, bot) \
         -> Optional[Message]:
     """Get a message related to an event."""
-    if archived:
-        channel = bot.eventarchivechannel
+    if event.container is not None:
+        return event.container.getMessage(bot)
     else:
-        channel = bot.eventchannel
+        if event.archived:
+            channel = bot.eventarchivechannel
+        else:
+            channel = bot.eventchannel
 
-    try:
-        return await channel.fetch_message(event.messageID)
-    except NotFound:
-        return None
+        try:
+            return await channel.fetch_message(event.messageID)
+        except NotFound:
+            return None
 
 
 async def getEvent(messageID, ctx: Context) -> Optional[Event]:
@@ -34,7 +37,6 @@ async def getEvent(messageID, ctx: Context) -> Optional[Event]:
         return None
     return eventToUpdate
 
-
 async def sortEventMessages(target: Messageable, bot=None):
     """Sort events in event database."""
     if bot is None:
@@ -43,87 +45,20 @@ async def sortEventMessages(target: Messageable, bot=None):
         else:
             raise ValueError("Requires either the bot argument or context.")
 
+    Container.sortEvents()
     from eventDatabase import EventDatabase
-    EventDatabase.sortEvents()
     print(EventDatabase.events)
 
 
-    event: Event
-    for event in EventDatabase.events.values():
-        message = await getEventMessage(event, bot)
+    for container in [event.container for event in EventDatabase.events.values()]:
+        message = await container.getMessage(bot)
         if message is None:
             await target.send(
                 "sortEventMessages: No message found with that message ID: {}"
-                .format(event.messageID))
+                .format(container.id))
             return
-        await updateReactions(event, message=message)
-        await updateMessageEmbed(message, event)
-
-
-# from EventDatabase
-async def createEventMessage(event: Event, channel: TextChannel) \
-        -> Message:
-    """Create a new event message."""
-    # Create embed and message
-    embed = event.createEmbed()
-    embed.set_footer(text="Event ID: " + str(event.id))
-    message = await channel.send(embed=embed)
-    event.messageID = message.id
-
-    return message
-
-
-# was: EventDatabase.updateEvent
-async def updateMessageEmbed(message: Message, updatedEvent: Event) \
-        -> None:
-    """Update the embed and footer of a message."""
-    newEventEmbed = updatedEvent.createEmbed()
-    newEventEmbed.set_footer(text="Event ID: " + str(updatedEvent.id))
-    await message.edit(embed=newEventEmbed)
-
-
-# from EventDatabase
-async def updateReactions(event: Event, message: Message = None, bot=None):
-    """
-    Update reactions of an event message.
-
-    Requires either the `message` or `bot` argument to be provided.
-    """
-    if message is None:
-        if bot is None:
-            raise ValueError("Requires either the `message` or `bot` argument"
-                             " to be provided")
-        message = await getEventMessage(event, bot)
-
-    reactions: List[Emoji] = event.getReactions()
-    reactionEmojisIntended = reactions
-    reactionsCurrent = message.reactions
-    reactionEmojisCurrent = {}
-    reactionsToRemove = []
-    reactionEmojisToAdd = []
-
-    # Find reaction emojis current
-    for reaction in reactionsCurrent:
-        reactionEmojisCurrent[reaction.emoji] = reaction
-
-    # Find emojis to remove
-    for emoji, reaction in reactionEmojisCurrent.items():
-        if emoji not in reactionEmojisIntended:
-            reactionsToRemove.append(reaction)
-
-    # Find emojis to add
-    for emoji in reactionEmojisIntended:
-        if emoji not in reactionEmojisCurrent.keys():
-            reactionEmojisToAdd.append(emoji)
-
-    # Remove existing unintended reactions
-    for reaction in reactionsToRemove:
-        await message.clear_reaction(reaction)
-
-    # Add not existing intended emojis
-    for emoji in reactionEmojisToAdd:
-        await message.add_reaction(emoji)
-
+        await container.updateReactions(message=message)
+        await container.updateEmbed()
 
 # async def createMessages(events: Dict[int, Event], bot):
 #     # Update event message contents and add reactions
@@ -150,12 +85,15 @@ async def syncMessages(events: Dict[int, Event], bot):
         message = await getEventMessage(event, bot)
         if message is not None and messageEventId(message) == event.id:
             print("found message {} for event {}".format(message.id, event))
+            if event.container is None:
+                print("event {} does not have a container, creating"
+                      .format(event))
+                event.container = Container(event, bot.eventchannel, message)
         else:
             print("missing a message for event {}, creating".format(event))
-            message = await createEventMessage(event, bot.eventchannel)
+            message = await Container.send(event, bot.eventchannel)
 
     await sortEventMessages(bot.commandchannel, bot)
-
 
 # async def importMessages(events: Dict[int, Event], bot):
 #     found = 0

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from discord import Embed, Emoji
 
@@ -27,33 +27,14 @@ class Event:
         self.roleGroups: Dict[str, RoleGroup] = {}
         self.additionalRoleCount = 0
         self.messageID = 0
+        self.container: Any = None
         self.id = eventID
+        self.archived = False
 
         self.normalEmojis = self._getNormalEmojis(guildEmojis)
         if not importing:
             self.addDefaultRoleGroups()
             self.addDefaultRoles()
-
-    # Return an embed for the event
-    def createEmbed(self) -> Embed:
-        title = "{} ({})".format(
-            self.title, self.date.strftime("%a %Y-%m-%d - %H:%M CEST"))
-        description = "Terrain: {} - Faction: {}\n\n{}".format(
-            self.terrain, self.faction, self.description)
-        eventEmbed = Embed(title=title, description=description,
-                           colour=self.color)
-
-        # Add field to embed for every rolegroup
-        for group in self.roleGroups.values():
-            if len(group.roles) > 0:
-                eventEmbed.add_field(name=group.name, value=str(group),
-                                     inline=group.isInline)
-            elif group.name == "Dummy":
-                eventEmbed.add_field(name="\N{ZERO WIDTH SPACE}",
-                                     value="\N{ZERO WIDTH SPACE}",
-                                     inline=group.isInline)
-
-        return eventEmbed
 
     # Add default role groups
     def addDefaultRoleGroups(self):
@@ -225,6 +206,9 @@ class Event:
     def __repr__(self):
         return "<Event title='{}' id={} date='{}'>".format(
             self.title, self.id, self.date)
+
+    def __lt__(self, other):
+        return self.date < other.date
 
     def toJson(self):
         roleGroupsData = {}
