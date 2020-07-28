@@ -189,9 +189,10 @@ class EventDatabase:
         eventsArchiveData = data['eventsArchive']
 
         # Add events
-        for eventID, eventData in eventsData.items():
+        for eventID, eventData in [
+                (int(_id), _data)
+                for _id, _data in eventsData.items()]:
             # Create event
-            eventID = int(eventID)
             date = datetime.strptime(eventData['date'],
                                      '%Y-%m-%d')
             event = EventDatabase.createEvent(date, emojis, eventID=eventID)

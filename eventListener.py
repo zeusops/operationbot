@@ -1,5 +1,6 @@
 import importlib
 from datetime import datetime, timedelta
+from typing import Optional
 
 from discord import Game, Member, Message, RawReactionActionEvent, Reaction
 from discord.ext.commands import Cog
@@ -56,7 +57,7 @@ class EventListener(Cog):
         await message.remove_reaction(payload.emoji, user)
 
         # Get event from database with message ID
-        event: Event = EventDatabase.getEventByMessage(message.id)
+        event: Optional[Event] = EventDatabase.getEventByMessage(message.id)
         if event is None:
             print("No event found with that id", message.id)
             await self.bot.logchannel.send(
@@ -74,7 +75,7 @@ class EventListener(Cog):
             emoji = payload.emoji.name
 
         # Find signup of user
-        signup: Role = event.findSignupRole(user.id)
+        signup: Optional[Role] = event.findSignupRole(user.id)
 
         # Get role with the emoji
         role = event.findRoleWithEmoji(emoji)
