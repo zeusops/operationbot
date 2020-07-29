@@ -164,6 +164,25 @@ class Event:
                              .format(self.platoon_size))
         return warnings
 
+    def reorder(self):
+        if self.sideop:
+            return None
+
+        newGroups = {}
+        warnings = ""
+        for groupName in cfg.DEFAULT_GROUPS[self.platoon_size] + ["Additional"]:
+            try:
+                group = self.roleGroups[groupName]
+            except KeyError:
+                group = RoleGroup("Dummy")
+                msg = "Could not find group {}".format(groupName)
+                print(msg)
+                warnings += msg + '\n'
+            newGroups[groupName] = group
+        self.roleGroups = newGroups
+        return warnings
+
+
     # Return an embed for the event
     def createEmbed(self) -> Embed:
         title = "{} ({})".format(

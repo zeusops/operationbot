@@ -369,6 +369,23 @@ class CommandListener(Cog):
         await ctx.send("All events resized succesfully")
         EventDatabase.toJson()
 
+    @command(aliases=['ro'])
+    async def reorder(self, ctx: Context, eventMessage: EventMessage):
+        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        if event is None:
+            return
+
+        ret = event.reorder()
+        if ret is None:
+            await ctx.send("{}: nothing to be done".format(event))
+            return
+        if ret.strip() != "":
+            await ctx.send(ret)
+
+        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateReactions(event, message=eventMessage)
+        await ctx.send("Event reordered succesfully")
+        EventDatabase.toJson()
 
     @command(aliases=['ar'])
     async def addrole(self, ctx: Context, eventMessage: EventMessage, *,
