@@ -21,6 +21,9 @@ class Role:
         else:
             return "{} {}\n".format(str(self.emoji), self.userName)
 
+    def __repr__(self):
+        return "<Role name='{}' userName='{}'>".format(self.name, self.userName)
+
     def toJson(self):
         data = {}
         data["name"] = self.name

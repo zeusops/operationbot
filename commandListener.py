@@ -134,7 +134,6 @@ class CommandListener(Cog):
         else:
             await ctx.send("Reloaded {}".format(moduleName))
 
-    # @command()
     @command()
     async def exec(self, ctx: Context, flag: str, *, cmd: str):
         """
@@ -177,12 +176,14 @@ class CommandListener(Cog):
         await ctx.send(msg)
 
     async def _create_event(self, ctx: Context, date: datetime,
-                            batch=False, sideop=False):
+                            batch=False, sideop=False,
+                            platoon_size=None):
         # TODO: Optionally specify sideop -> hide 1PLT and Bravo
         # TODO: Check for duplicate event dates?
         # Create event and sort events, export
         event: Event = EventDatabase.createEvent(date, ctx.guild.emojis,
-                                                 sideop=sideop)
+                                                 sideop=sideop,
+                                                 platoon_size=platoon_size)
         message = await msgFnc.createEventMessage(event, self.bot.eventchannel)
         if not batch:
             await msgFnc.updateReactions(event, message=message)
@@ -192,14 +193,19 @@ class CommandListener(Cog):
 
     # Create event command
     @command(aliases=['c'])
-    async def create(self, ctx: Context, date: EventDateTime, force=None):
+    async def create(self, ctx: Context, date: EventDateTime, force=None,
+                     platoon_size=None):
         """
         Create a new event.
 
         Use the `force` argument to create past events.
 
+        The platoon_size argument can be used to override the platoon size.
+        Valid values: 1PLT, 2PLT
+
         Example: create 2019-01-01
                  create 2019-01-01 force
+                 create 2019-01-01 force 2PLT
         """
 
         # FIXME: take time zone into account
@@ -209,7 +215,7 @@ class CommandListener(Cog):
                            "See `{}help create`"
                            .format(date, CMD))
         else:
-            await self._create_event(ctx, date)
+            await self._create_event(ctx, date, platoon_size=platoon_size)
 
     @command(aliases=['cs'])
     async def createside(self, ctx: Context, date: EventDateTime, force=None):
@@ -317,6 +323,52 @@ class CommandListener(Cog):
             await ctx.send('```py\n{}\n```'
                            .format(traceback.format_exc()))
             self.bot.awaiting_reply = False
+
+    @command(aliases=['csz'])
+    async def changesize(self, ctx: Context, eventMessage: EventMessage,
+                         new_size: str):
+        if new_size not in cfg.PLATOON_SIZES:
+            ctx.send("Invalid new size {}".format(new_size))
+            return
+
+        event = await msgFnc.getEvent(eventMessage.id, ctx)
+        if event is None:
+            return
+
+        ret = event.changeSize(new_size)
+        if ret is None:
+            await ctx.send("{}: nothing to be done".format(event))
+            return
+        if ret.strip() != "":
+            await ctx.send(ret)
+
+        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateReactions(event, message=eventMessage)
+        await ctx.send("Event resized succesfully")
+        EventDatabase.toJson()
+
+    @command(aliases=['csza'])
+    async def changesizeall(self, ctx: Context, new_size: str):
+        if new_size not in cfg.PLATOON_SIZES:
+            ctx.send("Invalid new size {}".format(new_size))
+            return
+
+        for event in EventDatabase.events.values():
+            print("converting", event)
+            ret = event.changeSize(new_size)
+            eventMessage = await msgFnc.getEventMessage(event, self.bot)
+            if ret is None:
+                await ctx.send("{}: nothing to be done".format(event))
+                continue
+            if ret.strip() != "":
+                await ctx.send(ret)
+
+            await msgFnc.updateMessageEmbed(eventMessage, event)
+            await msgFnc.updateReactions(event, message=eventMessage)
+            await ctx.send("Event {} resized succesfully".format(event))
+        await ctx.send("All events resized succesfully")
+        EventDatabase.toJson()
+
 
     @command(aliases=['ar'])
     async def addrole(self, ctx: Context, eventMessage: EventMessage, *,
@@ -693,6 +745,8 @@ class CommandListener(Cog):
     @exec.error
     @create.error
     @multicreate.error
+    @changesize.error
+    @changesizeall.error
     @addrole.error
     @removerole.error
     @removegroup.error

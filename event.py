@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Tuple
 from discord import Embed, Emoji
 
 import config as cfg
+from secret import PLATOON_SIZE
 from role import Role
 from roleGroup import RoleGroup
 
@@ -18,8 +19,8 @@ SIDEOP_COLOR = 0x0045FF
 
 class Event:
 
-    def __init__(self, date: datetime, guildEmojis: Tuple[Emoji],
-                 eventID=0, importing=False, sideop=False):
+    def __init__(self, date: datetime, guildEmojis: Tuple[Emoji], eventID=0,
+                 importing=False, sideop=False, platoon_size=None):
         self.title = TITLE if not sideop else SIDEOP_TITLE
         self.date = date
         self.terrain = TERRAIN
@@ -31,11 +32,137 @@ class Event:
         self.messageID = 0
         self.id = eventID
         self.sideop = sideop
+        if platoon_size is not None and platoon_size in cfg.PLATOON_SIZES:
+            self.platoon_size = platoon_size
+        else:
+            self.platoon_size = PLATOON_SIZE
 
         self.normalEmojis = self._getNormalEmojis(guildEmojis)
         if not importing:
             self.addDefaultRoleGroups(sideop=sideop)
             self.addDefaultRoles()
+
+    def changeSize(self, new_size):
+        if new_size == self.platoon_size:
+            return None
+
+        if self.sideop:
+            return None
+
+        if new_size not in cfg.PLATOON_SIZES:
+            raise ValueError("Unsupported new platoon size: {}"
+                             .format(new_size))
+
+        def _moveRole(roleName, sourceGroup: RoleGroup, targetGroupName=None):
+            print("sourcegroup", type(sourceGroup), sourceGroup.name)
+            msg = ""
+            role = sourceGroup[roleName]
+            print("moving role {} from {} to {}".format(roleName, sourceGroup.name, targetGroupName))
+            if targetGroupName is None:
+                if role.userID is not None:
+                    msg = "Warning: removing an active role {} from {}, {}" \
+                          .format(role, sourceGroup.name, self)
+                    print("removing active role")
+                sourceGroup.removeRole(roleName)
+            else:
+                if targetGroupName not in self.roleGroups:
+                    print("creating target group")
+                    self.roleGroups[targetGroupName] = \
+                        RoleGroup(targetGroupName)
+                self.roleGroups[targetGroupName][roleName] = role
+                self.roleGroups[sourceGroup.name].removeRole(roleName)
+            if not self.roleGroups[sourceGroup.name]:
+                print("deleting target group")
+                del self.roleGroups[sourceGroup.name]
+            return msg
+
+        def _getTargetGroup(new_groups):
+            for new_group in new_groups:
+                if new_group not in self.roleGroups:
+                    new_groups.remove(new_group)
+                    return new_group
+
+        warnings = ""
+        if self.platoon_size == "2PLT":
+            if new_size == "1PLT":
+                new_groups = ["Charlie", "Delta"]
+
+                sourceGroup = self.roleGroups["Battalion"]
+                msg = _moveRole("ZEUS", sourceGroup, "Company")
+                if msg != "":
+                    print(msg)
+                    warnings += msg + '\n'
+
+                sourceGroup = self.roleGroups["Company"]
+                for roleName in ["FAC", "RTO"]:
+                    msg = _moveRole(roleName, sourceGroup,
+                                    "1st Platoon")
+                    if msg != "":
+                        print(msg)
+                        warnings += msg + '\n'
+                sourceGroup = self.roleGroups["Company"]
+                msg = _moveRole("CO", sourceGroup, None)
+                if msg != "":
+                    print(msg)
+                    warnings += msg + '\n'
+
+                sourceGroup = self.roleGroups["2nd Platoon"]
+                msg = _moveRole("2PLT", self.roleGroups["2nd Platoon"], None)
+                if msg != "":
+                    print(msg)
+                    warnings += msg + '\n'
+
+                targetGroup = _getTargetGroup(new_groups)
+                sourceGroupName = "Echo"
+                sourceGroup = self.roleGroups[sourceGroupName]
+                for roleName in ["ESL", "E1"]:
+                    msg = _moveRole(roleName, sourceGroup, targetGroup)
+                    if msg != "":
+                        print(msg)
+                        warnings += msg + '\n'
+
+                targetGroup = _getTargetGroup(new_groups)
+                sourceGroupName = "Foxtrot"
+                sourceGroup = self.roleGroups[sourceGroupName]
+                signupFound = False
+                for roleName in ["FSL", "F1"]:
+                    if sourceGroup[roleName].userID is not None:
+                        signupFound = True
+                        break
+                if signupFound:
+                    for roleName in ["FSL", "F1"]:
+                        msg = _moveRole(roleName, sourceGroup, targetGroup)
+                        print(msg)
+                        warnings += msg + '\n'
+                else:
+                    del self.roleGroups[sourceGroupName]
+
+                del self.roleGroups["Dummy"]
+
+                newGroups = {}
+                for key, value in self.roleGroups.items():
+                    newGroups[key] = value
+                    if value.name == "1st Platoon":
+                        newGroups["Dummy"] = RoleGroup("Dummy")
+
+                self.roleGroups = newGroups
+
+                self.platoon_size = "1PLT"
+
+            else:
+                raise ValueError("Unsupported platoon size conversion: {} -> {}"
+                                 .format(self.platoon_size, new_size))
+        elif self.platoon_size == "1PLT":
+            if new_size == "2PLT":
+                # TODO: implement 1PLT -> 2PLT conversion
+                raise NotImplementedError("Conversion from 1PLT to 2PLT " \
+                                          "not implemented")
+            raise ValueError("Unsupported platoon size conversion: {} -> {}"
+                             .format(self.platoon_size, new_size))
+        else:
+            raise ValueError("Unsupported current platoon size: {}"
+                             .format(self.platoon_size))
+        return warnings
 
     # Return an embed for the event
     def createEmbed(self) -> Embed:
@@ -64,25 +191,42 @@ class Event:
             self.roleGroups["Battalion"] = RoleGroup("Battalion")
             self.roleGroups["Alpha"] = RoleGroup("Alpha")
             self.roleGroups["Additional"] = RoleGroup("Additional",
-                                                       isInline=False)
-        else:
+                                                      isInline=False)
+        # Dummy: an empty spacer. An embed can only have either one or three
+        # items on a line
+        if self.platoon_size == "1PLT":
+            self.roleGroups["Company"] = RoleGroup("Company")
+            self.roleGroups["Platoon"] = RoleGroup("Platoon")
+            self.roleGroups["Dummy"] = RoleGroup("Dummy")
+
+            self.roleGroups["Alpha"] = RoleGroup("Alpha")
+            self.roleGroups["Bravo"] = RoleGroup("Bravo")
+            self.roleGroups["Charlie"] = RoleGroup("Charlie")
+
+            self.roleGroups["Additional"] = RoleGroup("Additional",
+                                                      isInline=False)
+        elif self.platoon_size == "2PLT":
             self.roleGroups["Battalion"] = RoleGroup("Battalion")
             self.roleGroups["Company"] = RoleGroup("Company")
-            # An empty spacer. An embed can only have either one or three items on
-            # a line
             self.roleGroups["Dummy"] = RoleGroup("Dummy")
+
             self.roleGroups["1st Platoon"] = RoleGroup("1st Platoon")
             self.roleGroups["Alpha"] = RoleGroup("Alpha")
             self.roleGroups["Bravo"] = RoleGroup("Bravo")
+
             self.roleGroups["2nd Platoon"] = RoleGroup("2nd Platoon")
             self.roleGroups["Echo"] = RoleGroup("Echo")
             self.roleGroups["Foxtrot"] = RoleGroup("Foxtrot")
+
             self.roleGroups["Additional"] = RoleGroup("Additional",
-                                                       isInline=False)
+                                                      isInline=False)
+        else:
+            raise ValueError("Unsupported platoon size: {}"
+                             .format(self.platoon_size))
 
     # Add default roles
     def addDefaultRoles(self):
-        for name, groupName in cfg.DEFAULT_ROLES.items():
+        for name, groupName in cfg.DEFAULT_ROLES[self.platoon_size].items():
             # Only add role if the group exists
             if groupName in self.roleGroups.keys():
                 emoji = self.normalEmojis[name]
@@ -153,7 +297,7 @@ class Event:
         normalEmojis = {}
 
         for emoji in guildEmojis:
-            if emoji.name in cfg.DEFAULT_ROLES:
+            if emoji.name in cfg.DEFAULT_ROLES[self.platoon_size]:
                 normalEmojis[emoji.name] = emoji
 
         return normalEmojis
@@ -221,7 +365,6 @@ class Event:
                 if role.userID == user.id:
                     role.userID = None
                     role.userName = ""
-        return None
 
     def findSignupRole(self, userID) -> Optional[Role]:
         """Check if given user is already signed up."""
@@ -252,8 +395,10 @@ class Event:
         data["faction"] = self.faction
         data["color"] = self.color
         data["messageID"] = self.messageID
-        data["roleGroups"] = roleGroupsData
         data["additionalRoleCount"] = self.additionalRoleCount
+        data["platoon_size"] = self.platoon_size
+        data["sideop"] = self.sideop
+        data["roleGroups"] = roleGroupsData
         return data
 
     def fromJson(self, eventID, data, emojis):
@@ -267,6 +412,8 @@ class Event:
         self.color = data.get("color", COLOR)
         self.messageID = data.get("messageID", 0)
         self.additionalRoleCount = data.get("additionalRoleCount", 0)
+        self.platoon_size = data.get("platoon_size", PLATOON_SIZE)
+        self.sideop = data.get("sideop", False)
         # TODO: Handle missing roleGroups
         for groupName, roleGroupData in data["roleGroups"].items():
             roleGroup = RoleGroup(groupName)

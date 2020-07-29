@@ -13,6 +13,19 @@ class RoleGroup:
         self.isInline = isInline
         self.roles: List[Role] = []
 
+    def __repr__(self):
+        return "<RoleGroup name='{}'>".format(self.name)
+
+    def __getitem__(self, key):
+        for role in self.roles:
+            if role.name == key:
+                return role
+        raise KeyError(key)
+
+    def __setitem__(self, key, value):
+        self.removeRole(key)
+        self.addRole(value)
+
     # Add role to the group
     def addRole(self, role: Role):
         self.roles.append(role)
@@ -20,7 +33,7 @@ class RoleGroup:
     # Remove role from the group
     def removeRole(self, roleName: str):
         for role in self.roles:
-            if (role.name == roleName):
+            if role.name == roleName:
                 self.roles.remove(role)
 
     def __str__(self) -> str:
@@ -34,7 +47,7 @@ class RoleGroup:
     def toJson(self):
         rolesData = {}
         for role in self.roles:
-            if (type(role.emoji) is str):
+            if type(role.emoji) is str:
                 emoji = cfg.ADDITIONAL_ROLE_EMOJIS.index(role.emoji)
             else:
                 emoji = role.emoji.name
