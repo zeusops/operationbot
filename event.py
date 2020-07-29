@@ -188,38 +188,16 @@ class Event:
     # Add default role groups
     def addDefaultRoleGroups(self, sideop=False):
         if sideop:
-            self.roleGroups["Battalion"] = RoleGroup("Battalion")
-            self.roleGroups["Alpha"] = RoleGroup("Alpha")
-            self.roleGroups["Additional"] = RoleGroup("Additional",
-                                                      isInline=False)
-        # Dummy: an empty spacer. An embed can only have either one or three
-        # items on a line
-        if self.platoon_size == "1PLT":
+            self.platoon_size = "1PLT"
             self.roleGroups["Company"] = RoleGroup("Company")
-            self.roleGroups["Platoon"] = RoleGroup("Platoon")
-            self.roleGroups["Dummy"] = RoleGroup("Dummy")
-
             self.roleGroups["Alpha"] = RoleGroup("Alpha")
-            self.roleGroups["Bravo"] = RoleGroup("Bravo")
-            self.roleGroups["Charlie"] = RoleGroup("Charlie")
-
             self.roleGroups["Additional"] = RoleGroup("Additional",
                                                       isInline=False)
-        elif self.platoon_size == "2PLT":
-            self.roleGroups["Battalion"] = RoleGroup("Battalion")
-            self.roleGroups["Company"] = RoleGroup("Company")
-            self.roleGroups["Dummy"] = RoleGroup("Dummy")
-
-            self.roleGroups["1st Platoon"] = RoleGroup("1st Platoon")
-            self.roleGroups["Alpha"] = RoleGroup("Alpha")
-            self.roleGroups["Bravo"] = RoleGroup("Bravo")
-
-            self.roleGroups["2nd Platoon"] = RoleGroup("2nd Platoon")
-            self.roleGroups["Echo"] = RoleGroup("Echo")
-            self.roleGroups["Foxtrot"] = RoleGroup("Foxtrot")
-
-            self.roleGroups["Additional"] = RoleGroup("Additional",
-                                                      isInline=False)
+        if self.platoon_size == "1PLT" or self.platoon_size == "2PLT":
+            for group in cfg.DEFAULT_GROUPS[self.platoon_size]:
+                self.roleGroups[group] = RoleGroup(group)
+                self.roleGroups["Additional"] = RoleGroup("Additional",
+                                                        isInline=False)
         else:
             raise ValueError("Unsupported platoon size: {}"
                              .format(self.platoon_size))

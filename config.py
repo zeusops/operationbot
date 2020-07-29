@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import secret
 
-VERSION = 6
+VERSION = 7
 # PURGE_ON_CONNECT = False
 _test_channel = 530411066585382912
 if secret.DEBUG:
@@ -46,6 +46,34 @@ ADDITIONAL_ROLE_EMOJIS = [
 ]
 
 PLATOON_SIZES = ['1PLT', '2PLT']
+
+# Dummy: an empty spacer. An embed can only have either one or three
+# items on a line.
+# Additional roles are automatically added at the end of the group list
+DEFAULT_GROUPS = {
+    "1PLT": [
+        "Company",
+        "1st Platoon",
+        "Dummy",
+
+        "Alpha",
+        "Bravo",
+        "Charlie"
+    ],
+    "2PLT": [
+        "Battalion",
+        "Company",
+        "Dummy",
+
+        "1st Platoon",
+        "Alpha",
+        "Bravo",
+
+        "2nd Platoon",
+        "Echo",
+        "Foxtrot"
+    ]
+}
 
 # NOTE: role name equals emote name
 DEFAULT_ROLES = {
@@ -102,6 +130,8 @@ SIGNOFF_NOTIFY_ROLES = {
         "HQ", "ASL", "BSL", "CSL"
     ],
     "2PLT": [
-        "CO", "HQ", "ASL", "BSL", "CSL", "DSL", "ESL", "FSL", "GSL", "HSL",
+        "CO", "HQ",
+        "ASL", "BSL", "CSL", "DSL",
+        "ESL", "FSL", "GSL", "HSL",
     ],
 }
