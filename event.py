@@ -372,7 +372,7 @@ class Event:
         return None
 
     def __str__(self):
-        return "{} at {}".format(self.title, self.date)
+        return "{} (ID {}) at {}".format(self.title, self.id, self.date)
 
     def __repr__(self):
         return "<Event title='{}' id={} date='{}'>".format(
