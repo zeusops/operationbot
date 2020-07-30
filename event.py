@@ -212,7 +212,7 @@ class Event:
             self.roleGroups["Alpha"] = RoleGroup("Alpha")
             self.roleGroups["Additional"] = RoleGroup("Additional",
                                                       isInline=False)
-        if self.platoon_size == "1PLT" or self.platoon_size == "2PLT":
+        elif self.platoon_size == "1PLT" or self.platoon_size == "2PLT":
             for group in cfg.DEFAULT_GROUPS[self.platoon_size]:
                 self.roleGroups[group] = RoleGroup(group)
                 self.roleGroups["Additional"] = RoleGroup("Additional",
