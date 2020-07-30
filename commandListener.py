@@ -727,6 +727,18 @@ class CommandListener(Cog):
         EventDatabase.toJson(archive=True)
         await ctx.send("Event {} removed from archive".format(event))
 
+    @command()
+    async def list(self, ctx: Context):
+        msg = ""
+        if not EventDatabase.events:
+            await ctx.send("No events in the database")
+            return
+
+        for event in EventDatabase.events.values():
+            msg += "{}\n".format(event)
+
+        await ctx.send(msg)
+
     # sort events command
     @command()
     async def sort(self, ctx: Context):
@@ -776,6 +788,7 @@ class CommandListener(Cog):
 
     # TODO: Test commands
     @reloadreload.error
+    @list.error
     @impreload.error
     @exec.error
     @create.error
