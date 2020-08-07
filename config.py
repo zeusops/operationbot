@@ -127,10 +127,10 @@ EMOJI_ZEUS = "ZEUS"
 SIGNOFF_NOTIFY_TIME = timedelta(days=1)
 SIGNOFF_NOTIFY_ROLES = {
     "1PLT": [
-        "HQ", "ASL", "BSL", "CSL"
+        "1PLT", "HQ", "ASL", "BSL", "CSL"
     ],
     "2PLT": [
-        "CO", "HQ",
+        "CO", "HQ", "1PLT", "2PLT",
         "ASL", "BSL", "CSL", "DSL",
         "ESL", "FSL", "GSL", "HSL",
     ],
