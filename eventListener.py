@@ -6,7 +6,6 @@ from discord import Game, Member, Message, RawReactionActionEvent, Reaction
 from discord.ext.commands import Cog
 
 import config as cfg
-from secret import PLATOON_SIZE as PLT
 import messageFunctions as msgFnc
 from event import Event
 from eventDatabase import EventDatabase
@@ -121,7 +120,7 @@ class EventListener(Cog):
             message_action = "Signoff"
 
             print("Signed off role name:", role.name)
-            if role.name in cfg.SIGNOFF_NOTIFY_ROLES[PLT]:
+            if role.name in cfg.SIGNOFF_NOTIFY_ROLES[event.platoon_size]:
                 print("Signoff in to be notified")
                 date = event.date
                 print("Event date:", date)
