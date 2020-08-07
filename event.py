@@ -215,8 +215,8 @@ class Event:
         elif self.platoon_size == "1PLT" or self.platoon_size == "2PLT":
             for group in cfg.DEFAULT_GROUPS[self.platoon_size]:
                 self.roleGroups[group] = RoleGroup(group)
-                self.roleGroups["Additional"] = RoleGroup("Additional",
-                                                        isInline=False)
+            self.roleGroups["Additional"] = RoleGroup("Additional",
+                                                      isInline=False)
         else:
             raise ValueError("Unsupported platoon size: {}"
                              .format(self.platoon_size))

@@ -80,9 +80,9 @@ DEFAULT_ROLES = {
     "1PLT": {
         "ZEUS": "Company",
         "MOD": "Company",
-        "HQ": "Platoon",
-        "FAC": "Platoon",
-        "RTO": "Platoon",
+        "1PLT": "1st Platoon",
+        "FAC": "1st Platoon",
+        "RTO": "1st Platoon",
         "ASL": "Alpha",
         "A1": "Alpha",
         "A2": "Alpha",
