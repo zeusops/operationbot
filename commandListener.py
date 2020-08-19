@@ -232,15 +232,30 @@ class CommandListener(Cog):
     @command(aliases=['csq'])
     async def createsidequick(self, ctx: Context, date: EventDateTime,
                               terrain: str, faction: str, zeus: Member,
-                              force=None):
+                              time: str = None):
         """
         Create and pre-fill a side op event.
 
         Use the `force` argument to create past events.
 
+        Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:45
+
         Example: createsidequick 2019-01-01 Altis USMC Stroker
-                 createsidequick 2019-01-01 Altis USMC Stroker force
-        """
+                 createsidequick 2019-01-01 Altis USMC Stroker 17:45
+        """  # NOQA
+        force = False
+        if time is not None:
+            try:
+                hour = int(time[0:2])
+                minute = int(time[-2:])
+            except ValueError:
+                raise BadArgument(
+                    "Bad time format {}. "
+                    "Accepted time formats are HH:MM and HHMM"
+                    .format(time))
+            date = date.replace(hour=hour, minute=minute)
+            force = True
+
         event = await self._create_event(
             ctx, date, sideop=True, force=force, batch=True)
         message = await msgFnc.createEventMessage(
