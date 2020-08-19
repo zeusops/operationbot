@@ -177,15 +177,20 @@ class CommandListener(Cog):
 
     async def _create_event(self, ctx: Context, date: datetime,
                             batch=False, sideop=False,
-                            platoon_size=None) -> Event:
-        # TODO: Optionally specify sideop -> hide 1PLT and Bravo
+                            platoon_size=None, force=False) -> Event:
         # TODO: Check for duplicate event dates?
+        if date < datetime.today() and not force:
+            raise BadArgument("Requested date {} has already passed. "
+                              "Use the `force` argument to override"
+                              .format(date))
+
         # Create event and sort events, export
         event: Event = EventDatabase.createEvent(date, ctx.guild.emojis,
                                                  sideop=sideop,
                                                  platoon_size=platoon_size)
-        message = await msgFnc.createEventMessage(event, self.bot.eventchannel)
         if not batch:
+            message = await msgFnc.createEventMessage(
+                event, self.bot.eventchannel)
             await msgFnc.updateReactions(event, message=message)
             await msgFnc.sortEventMessages(ctx)
             EventDatabase.toJson()  # Update JSON file
@@ -201,22 +206,15 @@ class CommandListener(Cog):
 
         Use the `force` argument to create past events.
 
-        The platoon_size argument can be used to override the platoon size.
-        Valid values: 1PLT, 2PLT
+        The platoon_size argument can be used to override the platoon size. Valid values: 1PLT, 2PLT
 
         Example: create 2019-01-01
                  create 2019-01-01 force
                  create 2019-01-01 force 2PLT
-        """
+        """  # NOQA
 
-        # FIXME: take time zone into account
-        if date < datetime.today() and not force:
-            await ctx.send("Requested date {} has already passed. "
-                           "Use the `force` argument to override. "
-                           "See `{}help create`"
-                           .format(date, CMD))
-        else:
-            await self._create_event(ctx, date, platoon_size=platoon_size)
+        await self._create_event(ctx, date, platoon_size=platoon_size,
+                                 force=force)
 
     @command(aliases=['cs'])
     async def createside(self, ctx: Context, date: EventDateTime, force=None):
@@ -225,18 +223,11 @@ class CommandListener(Cog):
 
         Use the `force` argument to create past events.
 
-        Example: create 2019-01-01
-                 create 2019-01-01 force
+        Example: createside 2019-01-01
+                 createside 2019-01-01 force
         """
 
-        # FIXME: take time zone into account
-        if date < datetime.today() and not force:
-            await ctx.send("Requested date {} has already passed. "
-                           "Use the `force` argument to override. "
-                           "See `{}help create`"
-                           .format(date, CMD))
-        else:
-            await self._create_event(ctx, date, sideop=True)
+        await self._create_event(ctx, date, sideop=True, force=force)
 
     @command(aliases=['csq'])
     async def createsidequick(self, ctx: Context, date: EventDateTime,
@@ -247,32 +238,25 @@ class CommandListener(Cog):
 
         Use the `force` argument to create past events.
 
-        Example: create 2019-01-01 Altis USMC Stroker
-                 create 2019-01-01 Altis USMC Stroker force
+        Example: createsidequick 2019-01-01 Altis USMC Stroker
+                 createsidequick 2019-01-01 Altis USMC Stroker force
         """
-        if date < datetime.today() and not force:
-            await ctx.send("Requested date {} has already passed. "
-                           "Use the `force` argument to override. "
-                           "See `{}help create`"
-                           .format(date, CMD))
-        else:
-            event: Event = EventDatabase.createEvent(date, ctx.guild.emojis,
-                                                    sideop=True,
-                                                    platoon_size=None)
-            message = await msgFnc.createEventMessage(event,
-                                                      self.bot.eventchannel)
+        event = await self._create_event(
+            ctx, date, sideop=True, force=force, batch=True)
+        message = await msgFnc.createEventMessage(
+            event, self.bot.eventchannel)
 
-            event.setTerrain(terrain)
-            event.setFaction(faction)
-            event.signup(event.findRoleWithName("ZEUS"), zeus)
+        event.setTerrain(terrain)
+        event.setFaction(faction)
+        event.signup(event.findRoleWithName("ZEUS"), zeus)
 
-            await msgFnc.updateReactions(event, message=message)
-            await msgFnc.updateMessageEmbed(message, event)
-            await msgFnc.sortEventMessages(ctx)
-            EventDatabase.toJson()  # Update JSON file
-            await ctx.send("Created event {} with id {}".format(event,
-                                                                event.id))
-            return event
+        await msgFnc.updateReactions(event, message=message)
+        await msgFnc.updateMessageEmbed(message, event)
+        await msgFnc.sortEventMessages(ctx)
+        EventDatabase.toJson()  # Update JSON file
+        await ctx.send(
+            "Created event {} with id {}".format(event, event.id))
+        return event
 
     @command(aliases=['mc'])
     async def multicreate(self, ctx: Context, start: EventDate,
