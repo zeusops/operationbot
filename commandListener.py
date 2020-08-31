@@ -41,12 +41,13 @@ class EventDate(Converter):
 
 class EventTime(Converter):
     async def convert(self, ctx: Context, arg: str) -> datetime:
-        try:
-            time = datetime.strptime(arg, '%H:%M')
-        except ValueError:
-            raise BadArgument("Invalid time format {}. Has to be HH:MM"
-                              .format(arg))
-        return time
+        for fmt in('%H:%M', '%H%M'):
+            try:
+                return datetime.strptime(arg, fmt)
+            except ValueError:
+                pass
+        raise BadArgument("Invalid time format {}. Has to be HH:MM or HHMM"
+                            .format(arg))
 
 
 class EventMessage(Converter):
@@ -232,32 +233,22 @@ class CommandListener(Cog):
     @command(aliases=['csq'])
     async def createsidequick(self, ctx: Context, date: EventDateTime,
                               terrain: str, faction: str, zeus: Member,
-                              time: str = None):
+                              time: EventTime = None):
         """
         Create and pre-fill a side op event.
 
-        Use the `force` argument to create past events.
+        Define the event time to force creation of past events.
 
         Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:45
 
         Example: createsidequick 2019-01-01 Altis USMC Stroker
                  createsidequick 2019-01-01 Altis USMC Stroker 17:45
         """  # NOQA
-        force = False
         if time is not None:
-            try:
-                hour = int(time[0:2])
-                minute = int(time[-2:])
-            except ValueError:
-                raise BadArgument(
-                    "Bad time format {}. "
-                    "Accepted time formats are HH:MM and HHMM"
-                    .format(time))
-            date = date.replace(hour=hour, minute=minute)
-            force = True
+            date = date.replace(hour=time.hour, minute=time.minute)
 
         event = await self._create_event(
-            ctx, date, sideop=True, force=force, batch=True)
+            ctx, date, sideop=True, force=(time is not None), batch=True)
         message = await msgFnc.createEventMessage(
             event, self.bot.eventchannel)
 
