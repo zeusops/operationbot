@@ -178,7 +178,8 @@ class CommandListener(Cog):
 
     async def _create_event(self, ctx: Context, date: datetime,
                             batch=False, sideop=False,
-                            platoon_size=None, force=False) -> Event:
+                            platoon_size=None, force=False,
+                            silent=False) -> Event:
         # TODO: Check for duplicate event dates?
         if date < datetime.today() and not force:
             raise BadArgument("Requested date {} has already passed. "
@@ -189,13 +190,14 @@ class CommandListener(Cog):
         event: Event = EventDatabase.createEvent(date, ctx.guild.emojis,
                                                  sideop=sideop,
                                                  platoon_size=platoon_size)
+        message = await msgFnc.createEventMessage(
+            event, self.bot.eventchannel)
         if not batch:
-            message = await msgFnc.createEventMessage(
-                event, self.bot.eventchannel)
             await msgFnc.updateReactions(event, message=message)
             await msgFnc.sortEventMessages(ctx)
             EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Created event {}".format(event))
+        if not silent:
+            await ctx.send("Created event {}".format(event))
         return event
 
     # Create event command
@@ -248,14 +250,14 @@ class CommandListener(Cog):
             date = date.replace(hour=time.hour, minute=time.minute)
 
         event = await self._create_event(
-            ctx, date, sideop=True, force=(time is not None), batch=True)
-        message = await msgFnc.createEventMessage(
-            event, self.bot.eventchannel)
+            ctx, date, sideop=True, force=(time is not None), batch=True,
+            silent=True)
 
         event.setTerrain(terrain)
         event.setFaction(faction)
         event.signup(event.findRoleWithName("ZEUS"), zeus)
 
+        message = await msgFnc.getEventMessage(event, ctx.bot)
         await msgFnc.updateReactions(event, message=message)
         await msgFnc.updateMessageEmbed(message, event)
         await msgFnc.sortEventMessages(ctx)
