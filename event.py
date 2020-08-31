@@ -349,6 +349,7 @@ class Event:
 
     def signup(self, roleToSet, user) -> None:
         """Add username to role."""
+        self.undoSignup(user)
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role == roleToSet:
