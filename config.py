@@ -79,7 +79,6 @@ DEFAULT_GROUPS = {
 DEFAULT_ROLES = {
     "1PLT": {
         "ZEUS": "Company",
-        "MOD": "Company",
         "1PLT": "1st Platoon",
         "FAC": "1st Platoon",
         "RTO": "1st Platoon",
