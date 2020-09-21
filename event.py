@@ -15,6 +15,7 @@ FACTION = "unknown"
 DESCRIPTION = ""
 COLOR = 0xFF4500
 SIDEOP_COLOR = 0x0045FF
+WW2_SIDEOP_COLOR = 0x808080
 
 
 class Event:
@@ -32,14 +33,28 @@ class Event:
         self.messageID = 0
         self.id = eventID
         self.sideop = sideop
-        if platoon_size is not None and platoon_size in cfg.PLATOON_SIZES:
+        if platoon_size is None:
+            if sideop:
+                self.platoon_size = "sideop"
+            else:
+                self.platoon_size = PLATOON_SIZE
+        elif platoon_size in cfg.PLATOON_SIZES:
             self.platoon_size = platoon_size
         else:
-            self.platoon_size = PLATOON_SIZE
+            raise ValueError("Unsupported platoon size: {}"
+                             .format(platoon_size))
+
+        if self.platoon_size.startswith("WW2"):
+            self.title = "WW2 " + self.title
+            if sideop:
+                self.color = WW2_SIDEOP_COLOR
+            else:
+                # no WW2 main operations are happening right now
+                pass
 
         self.normalEmojis = self._getNormalEmojis(guildEmojis)
         if not importing:
-            self.addDefaultRoleGroups(sideop=sideop)
+            self.addDefaultRoleGroups()
             self.addDefaultRoles()
 
     def changeSize(self, new_size):
@@ -205,21 +220,11 @@ class Event:
         return eventEmbed
 
     # Add default role groups
-    def addDefaultRoleGroups(self, sideop=False):
-        if sideop:
-            self.platoon_size = "1PLT"
-            self.roleGroups["Company"] = RoleGroup("Company")
-            self.roleGroups["Alpha"] = RoleGroup("Alpha")
-            self.roleGroups["Additional"] = RoleGroup("Additional",
-                                                      isInline=False)
-        elif self.platoon_size == "1PLT" or self.platoon_size == "2PLT":
-            for group in cfg.DEFAULT_GROUPS[self.platoon_size]:
-                self.roleGroups[group] = RoleGroup(group)
-            self.roleGroups["Additional"] = RoleGroup("Additional",
-                                                      isInline=False)
-        else:
-            raise ValueError("Unsupported platoon size: {}"
-                             .format(self.platoon_size))
+    def addDefaultRoleGroups(self):
+        for group in cfg.DEFAULT_GROUPS[self.platoon_size]:
+            self.roleGroups[group] = RoleGroup(group)
+        self.roleGroups["Additional"] = RoleGroup("Additional",
+                                                  isInline=False)
 
     # Add default roles
     def addDefaultRoles(self):

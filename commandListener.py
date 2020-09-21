@@ -232,6 +232,19 @@ class CommandListener(Cog):
 
         await self._create_event(ctx, date, sideop=True, force=force)
 
+    @command(aliases=['cs2'])
+    async def createside2(self, ctx: Context, date: EventDateTime, force=None):
+        """
+        Create a new WW2 side op event.
+
+        Use the `force` argument to create past events.
+
+        Example: createside2 2019-01-01
+                 createside2 2019-01-01 force
+        """
+
+        await self._create_event(ctx, date, sideop=True, platoon_size="WW2side", force=force)
+
     @command(aliases=['csq'])
     async def createsidequick(self, ctx: Context, date: EventDateTime,
                               terrain: str, faction: str, zeus: Member,
@@ -853,6 +866,7 @@ class CommandListener(Cog):
     @exec.error
     @create.error
     @createside.error
+    @createside2.error
     @createsidequick.error
     @multicreate.error
     @changesize.error

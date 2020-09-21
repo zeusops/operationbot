@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import secret
 
-VERSION = 7
+VERSION = 8
 # PURGE_ON_CONNECT = False
 _test_channel = 530411066585382912
 if secret.DEBUG:
@@ -45,7 +45,7 @@ ADDITIONAL_ROLE_EMOJIS = [
     "\N{REGIONAL INDICATOR SYMBOL LETTER J}",
 ]
 
-PLATOON_SIZES = ['1PLT', '2PLT']
+PLATOON_SIZES = ['1PLT', '2PLT', 'sideop', 'WW2side']
 
 # Dummy: an empty spacer. An embed can only have either one or three
 # items on a line.
@@ -72,7 +72,15 @@ DEFAULT_GROUPS = {
         "2nd Platoon",
         "Echo",
         "Foxtrot"
-    ]
+    ],
+    "sideop": [
+        "Company",
+        "Alpha",
+    ],
+    "WW2side": [
+        "Company",
+        "1st Platoon",
+    ],
 }
 
 # NOTE: role name equals emote name
@@ -118,7 +126,19 @@ DEFAULT_ROLES = {
         "G1": "Golf",
         "HSL": "Hotel",
         "H1": "Hotel",
-    }
+    },
+    "sideop": {
+        "ZEUS": "Company",
+        "ASL": "Alpha",
+        "A1": "Alpha",
+        "A2": "Alpha",
+    },
+    "WW2side": {
+        "ZEUS": "Company",
+        "1PLT": "1st Platoon",
+        "ASL": "1st Platoon",
+        "BSL": "1st Platoon",
+    },
 }
 
 EMOJI_ZEUS = "ZEUS"
@@ -136,4 +156,6 @@ SIGNOFF_NOTIFY_ROLES = {
         "ASL", "BSL", "CSL", "DSL",
         "ESL", "FSL", "GSL", "HSL",
     ],
+    "sideop": [],
+    "WW2side": [],
 }
