@@ -195,7 +195,7 @@ class CommandListener(Cog):
             await msgFnc.updateReactions(event, message=message)
             await msgFnc.sortEventMessages(ctx)
             EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Created event {} with id {}".format(event, event.id))
+        await ctx.send("Created event {}".format(event))
         return event
 
     # Create event command
@@ -261,7 +261,7 @@ class CommandListener(Cog):
         await msgFnc.sortEventMessages(ctx)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send(
-            "Created event {} with id {}".format(event, event.id))
+            "Created event {}".format(event))
         return event
 
     @command(aliases=['mc'])
