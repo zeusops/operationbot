@@ -245,9 +245,28 @@ class CommandListener(Cog):
 
         await self._create_event(ctx, date, sideop=True, platoon_size="WW2side", force=force)
 
+    async def _create_side_quick(self, ctx: Context, date: EventDateTime,
+                                 terrain: str, faction: str,
+                                 zeus: Member = None, time: EventTime = None,
+                                 platoon_size: str = None, quiet=False):
+        if time is not None:
+            date = date.replace(hour=time.hour, minute=time.minute)
+
+        event = await self._create_event(
+            ctx, date, sideop=True, platoon_size=platoon_size,
+            force=(time is not None), batch=True, silent=True)
+
+        message = await msgFnc.getEventMessage(event, ctx.bot)
+        await self._set_quick(ctx, event, message, terrain, faction,
+                              zeus, quiet=True)
+
+        if not quiet:
+            await ctx.send("Created event {}".format(event))
+        return event
+
     @command(aliases=['csq'])
     async def createsidequick(self, ctx: Context, date: EventDateTime,
-                              terrain: str, faction: str, zeus: Member,
+                              terrain: str, faction: str, zeus: Member = None,
                               time: EventTime = None):
         """
         Create and pre-fill a side op event.
@@ -259,19 +278,24 @@ class CommandListener(Cog):
         Example: createsidequick 2019-01-01 Altis USMC Stroker
                  createsidequick 2019-01-01 Altis USMC Stroker 17:45
         """  # NOQA
-        if time is not None:
-            date = date.replace(hour=time.hour, minute=time.minute)
+        await self._create_side_quick(ctx, date, terrain, faction, zeus, time)
 
-        event = await self._create_event(
-            ctx, date, sideop=True, force=(time is not None), batch=True,
-            silent=True)
+    @command(aliases=['csq2'])
+    async def createside2quick(self, ctx: Context, date: EventDateTime,
+                               terrain: str, faction: str, zeus: Member = None,
+                               time: EventTime = None):
+        """
+        Create and pre-fill a WW2 side op event.
 
-        message = await msgFnc.getEventMessage(event, ctx.bot)
-        await self._set_quick(ctx, event, message, terrain, faction,
-                              zeus, quiet=True)
+        Define the event time to force creation of past events.
 
-        await ctx.send("Created event {}".format(event))
-        return event
+        Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:45
+
+        Example: createside2quick 2019-01-01 Altis USMC Stroker
+                 createside2quick 2019-01-01 Altis USMC Stroker 17:45
+        """  # NOQA
+        await self._create_side_quick(ctx, date, terrain, faction, zeus, time,
+                                      platoon_size="WW2side")
 
     @command(aliases=['mc'])
     async def multicreate(self, ctx: Context, start: EventDate,
