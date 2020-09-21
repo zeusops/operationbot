@@ -647,6 +647,37 @@ class CommandListener(Cog):
         await ctx.send("Description \"{}\" set for operation {}"
                        .format(event.description, event))
 
+    @command(aliases=['sq'])
+    async def setquick(self, ctx: Context, event_message: EventMessage,
+                             terrain: str, faction: str, zeus: Member = None,
+                             time: EventTime = None):
+        """
+        Quickly set event details.
+
+        Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:45
+
+        Example: setquick 1 Altis USMC
+                 setquick 1 Altis USMC Stroker
+                 setquick 1 Altis USMC Stroker 17:45
+        """  # NOQA
+        event = await msgFnc.getEvent(event_message.id, ctx)
+        if event is None:
+            return
+
+        event.setTerrain(terrain)
+        event.setFaction(faction)
+        if zeus is not None:
+            event.signup(event.findRoleWithName("ZEUS"), zeus)
+        if time is not None:
+            event.setTime(time)
+
+        await msgFnc.updateReactions(event, message=event_message)
+        await msgFnc.updateMessageEmbed(event_message, event)
+        await msgFnc.sortEventMessages(ctx)
+        EventDatabase.toJson()  # Update JSON file
+        await ctx.send("Updated event {}".format(event))
+        return event
+
     # Sign user up to event command
     @command(aliases=['s'])
     async def signup(self, ctx: Context, eventMessage: EventMessage,
@@ -833,6 +864,7 @@ class CommandListener(Cog):
     @setterrain.error
     @setfaction.error
     @setdescription.error
+    @setquick.error
     @signup.error
     @removesignup.error
     @archive.error
