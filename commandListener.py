@@ -266,17 +266,11 @@ class CommandListener(Cog):
             ctx, date, sideop=True, force=(time is not None), batch=True,
             silent=True)
 
-        event.setTerrain(terrain)
-        event.setFaction(faction)
-        event.signup(event.findRoleWithName("ZEUS"), zeus)
-
         message = await msgFnc.getEventMessage(event, ctx.bot)
-        await msgFnc.updateReactions(event, message=message)
-        await msgFnc.updateMessageEmbed(message, event)
-        await msgFnc.sortEventMessages(ctx)
-        EventDatabase.toJson()  # Update JSON file
-        await ctx.send(
-            "Created event {}".format(event))
+        await self._set_quick(ctx, event, message, terrain, faction,
+                              zeus, quiet=True)
+
+        await ctx.send("Created event {}".format(event))
         return event
 
     @command(aliases=['mc'])
@@ -662,6 +656,24 @@ class CommandListener(Cog):
         await ctx.send("Description \"{}\" set for operation {}"
                        .format(event.description, event))
 
+    async def _set_quick(self, ctx: Context, event: Event,
+                         message: Message, terrain: str,
+                         faction: str, zeus: Member = None,
+                         time: EventTime = None, quiet=False):
+        event.setTerrain(terrain)
+        event.setFaction(faction)
+        if zeus is not None:
+            event.signup(event.findRoleWithName("ZEUS"), zeus)
+        if time is not None:
+            event.setTime(time)
+
+        await msgFnc.updateReactions(event, message=message)
+        await msgFnc.updateMessageEmbed(message, event)
+        await msgFnc.sortEventMessages(ctx)
+        EventDatabase.toJson()  # Update JSON file
+        if not quiet:
+            await ctx.send("Updated event {}".format(event))
+
     @command(aliases=['sq'])
     async def setquick(self, ctx: Context, event_message: EventMessage,
                              terrain: str, faction: str, zeus: Member = None,
@@ -679,19 +691,8 @@ class CommandListener(Cog):
         if event is None:
             return
 
-        event.setTerrain(terrain)
-        event.setFaction(faction)
-        if zeus is not None:
-            event.signup(event.findRoleWithName("ZEUS"), zeus)
-        if time is not None:
-            event.setTime(time)
-
-        await msgFnc.updateReactions(event, message=event_message)
-        await msgFnc.updateMessageEmbed(event_message, event)
-        await msgFnc.sortEventMessages(ctx)
-        EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Updated event {}".format(event))
-        return event
+        await self._set_quick(ctx, event, event_message, terrain,
+                              faction, zeus, time)
 
     # Sign user up to event command
     @command(aliases=['s'])
