@@ -82,6 +82,7 @@ DEFAULT_ROLES = {
         "1PLT": "1st Platoon",
         "FAC": "1st Platoon",
         "RTO": "1st Platoon",
+
         "ASL": "Alpha",
         "A1": "Alpha",
         "A2": "Alpha",
@@ -97,6 +98,7 @@ DEFAULT_ROLES = {
         "CO": "Company",
         "FAC": "Company",
         "RTO": "Company",
+
         "1PLT": "1st Platoon",
         "ASL": "Alpha",
         "A1": "Alpha",
@@ -106,6 +108,7 @@ DEFAULT_ROLES = {
         "C1": "Charlie",
         "DSL": "Delta",
         "D1": "Delta",
+
         "2PLT": "2nd Platoon",
         "ESL": "Echo",
         "E1": "Echo",
