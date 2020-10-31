@@ -51,6 +51,9 @@ class EventListener(Cog):
             # Bot's own reaction, or reaction outside of the event channel
             return
 
+        if payload.emoji.name in cfg.EXTRA_EMOJIS:
+            return
+
         # Remove the reaction
         message = await self.bot.eventchannel.fetch_message(payload.message_id)
         user = payload.member

@@ -304,8 +304,8 @@ class Event:
 
         return normalEmojis
 
-    # Returns reactions of all roles
     def getReactions(self) -> List[Emoji]:
+        """Return reactions of all roles and extra reactions"""
         reactions = []
 
         for roleGroup in self.roleGroups.values():
@@ -317,6 +317,9 @@ class Event:
                 if not (isinstance(emoji, Emoji)
                         and emoji.name == cfg.EMOJI_ZEUS):
                     reactions.append(role.emoji)
+
+        if self.sideop:
+            reactions.append(cfg.ATTENDANCE_EMOJI)
 
         return reactions
 
