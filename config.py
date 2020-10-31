@@ -45,6 +45,12 @@ ADDITIONAL_ROLE_EMOJIS = [
     "\N{REGIONAL INDICATOR SYMBOL LETTER J}",
 ]
 
+ATTENDANCE_EMOJI = "\N{HEAVY PLUS SIGN}"
+
+EXTRA_EMOJIS = [
+    ATTENDANCE_EMOJI
+]
+
 PLATOON_SIZES = ['1PLT', '2PLT', 'sideop', 'WW2side']
 
 # Dummy: an empty spacer. An embed can only have either one or three
