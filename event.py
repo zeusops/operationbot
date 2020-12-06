@@ -319,7 +319,8 @@ class Event:
                     reactions.append(role.emoji)
 
         if self.sideop:
-            reactions.append(cfg.ATTENDANCE_EMOJI)
+            if cfg.ATTENDANCE_EMOJI:
+                reactions.append(cfg.ATTENDANCE_EMOJI)
 
         return reactions
 
