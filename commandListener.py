@@ -663,22 +663,29 @@ class CommandListener(Cog):
     # Set faction of event command
     @command(aliases=['sd'])
     async def setdescription(self, ctx: Context, eventMessage: EventMessage, *,
-                             description: str):
+                             description: str = ""):
         """
-        Set event description.
+        Set or clear event description. To clear the description, run `setdescription [ID]` without the description parameter
 
         Example: setdescription 1 Extra mods required
-        """
+        """  # NOQA
         event = await msgFnc.getEvent(eventMessage.id, ctx)
         if event is None:
             return
+
+        if description and description[0] == '"' and description[-1] == '"':
+            description = description[1:-1]
 
         # Change description, update event, export
         event.description = description
         await msgFnc.updateMessageEmbed(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Description \"{}\" set for operation {}"
-                       .format(event.description, event))
+        if description:
+            await ctx.send("Description \"{}\" set for operation {}"
+                           .format(event.description, event))
+        else:
+            await ctx.send("Description cleared from operation {}"
+                           .format(event))
 
     async def _set_quick(self, ctx: Context, event: Event,
                          message: Message, terrain: str,
