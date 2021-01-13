@@ -17,6 +17,7 @@ from eventDatabase import EventDatabase
 from operationbot import OperationBot
 from secret import ADMINS
 from secret import COMMAND_CHAR as CMD
+from secret import WW2_DESCRIPTION
 
 
 class EventDateTime(Converter):
@@ -285,7 +286,7 @@ class CommandListener(Cog):
                                terrain: str, faction: str, zeus: Member = None,
                                time: EventTime = None):
         """
-        Create and pre-fill a WW2 side op event.
+        Create and pre-fill a WW2 side op event. Automatically sets description.
 
         Define the event time to force creation of past events.
 
@@ -294,8 +295,11 @@ class CommandListener(Cog):
         Example: createside2quick 2019-01-01 Altis USMC Stroker
                  createside2quick 2019-01-01 Altis USMC Stroker 17:45
         """  # NOQA
-        await self._create_side_quick(ctx, date, terrain, faction, zeus, time,
-                                      platoon_size="WW2side")
+        event = await self._create_side_quick(ctx, date, terrain, faction, zeus,
+                                              time, platoon_size="WW2side")
+        if WW2_DESCRIPTION:
+            await self._set_description(ctx, event, description=WW2_DESCRIPTION)
+
 
     @command(aliases=['mc'])
     async def multicreate(self, ctx: Context, start: EventDate,
@@ -660,7 +664,25 @@ class CommandListener(Cog):
         await ctx.send("Faction {} set for operation {}"
                        .format(event.faction, event))
 
-    # Set faction of event command
+    async def _set_description(self, ctx: Context, event: Event,
+                               message: Message = None, description: str = ""):
+        if description and description[0] == '"' and description[-1] == '"':
+            description = description[1:-1]
+
+        if message is None:
+            message = await msgFnc.getEventMessage(event, ctx.bot)
+
+        # Change description, update event, export
+        event.description = description
+        await msgFnc.updateMessageEmbed(message, event)
+        EventDatabase.toJson()  # Update JSON file
+        if description:
+            await ctx.send("Description \"{}\" set for operation {}"
+                           .format(event.description, event))
+        else:
+            await ctx.send("Description cleared from operation {}"
+                           .format(event))
+
     @command(aliases=['sd'])
     async def setdescription(self, ctx: Context, eventMessage: EventMessage, *,
                              description: str = ""):
@@ -672,20 +694,7 @@ class CommandListener(Cog):
         event = await msgFnc.getEvent(eventMessage.id, ctx)
         if event is None:
             return
-
-        if description and description[0] == '"' and description[-1] == '"':
-            description = description[1:-1]
-
-        # Change description, update event, export
-        event.description = description
-        await msgFnc.updateMessageEmbed(eventMessage, event)
-        EventDatabase.toJson()  # Update JSON file
-        if description:
-            await ctx.send("Description \"{}\" set for operation {}"
-                           .format(event.description, event))
-        else:
-            await ctx.send("Description cleared from operation {}"
-                           .format(event))
+        await self._set_description(ctx, event, eventMessage, description)
 
     async def _set_quick(self, ctx: Context, event: Event,
                          message: Message, terrain: str,
