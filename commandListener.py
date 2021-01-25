@@ -757,11 +757,18 @@ class CommandListener(Cog):
             return
 
         # Sign user up, update event, export
-        event.signup(role, user)
+        old_signup, replaced_user = event.signup(role, user)
         await msgFnc.updateMessageEmbed(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("User {} signed up to event {} as {}"
-                       .format(user.display_name, event, role.name))
+        message = "User {} signed up to event {} as {}" \
+                 .format(user.display_name, event, role.name)
+        if old_signup:
+            # User was signed on to a different role previously
+            message += ". Signed off from {}".format(old_signup.name)
+        if replaced_user.display_name:
+            # Took priority over another user's signup
+            message += ". Replaced user {}".format(replaced_user.display_name)
+        await ctx.send(message)
 
     # Remove signup on event of user command
     @command(aliases=['rs'])

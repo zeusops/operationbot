@@ -18,6 +18,12 @@ SIDEOP_COLOR = 0x0045FF
 WW2_SIDEOP_COLOR = 0x808080
 
 
+class User:
+    def __init__(self, id: id = None, display_name: str = None):
+        self.id = id
+        self.display_name = display_name
+
+
 class Event:
 
     def __init__(self, date: datetime, guildEmojis: Tuple[Emoji], eventID=0,
@@ -356,22 +362,32 @@ class Event:
         """Check if a role group with given name exists in the event."""
         return groupName in self.roleGroups
 
-    def signup(self, roleToSet, user) -> None:
-        """Add username to role."""
-        self.undoSignup(user)
+    def signup(self, roleToSet, user) -> Optional[List[Tuple[User, Role]]]:
+        """Add username to role.
+
+        Returns a tuple containing the role current user was removed from and
+        the sign-up that this command replaced."""
+        old_role = self.undoSignup(user)
+        old_user = None
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role == roleToSet:
+                    old_user = User(role.userID, role.userName)
                     role.userID = user.id
                     role.userName = user.display_name
+                    return old_role, old_user
+        return old_role, User()
 
-    def undoSignup(self, user) -> None:
-        """Remove username from any signups."""
+    def undoSignup(self, user) -> Optional[Role]:
+        """Remove username from any signups.
+
+        Returns Role if user was signed up, otherwise None."""
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role.userID == user.id:
                     role.userID = None
                     role.userName = ""
+                    return role
 
     def findSignupRole(self, userID) -> Optional[Role]:
         """Check if given user is already signed up."""
