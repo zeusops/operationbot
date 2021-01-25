@@ -760,9 +760,8 @@ class CommandListener(Cog):
         event.signup(role, user)
         await msgFnc.updateMessageEmbed(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
-        # TODO: handle users without separate nickname
         await ctx.send("User {} signed up to event {} as {}"
-                       .format(user.nick, event, roleName))
+                       .format(user.display_name, event, roleName))
 
     # Remove signup on event of user command
     @command(aliases=['rs'])
@@ -783,9 +782,8 @@ class CommandListener(Cog):
         event.undoSignup(user)
         await msgFnc.updateMessageEmbed(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
-        # TODO: handle users without separate nickname
         await ctx.send("User {} removed from event {}"
-                       .format(user.nick, event))
+                       .format(user.display_name, event))
 
     # Archive event command
     @command(aliases=['a'])
