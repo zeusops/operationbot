@@ -139,6 +139,7 @@ class EventDatabase:
         data['nextID'] = EventDatabase.nextID
         data['events'] = eventsData
 
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, 'w') as jsonFile:
             json.dump(data, jsonFile, indent=2)
 
@@ -180,6 +181,7 @@ class EventDatabase:
                 raise FileNotFoundError
         except FileNotFoundError:
             print("JSON not found, creating")
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
             with open(filename, "w") as jsonFile:
                 # Create a new file with empty JSON structure inside
                 json.dump({
