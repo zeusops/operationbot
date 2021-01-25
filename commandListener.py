@@ -761,7 +761,7 @@ class CommandListener(Cog):
         await msgFnc.updateMessageEmbed(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("User {} signed up to event {} as {}"
-                       .format(user.display_name, event, roleName))
+                       .format(user.display_name, event, role.name))
 
     # Remove signup on event of user command
     @command(aliases=['rs'])
