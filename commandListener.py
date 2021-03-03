@@ -201,6 +201,10 @@ class CommandListener(Cog):
             await ctx.send("Created event {}".format(event))
         return event
 
+    @command(aliases=["cat"])
+    async def show(self, ctx: Context, event: EventEvent):
+        await msgFnc.createEventMessage(event, ctx.channel, update_id=False)
+
     # Create event command
     @command(aliases=['c'])
     async def create(self, ctx: Context, date: EventDateTime, force=None,
@@ -850,7 +854,7 @@ class CommandListener(Cog):
         EventDatabase.toJson(archive=True)
         await ctx.send("Event {} removed from archive".format(event))
 
-    @command(name="list")
+    @command(name="list", aliases=["ls"])
     async def listEvents(self, ctx: Context):
         msg = ""
         if not EventDatabase.events:

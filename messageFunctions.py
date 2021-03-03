@@ -61,14 +61,15 @@ async def sortEventMessages(target: Messageable, bot=None):
 
 
 # from EventDatabase
-async def createEventMessage(event: Event, channel: TextChannel) \
-        -> Message:
+async def createEventMessage(event: Event, channel: TextChannel,
+        update_id=True) -> Message:
     """Create a new event message."""
     # Create embed and message
     embed = event.createEmbed()
     embed.set_footer(text="Event ID: " + str(event.id))
     message = await channel.send(embed=embed)
-    event.messageID = message.id
+    if update_id:
+        event.messageID = message.id
 
     return message
 
