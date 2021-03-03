@@ -16,6 +16,12 @@ DESCRIPTION = ""
 COLOR = 0xFF4500
 SIDEOP_COLOR = 0x0045FF
 WW2_SIDEOP_COLOR = 0x808080
+# Discord API limitation
+MAX_REACTIONS = 20
+
+
+class RoleError(Exception):
+    pass
 
 
 class User:
@@ -245,6 +251,8 @@ class Event:
     def addAdditionalRole(self, name: str) -> str:
         # Find next emoji for additional role
 
+        if self.countReactions() >= MAX_REACTIONS:
+            raise RoleError("Too many roles.")
         emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additionalRoleCount]
 
         # Create role
@@ -329,6 +337,10 @@ class Event:
                 reactions.append(cfg.ATTENDANCE_EMOJI)
 
         return reactions
+
+    def countReactions(self) -> int:
+        """Count how many reactions a message should have."""
+        return len(self.getReactions())
 
     def getReactionsOfGroup(self, groupName: str) -> List[Emoji]:
         """Find reactions of a given role group."""

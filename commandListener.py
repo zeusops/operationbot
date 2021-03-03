@@ -12,7 +12,7 @@ from discord.ext.commands import (BadArgument, Cog, Context, Converter,
 
 import config as cfg
 import messageFunctions as msgFnc
-from event import Event
+from event import Event, RoleError
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
 from secret import ADMINS
@@ -488,13 +488,17 @@ class CommandListener(Cog):
             await ctx.send("Too many additional roles. This should not "
                            "happen. Nag at {}".format(user.mention))
             return
+        except RoleError:
+            await ctx.send("Too many roles, not adding role {}"
+                            .format(rolename))
+            return
         try:
             await eventMessage.add_reaction(reaction)
         except Forbidden as e:
             if e.code == 30010:
-                await ctx.send("Too many reactions, not adding role {}"
-                               .format(rolename))
-                event.removeAdditionalRole(rolename)
+                await ctx.send("Too many reactions, not adding role {}."
+                               "This should not happen. Nag at {}"
+                               .format(rolename, self.bot.owner.mention))
                 return
 
         await msgFnc.updateMessageEmbed(eventMessage, event)
