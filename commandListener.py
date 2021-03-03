@@ -892,6 +892,26 @@ class CommandListener(Cog):
     #     EventDatabase.toJson()
     #     await ctx.send("Event messages created")
 
+    async def _update_event(self, event: Event, import_db=False, reorder=True):
+        if import_db:
+            await self.bot.import_database()
+        message = await msgFnc.getEventMessage(event, self.bot)
+        if not message:
+            message = await msgFnc.createEventMessage(
+                event, self.bot.eventchannel)
+        await msgFnc.updateReactions(event=event, message=message,
+                                     reorder=reorder)
+        await msgFnc.updateMessageEmbed(eventMessage=message,
+                                        updatedEvent=event)
+        EventDatabase.toJson()
+
+    @command()
+    async def updateevent(self, ctx: Context, event: EventEvent,
+                          import_db: bool = False):
+        """Import database, update embed and reactions on a single event message."""
+        await self._update_event(event, import_db)
+        await ctx.send("Event updated")
+
     @command()
     async def syncmessages(self, ctx: Context):
         """Import database, sync messages with events and create missing messages."""
