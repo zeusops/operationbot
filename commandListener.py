@@ -539,6 +539,24 @@ class CommandListener(Cog):
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Role {} removed from {}".format(rolename, event))
 
+    @command(aliases=['rra'])
+    async def removereaction(self, ctx: Context, event: EventEvent,
+                             reaction: str):
+        """
+        Removes a role and the corresponding reaction from the event and updates the message.
+        """
+        self._find_remove_reaction(reaction, event)
+        await self._update_event(event, reorder=False)
+        await ctx.send("Reaction {} removed from {}".format(reaction, event))
+
+    def _find_remove_reaction(self, reaction: str, event: Event):
+        for group in event.roleGroups.values():
+            for role in group.roles:
+                if role.name == reaction:
+                    group.roles.remove(role)
+                    return
+        raise BadArgument("No reaction found")
+
     @command(aliases=['rg'])
     async def removegroup(self, ctx: Context, eventMessage: EventMessage, *,
                           groupName: str):

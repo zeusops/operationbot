@@ -84,11 +84,14 @@ async def updateMessageEmbed(eventMessage: Message, updatedEvent: Event) \
 
 
 # from EventDatabase
-async def updateReactions(event: Event, message: Message = None, bot=None):
+async def updateReactions(event: Event, message: Message = None, bot=None,
+                          reorder=False):
     """
     Update reactions of an event message.
 
-    Requires either the `message` or `bot` argument to be provided.
+    Requires either the `message` or `bot` argument to be provided. Calling
+    the function with reorder = True causes all reactions to be removed and
+    reinserted in the correct order.
     """
     if message is None:
         if bot is None:
@@ -97,31 +100,39 @@ async def updateReactions(event: Event, message: Message = None, bot=None):
         message = await getEventMessage(event, bot)
 
     reactions: List[Emoji] = event.getReactions()
-    reactionEmojisIntended = reactions
     reactionsCurrent = message.reactions
     reactionEmojisCurrent = {}
     reactionsToRemove = []
     reactionEmojisToAdd = []
 
-    # Find reaction emojis current
+    # Find current reaction emojis
     for reaction in reactionsCurrent:
         reactionEmojisCurrent[reaction.emoji] = reaction
 
-    # Find emojis to remove
-    for emoji, reaction in reactionEmojisCurrent.items():
-        if emoji not in reactionEmojisIntended:
-            reactionsToRemove.append(reaction)
+    if list(reactionEmojisCurrent) == reactions:
+        # Emojis are already correct, no need for further edits
+        return
 
-    # Find emojis to add
-    for emoji in reactionEmojisIntended:
-        if emoji not in reactionEmojisCurrent.keys():
-            reactionEmojisToAdd.append(emoji)
+    if reorder:
+        # Re-adding all reactions in order to put them in the correct order
+        await message.clear_reactions()
+        reactionEmojisToAdd = reactions
+    else:
+        # Find emojis to remove
+        for emoji, reaction in reactionEmojisCurrent.items():
+            if emoji not in reactions:
+                reactionsToRemove.append(reaction)
 
-    # Remove existing unintended reactions
-    for reaction in reactionsToRemove:
-        await message.clear_reaction(reaction)
+        # Find emojis to add
+        for emoji in reactions:
+            if emoji not in reactionEmojisCurrent.keys():
+                reactionEmojisToAdd.append(emoji)
 
-    # Add not existing intended emojis
+        # Remove existing unintended reactions
+        for reaction in reactionsToRemove:
+            await message.clear_reaction(reaction)
+
+    # Add missing emojis
     for emoji in reactionEmojisToAdd:
         await message.add_reaction(emoji)
 
