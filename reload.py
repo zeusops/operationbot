@@ -28,7 +28,7 @@ class Reload(Cog):
                 self.bot.load_extension(extension)
                 print("loaded", extension)
             except Exception:
-                await ctx.send("An error occured while reloading: ```{}```"
+                await ctx.send("An error occured while reloading: ```py\n{}```"
                                .format(traceback.format_exc()))
             else:
                 loaded.append(extension)

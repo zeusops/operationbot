@@ -131,7 +131,7 @@ class CommandListener(Cog):
             await ctx.send("Failed to reload module {}: {}"
                            .format(moduleName, str(e)))
         except Exception as e:
-            await ctx.send("An error occured while reloading: ```{}```"
+            await ctx.send("An error occured while reloading: ```py\n{}```"
                            .format(str(e)))
         else:
             await ctx.send("Reloaded {}".format(moduleName))
@@ -906,37 +906,8 @@ class CommandListener(Cog):
         sys.exit()
 
     # TODO: Test commands
-    @reloadreload.error
-    @listEvents.error
-    @impreload.error
-    @exec.error
-    @create.error
-    @createside.error
-    @createside2.error
-    @createsidequick.error
-    @multicreate.error
-    @changesize.error
-    @changesizeall.error
-    @addrole.error
-    @removerole.error
-    @removegroup.error
-    @settitle.error
-    @setdate.error
-    @settime.error
-    @setterrain.error
-    @setfaction.error
-    @setdescription.error
-    @setquick.error
-    @signup.error
-    @removesignup.error
-    @archive.error
-    @delete.error
-    @deletearchived.error
-    @sort.error
-    @export.error
-    @importJson.error
-    @shutdown.error
-    async def command_error(self, ctx: Context, error):
+    @Cog.listener()
+    async def on_command_error(self, ctx: Context, error):
         if isinstance(error, MissingRequiredArgument):
             await ctx.send("Missing argument. See: `{}help {}`"
                            .format(CMD, ctx.command))
@@ -944,9 +915,15 @@ class CommandListener(Cog):
             await ctx.send("Invalid argument: {}. See: `{}help {}`"
                            .format(error, CMD, ctx.command))
         else:
-            await ctx.send("Unexpected error occured: ```{}```".format(error))
-            traceback.print_exc()
-
+            cmd = "Command `{}` caused an error:".format(
+                ctx.message.clean_content)
+            print(''.join(traceback.format_exception(type(error),
+                error, error.__traceback__)))
+            msg = ''.join(traceback.format_exception(type(error), error,
+                error.__traceback__, 2))
+            await ctx.send(
+                "Unexpected error occured: ```{}```\nMessage: `{}`\n\n```py\n{}```"
+                .format(error, ctx.message.clean_content, msg))
 
 def setup(bot):
     # importlib.reload(Event)
