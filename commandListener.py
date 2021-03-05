@@ -27,7 +27,7 @@ class EventDateTime(Converter):
         except ValueError:
             raise BadArgument("Invalid date format {}. Has to be YYYY-MM-DD"
                               .format(arg))
-        return date.replace(hour=18, minute=45)
+        return date.replace(hour=18, minute=30)
 
 
 class EventDate(Converter):
@@ -278,10 +278,10 @@ class CommandListener(Cog):
 
         Define the event time to force creation of past events.
 
-        Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:45
+        Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:30
 
         Example: createsidequick 2019-01-01 Altis USMC Stroker
-                 createsidequick 2019-01-01 Altis USMC Stroker 17:45
+                 createsidequick 2019-01-01 Altis USMC Stroker 17:30
         """  # NOQA
         await self._create_side_quick(ctx, date, terrain, faction, zeus, time)
 
@@ -294,10 +294,10 @@ class CommandListener(Cog):
 
         Define the event time to force creation of past events.
 
-        Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:45
+        Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:30
 
         Example: createside2quick 2019-01-01 Altis USMC Stroker
-                 createside2quick 2019-01-01 Altis USMC Stroker 17:45
+                 createside2quick 2019-01-01 Altis USMC Stroker 17:30
         """  # NOQA
         event = await self._create_side_quick(ctx, date, terrain, faction, zeus,
                                               time, platoon_size="WW2side")
@@ -364,7 +364,7 @@ class CommandListener(Cog):
             return m.author == ctx.message.author \
                    and m.channel == ctx.channel
 
-        event_time = time(hour=18, minute=45)
+        event_time = time(hour=18, minute=30)
         with_time = [datetime.combine(day, event_time) for day in days]
 
         try:
@@ -634,7 +634,7 @@ class CommandListener(Cog):
         """
         Set event time.
 
-        Example: settime 1 18:45
+        Example: settime 1 18:30
         """
         event = await msgFnc.getEvent(eventMessage.id, ctx)
         if event is None:
@@ -747,11 +747,11 @@ class CommandListener(Cog):
         """
         Quickly set event details.
 
-        Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:45
+        Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:30
 
         Example: setquick 1 Altis USMC
                  setquick 1 Altis USMC Stroker
-                 setquick 1 Altis USMC Stroker 17:45
+                 setquick 1 Altis USMC Stroker 17:30
         """  # NOQA
         event = await msgFnc.getEvent(event_message.id, ctx)
         if event is None:
