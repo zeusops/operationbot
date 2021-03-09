@@ -917,6 +917,9 @@ class CommandListener(Cog):
     async def _update_event(self, event: Event, import_db=False, reorder=True):
         if import_db:
             await self.bot.import_database()
+            # Event instance might have changed because of DB import, get again
+            event = await EventDatabase.getEventByMessage(event.messageID)
+
         message = await msgFnc.getEventMessage(event, self.bot)
         if not message:
             message = await msgFnc.createEventMessage(
