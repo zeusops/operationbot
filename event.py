@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Tuple
 from discord import Embed, Emoji
 
 import config as cfg
-from errors import RoleNotFound
+from errors import RoleGroupNotFound, RoleNotFound
 from secret import PLATOON_SIZE
 from role import Role
 from roleGroup import RoleGroup
@@ -371,6 +371,13 @@ class Event:
                     return role
         raise RoleNotFound("No role found with name {}".format(roleName))
 
+    def getRoleGroup(self, groupName: str) -> RoleGroup:
+        try:
+            return self.roleGroups[groupName]
+        except KeyError:
+            raise RoleGroupNotFound("No role group found with name {}"
+                                    .format(groupName))
+
     def hasRoleGroup(self, groupName: str) -> bool:
         """Check if a role group with given name exists in the event."""
         return groupName in self.roleGroups
@@ -418,10 +425,10 @@ class Event:
         return "<Event title='{}' id={} date='{}'>".format(
             self.title, self.id, self.date)
 
-    def toJson(self):
+    def toJson(self, brief_output=False):
         roleGroupsData = {}
         for groupName, roleGroup in self.roleGroups.items():
-            roleGroupsData[groupName] = roleGroup.toJson()
+            roleGroupsData[groupName] = roleGroup.toJson(brief_output)
 
         data = {}
         data["title"] = self.title
@@ -430,15 +437,16 @@ class Event:
         data["time"] = self.date.strftime("%H:%M")
         data["terrain"] = self.terrain
         data["faction"] = self.faction
-        data["color"] = self.color
-        data["messageID"] = self.messageID
-        data["additionalRoleCount"] = self.additionalRoleCount
-        data["platoon_size"] = self.platoon_size
-        data["sideop"] = self.sideop
+        if not brief_output:
+            data["color"] = self.color
+            data["messageID"] = self.messageID
+            data["additionalRoleCount"] = self.additionalRoleCount
+            data["platoon_size"] = self.platoon_size
+            data["sideop"] = self.sideop
         data["roleGroups"] = roleGroupsData
         return data
 
-    def fromJson(self, eventID, data, emojis):
+    def fromJson(self, eventID, data, emojis, manual_load=False):
         self.id = int(eventID)
         self.setTitle(data.get("title", TITLE))
         time = datetime.strptime(data.get("time", "00:00"), "%H:%M")
@@ -446,13 +454,27 @@ class Event:
         self.setTerrain(data.get("terrain", TERRAIN))
         self.faction = data.get("faction", FACTION)
         self.description = data.get("description", DESCRIPTION)
-        self.color = data.get("color", COLOR)
-        self.messageID = data.get("messageID", 0)
-        self.additionalRoleCount = data.get("additionalRoleCount", 0)
-        self.platoon_size = data.get("platoon_size", PLATOON_SIZE)
-        self.sideop = data.get("sideop", False)
+        if not manual_load:
+            self.color = data.get("color", COLOR)
+            self.messageID = data.get("messageID", 0)
+            self.additionalRoleCount = data.get("additionalRoleCount", 0)
+            self.platoon_size = data.get("platoon_size", PLATOON_SIZE)
+            self.sideop = data.get("sideop", False)
         # TODO: Handle missing roleGroups
+        groups: List[str] = []
         for groupName, roleGroupData in data["roleGroups"].items():
-            roleGroup = RoleGroup(groupName)
-            roleGroup.fromJson(roleGroupData, emojis)
-            self.roleGroups[groupName] = roleGroup
+            if not manual_load:
+                # Only create new role groups if we're not loading data manually
+                # from the command channel
+                roleGroup = RoleGroup(groupName)
+                self.roleGroups[groupName] = roleGroup
+            else:
+                roleGroup = self.roleGroups[groupName]
+                groups.append(groupName)
+            roleGroup.fromJson(roleGroupData, emojis, manual_load)
+        if manual_load:
+            # Remove role groups that were not present in imported data
+            # self.roleGroups = [x for x in self.roleGroups if x.name in groups]
+            for roleGroup in list(self.roleGroups.keys()):
+                if roleGroup not in groups:
+                    del self.roleGroups[roleGroup]

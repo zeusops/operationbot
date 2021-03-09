@@ -8,3 +8,11 @@ class RoleNotFound(Exception):
 
 class MessageNotFound(Exception):
     pass
+
+
+class UnexpectedRole(Exception):
+    pass
+
+
+class RoleGroupNotFound(Exception):
+    pass

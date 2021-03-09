@@ -3,6 +3,7 @@ from typing import List, Tuple
 from discord import Emoji, Guild
 
 import config as cfg
+from errors import UnexpectedRole
 from role import Role
 
 
@@ -44,14 +45,14 @@ class RoleGroup:
 
         return roleGroupString
 
-    def toJson(self):
+    def toJson(self, brief_output=False):
         rolesData = {}
         for role in self.roles:
             if type(role.emoji) is str:
                 emoji = cfg.ADDITIONAL_ROLE_EMOJIS.index(role.emoji)
             else:
                 emoji = role.emoji.name
-            rolesData[emoji] = role.toJson()
+            rolesData[emoji] = role.toJson(brief_output=brief_output)
 
         data = {}
         data["name"] = self.name
@@ -59,9 +60,12 @@ class RoleGroup:
         data["roles"] = rolesData
         return data
 
-    def fromJson(self, data: dict, emojis: Tuple[Emoji]):
+    def fromJson(self, data: dict, emojis: Tuple[Emoji], manual_load=False):
         self.name = data["name"]
-        self.isInline = data["isInline"]
+        if not manual_load:
+            self.isInline = data["isInline"]
+
+        roles: List[str] = []
         for roleEmoji, roleData in data["roles"].items():
             try:
                 roleEmoji = cfg.ADDITIONAL_ROLE_EMOJIS[int(roleEmoji)]
@@ -70,6 +74,22 @@ class RoleGroup:
                     if emoji.name == roleEmoji:
                         roleEmoji = emoji
                         break
-            role = Role(roleData["name"], roleEmoji, roleData["displayName"])
-            role.fromJson(roleData)
-            self.roles.append(role)
+            if not manual_load:
+                # Only create new roles if we're not loading data manually from
+                # the command channel
+                role = Role(roleData["name"], roleEmoji,
+                            roleData["displayName"])
+                self.roles.append(role)
+            else:
+                try:
+                    role = next(x for x in self.roles if x.emoji == roleEmoji)
+                except StopIteration:
+                    name = roleData.get("displayName") or roleData["name"]
+                    raise UnexpectedRole("Cannot import unexpected role '{}'"
+                                         .format(name))
+                roles.append(roleEmoji)
+
+            role.fromJson(roleData, manual_load=manual_load)
+        if manual_load:
+            # Remove roles that were not present in imported data
+            self.roles = [x for x in self.roles if x.emoji in roles]
