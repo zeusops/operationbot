@@ -7,6 +7,7 @@ from discord import Emoji
 
 import config as cfg
 from event import Event
+from errors import EventNotFound
 
 DATABASE_VERSION = 4
 
@@ -70,31 +71,51 @@ class EventDatabase:
 
     # was: findEvent
     @staticmethod
-    def getEventByMessage(messageID: int) -> Optional[Event]:
-        """Find an event with it's message ID."""
-        event: Event
-        for event in EventDatabase.events.values():
+    def getEventByMessage(messageID: int, archived=False) -> Event:
+        """Finds an event with its message ID.
+
+        Raises EventNotFound if event cannot be found"""
+        if archived:
+            collection = EventDatabase.eventsArchive
+        else:
+            collection = EventDatabase.events
+
+        for event in collection.values():
             if event.messageID == messageID:
                 return event
-        return None
+        raise EventNotFound("No event found with message ID "
+                            .format(messageID))
 
     @staticmethod
-    def getEventByID(eventID: int) -> Optional[Event]:
-        """Find an event with it's ID."""
-        return EventDatabase.events.get(eventID)
+    def getEventByID(eventID: int, archived=False) -> Event:
+        """Finds an event with its ID.
+
+        Raises EventNotFound if event cannot be found."""
+        if archived:
+            collection = EventDatabase.eventsArchive
+        else:
+            collection = EventDatabase.events
+
+        try:
+            return collection[eventID]
+        except KeyError:
+            raise EventNotFound("No event found with ID {}".format(eventID))
 
     @staticmethod
-    def getArchivedEventByMessage(messageID: int) -> Optional[Event]:
-        # return EventDatabase.eventsArchive.get(messageID)
-        for event in EventDatabase.eventsArchive.values():
-            if event.messageID == messageID:
-                return event
-        return None
+    def getArchivedEventByMessage(messageID: int) -> Event:
+        """Finds an archived event with its message ID.
+
+        Raises EventNotFound if event cannot be found"""
+
+        return EventDatabase.getEventByMessage(messageID, archived=True)
 
     # was: findEventInArchiveeventid
     @staticmethod
     def getArchivedEventByID(eventID: int):
-        return EventDatabase.eventsArchive.get(eventID)
+        """Finds an archived event with its ID.
+
+        Raises EventNotFound if event cannot be found."""
+        return EventDatabase.getEventByID(eventID, archived=True)
 
     @staticmethod
     def sortEvents():
@@ -111,7 +132,7 @@ class EventDatabase:
         messageIDs.sort(reverse=True)
 
         # Fill events again
-        EventDatabase.events: Dict[int, Event] = {}
+        EventDatabase.events = {}
         for event in sortedEvents:
             # event = sortedEvents[index]
             event.messageID = messageIDs.pop()

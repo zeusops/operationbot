@@ -11,6 +11,7 @@ from discord.ext.commands import (BadArgument, Cog, Context, Converter,
                                   MissingRequiredArgument, command)
 
 import config as cfg
+from errors import EventNotFound, MessageNotFound
 import messageFunctions as msgFnc
 from event import Event, RoleError
 from eventDatabase import EventDatabase
@@ -58,14 +59,11 @@ class EventMessage(Converter):
         except ValueError:
             raise BadArgument("Invalid message ID {}, needs to be an "
                               "integer".format(arg))
-
-        event = EventDatabase.getEventByID(eventID)
-        if event is None:
-            raise BadArgument("No event found with ID {}".format(eventID))
-        message = await msgFnc.getEventMessage(event, ctx.bot)
-        if message is None:
-            raise BadArgument("No message found with event ID {}"
-                              .format(eventID))
+        try:
+            event = EventDatabase.getEventByID(eventID)
+            message = await msgFnc.getEventMessage(event, ctx.bot)
+        except (EventNotFound, MessageNotFound) as e:
+            raise BadArgument(str(e))
 
         return message
 
@@ -78,9 +76,10 @@ class EventEvent(Converter):
             raise BadArgument("Invalid message ID {}, needs to be an "
                               "integer".format(arg))
 
-        event = EventDatabase.getEventByID(eventID)
-        if event is None:
-            raise BadArgument("No event found with ID {}".format(eventID))
+        try:
+            event = EventDatabase.getEventByID(eventID)
+        except EventNotFound as e:
+            raise BadArgument(str(e))
 
         return event
 
@@ -93,9 +92,10 @@ class ArchivedEvent(Converter):
             raise BadArgument("Invalid message ID {}, needs to be an "
                               "integer".format(arg))
 
-        event = EventDatabase.getArchivedEventByID(eventID)
-        if event is None:
-            raise BadArgument("No event found with ID {}".format(eventID))
+        try:
+            event = EventDatabase.getArchivedEventByID(eventID)
+        except EventNotFound as e:
+            raise BadArgument(str(e))
 
         return event
 
@@ -191,11 +191,9 @@ class CommandListener(Cog):
         event: Event = EventDatabase.createEvent(date, ctx.guild.emojis,
                                                  sideop=sideop,
                                                  platoon_size=platoon_size)
-        message = await msgFnc.createEventMessage(
-            event, self.bot.eventchannel)
+        await msgFnc.createEventMessage(event, self.bot.eventchannel)
         if not batch:
-            await msgFnc.updateReactions(event, message=message)
-            await msgFnc.sortEventMessages(ctx)
+            await msgFnc.sortEventMessages(self.bot)
             EventDatabase.toJson()  # Update JSON file
         if not silent:
             await ctx.send("Created event {}".format(event))
@@ -261,9 +259,7 @@ class CommandListener(Cog):
             ctx, date, sideop=True, platoon_size=platoon_size,
             force=(time is not None), batch=True, silent=True)
 
-        message = await msgFnc.getEventMessage(event, ctx.bot)
-        await self._set_quick(ctx, event, message, terrain, faction,
-                              zeus, quiet=True)
+        await self._set_quick(ctx, event, terrain, faction, zeus, quiet=True)
 
         if not quiet:
             await ctx.send("Created event {}".format(event))
@@ -376,7 +372,7 @@ class CommandListener(Cog):
                     await ctx.send("Creating events")
                     for day in with_time:
                         await self._create_event(ctx, day, batch=True)
-                    await msgFnc.sortEventMessages(ctx)
+                    await msgFnc.sortEventMessages(self.bot)
                     EventDatabase.toJson()
                     await ctx.send("Done creating events")
                     self.bot.awaiting_reply = False
@@ -393,14 +389,10 @@ class CommandListener(Cog):
             self.bot.awaiting_reply = False
 
     @command(aliases=['csz'])
-    async def changesize(self, ctx: Context, eventMessage: EventMessage,
+    async def changesize(self, ctx: Context, event: EventEvent,
                          new_size: str):
         if new_size not in cfg.PLATOON_SIZES:
             ctx.send("Invalid new size {}".format(new_size))
-            return
-
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
-        if event is None:
             return
 
         ret = event.changeSize(new_size)
@@ -410,10 +402,8 @@ class CommandListener(Cog):
         if ret.strip() != "":
             await ctx.send(ret)
 
-        await msgFnc.updateMessageEmbed(eventMessage, event)
-        await msgFnc.updateReactions(event, message=eventMessage)
+        await self._update_event(event)
         await ctx.send("Event resized succesfully")
-        EventDatabase.toJson()
 
     @command(aliases=['csza'])
     async def changesizeall(self, ctx: Context, new_size: str):
@@ -424,25 +414,19 @@ class CommandListener(Cog):
         for event in EventDatabase.events.values():
             print("converting", event)
             ret = event.changeSize(new_size)
-            eventMessage = await msgFnc.getEventMessage(event, self.bot)
             if ret is None:
                 await ctx.send("{}: nothing to be done".format(event))
                 continue
             if ret.strip() != "":
                 await ctx.send(ret)
 
-            await msgFnc.updateMessageEmbed(eventMessage, event)
-            await msgFnc.updateReactions(event, message=eventMessage)
+            await self._update_event(event, export=False)
             await ctx.send("Event {} resized succesfully".format(event))
         await ctx.send("All events resized succesfully")
         EventDatabase.toJson()
 
     @command(aliases=['ro'])
-    async def reorder(self, ctx: Context, eventMessage: EventMessage):
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
-        if event is None:
-            return
-
+    async def reorder(self, ctx: Context, event: EventEvent):
         ret = event.reorder()
         if ret is None:
             await ctx.send("{}: nothing to be done".format(event))
@@ -450,25 +434,21 @@ class CommandListener(Cog):
         if ret.strip() != "":
             await ctx.send(ret)
 
-        await msgFnc.updateMessageEmbed(eventMessage, event)
-        await msgFnc.updateReactions(event, message=eventMessage)
+        await self._update_event(event)
         await ctx.send("Event reordered succesfully")
-        EventDatabase.toJson()
 
     @command(aliases=['roa'])
     async def resizeall(self, ctx: Context):
         for event in EventDatabase.events.values():
             print("reordering", event)
             ret = event.reorder()
-            eventMessage = await msgFnc.getEventMessage(event, self.bot)
             if ret is None:
                 await ctx.send("{}: nothing to be done".format(event))
                 continue
             if ret.strip() != "":
                 await ctx.send(ret)
 
-            await msgFnc.updateMessageEmbed(eventMessage, event)
-            await msgFnc.updateReactions(event, message=eventMessage)
+            await self._update_event(event, export=False)
             await ctx.send("Event {} reordered succesfully".format(event))
         await ctx.send("All events reordered succesfully")
         EventDatabase.toJson()
@@ -481,9 +461,7 @@ class CommandListener(Cog):
 
         Example: addrole 1 Y1 (Bradley) Driver
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
-        if event is None:
-            return
+        event = EventDatabase.getEventByMessage(eventMessage.id)
 
         try:
             reaction = event.addAdditionalRole(rolename)
@@ -512,31 +490,18 @@ class CommandListener(Cog):
 
     # Remove additional role from event command
     @command(aliases=['rr'])
-    async def removerole(self, ctx: Context, eventMessage: EventMessage, *,
+    async def removerole(self, ctx: Context, event: EventEvent, *,
                          rolename: str):
         """
         Remove an additional role from the event.
 
         Example: removerole 1 Y1 (Bradley) Driver
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
-        if event is None:
-            return
-
         # Find role
         role = event.findRoleWithName(rolename)
-        if role is None:
-            await ctx.send("No role found with name {}".format(rolename))
-            return
 
-        # Remove reactions, remove role, update event, add reactions, export
-        for reaction in event.getReactionsOfGroup("Additional"):
-            await eventMessage.remove_reaction(reaction, self.bot.user)
         event.removeAdditionalRole(rolename)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
-        for reaction in event.getReactionsOfGroup("Additional"):
-            await eventMessage.add_reaction(reaction)
-        EventDatabase.toJson()  # Update JSON file
+        await self._update_event(event)
         await ctx.send("Role {} removed from {}".format(rolename, event))
 
     @command(aliases=['rra'])
@@ -565,9 +530,7 @@ class CommandListener(Cog):
 
         Example: removegroup 1 Bravo
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
-        if event is None:
-            return
+        event = EventDatabase.getEventByMessage(eventMessage.id)
 
         if not event.hasRoleGroup:
             await ctx.send("No role group found with name {}"
@@ -584,124 +547,95 @@ class CommandListener(Cog):
 
     # Set title of event command
     @command(aliases=['stt'])
-    async def settitle(self, ctx: Context, eventMessage: EventMessage, *,
+    async def settitle(self, ctx: Context, event: EventEvent, *,
                        title: str):
         """
         Set event title.
 
         Example: settitle 1 Operation Striker
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
-        if event is None:
-            return
-
         # Change title, update event, export
         # NOTE: Does not check for too long input. Will result in an API error
         # and a bot crash
         event.setTitle(title)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
-        EventDatabase.toJson()  # Update JSON file
+        await self._update_event(event)
         await ctx.send("Title {} set for operation ID {} at {}"
                        .format(event.title, event.id, event.date))
 
     # Set date of event command
     @command(aliases=['sdt'])
-    async def setdate(self, ctx: Context, eventMessage: EventMessage,
+    async def setdate(self, ctx: Context, event: EventEvent,
                       date: EventDateTime):
         """
         Set event date.
 
         Example: setdate 1 2019-01-01
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
-        if event is None:
-            return
-
         # Change date
         event.setDate(date)
 
         # Update event and sort events, export
-        await msgFnc.updateMessageEmbed(eventMessage, event)
-        await msgFnc.sortEventMessages(ctx)
+        await msgFnc.sortEventMessages(self.bot)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Date {} set for operation {} ID {}"
                        .format(event.date, event.title, event.id))
 
     # Set time of event command
     @command(aliases=['stm'])
-    async def settime(self, ctx: Context, eventMessage: EventMessage,
-                      time: EventTime):
+    async def settime(self, ctx: Context, event: EventEvent, time: EventTime):
         """
         Set event time.
 
         Example: settime 1 18:30
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
-        if event is None:
-            return
-
         # Change time
         event.setTime(time)
 
         # Update event and sort events, export
-        await msgFnc.updateMessageEmbed(eventMessage, event)
-        await msgFnc.sortEventMessages(ctx)
+        await msgFnc.sortEventMessages(self.bot)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send("Time set for operation {}"
                        .format(event))
 
     # Set terrain of event command
     @command(aliases=['st'])
-    async def setterrain(self, ctx: Context, eventMessage: EventMessage, *,
+    async def setterrain(self, ctx: Context, event: EventEvent, *,
                          terrain: str):
         """
         Set event terrain.
 
         Example: settime 1 Takistan
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
-        if event is None:
-            return
-
         # Change terrain, update event, export
         event.setTerrain(terrain)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
-        EventDatabase.toJson()  # Update JSON file
+        await self._update_event(event)
         await ctx.send("Terrain {} set for operation {}"
                        .format(event.terrain, event))
 
     # Set faction of event command
     @command(aliases=['sf'])
-    async def setfaction(self, ctx: Context, eventMessage: EventMessage, *,
+    async def setfaction(self, ctx: Context, event: EventEvent, *,
                          faction: str):
         """
         Set event faction.
 
         Example: setfaction 1 Insurgents
         """
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
-        if event is None:
-            return
-
         # Change faction, update event, export
         event.setFaction(faction)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
-        EventDatabase.toJson()  # Update JSON file
+        await self._update_event(event)
         await ctx.send("Faction {} set for operation {}"
                        .format(event.faction, event))
 
     async def _set_description(self, ctx: Context, event: Event,
-                               message: Message = None, description: str = ""):
+                               description: str = ""):
         if description and description[0] == '"' and description[-1] == '"':
+            # Strip quotes from description
             description = description[1:-1]
 
-        if message is None:
-            message = await msgFnc.getEventMessage(event, ctx.bot)
-
-        # Change description, update event, export
+        # Change description, update event
         event.description = description
-        await msgFnc.updateMessageEmbed(message, event)
-        EventDatabase.toJson()  # Update JSON file
+        await self._update_event(event)
         if description:
             await ctx.send("Description \"{}\" set for operation {}"
                            .format(event.description, event))
@@ -710,20 +644,25 @@ class CommandListener(Cog):
                            .format(event))
 
     @command(aliases=['sd'])
-    async def setdescription(self, ctx: Context, eventMessage: EventMessage, *,
+    async def setdescription(self, ctx: Context, event: EventEvent, *,
                              description: str = ""):
         """
         Set or clear event description. To clear the description, run `setdescription [ID]` without the description parameter
 
         Example: setdescription 1 Extra mods required
         """  # NOQA
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
-        if event is None:
-            return
-        await self._set_description(ctx, event, eventMessage, description)
+        await self._set_description(ctx, event, description)
 
-    async def _set_quick(self, ctx: Context, event: Event,
-                         message: Message, terrain: str,
+    @command(aliases=['cld'])
+    async def cleardescription(self, ctx: Context, event: EventEvent):
+        """
+        Clear event description. Alias for `setdescription [ID]`
+
+        Example: cleardescription 1
+        """
+        await self._set_description(ctx, event)
+
+    async def _set_quick(self, ctx: Context, event: Event, terrain: str,
                          faction: str, zeus: Member = None,
                          time: EventTime = None, quiet=False):
         event.setTerrain(terrain)
@@ -733,15 +672,13 @@ class CommandListener(Cog):
         if time is not None:
             event.setTime(time)
 
-        await msgFnc.updateReactions(event, message=message)
-        await msgFnc.updateMessageEmbed(message, event)
-        await msgFnc.sortEventMessages(ctx)
+        await msgFnc.sortEventMessages(self.bot)
         EventDatabase.toJson()  # Update JSON file
         if not quiet:
             await ctx.send("Updated event {}".format(event))
 
     @command(aliases=['sq'])
-    async def setquick(self, ctx: Context, event_message: EventMessage,
+    async def setquick(self, ctx: Context, event: EventEvent,
                              terrain: str, faction: str, zeus: Member = None,
                              time: EventTime = None):
         """
@@ -753,17 +690,13 @@ class CommandListener(Cog):
                  setquick 1 Altis USMC Stroker
                  setquick 1 Altis USMC Stroker 17:30
         """  # NOQA
-        event = await msgFnc.getEvent(event_message.id, ctx)
-        if event is None:
-            return
-
-        await self._set_quick(ctx, event, event_message, terrain,
+        await self._set_quick(ctx, event, terrain,
                               faction, zeus, time)
 
     # Sign user up to event command
     @command(aliases=['s'])
-    async def signup(self, ctx: Context, eventMessage: EventMessage,
-                     user: Member, *, roleName: str):
+    async def signup(self, ctx: Context, event: EventEvent, user: Member, *,
+                     roleName: str):
         """
         Sign user up (manually).
 
@@ -772,20 +705,12 @@ class CommandListener(Cog):
 
         Example: signup 1 "S. Gehock" Y1 (Bradley) Gunner
         """  # NOQA
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
-        if event is None:
-            return
-
         # Find role
         role = event.findRoleWithName(roleName)
-        if role is None:
-            await ctx.send("No role found with name {}".format(roleName))
-            return
 
         # Sign user up, update event, export
         old_signup, replaced_user = event.signup(role, user)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
-        EventDatabase.toJson()  # Update JSON file
+        await self._update_event(event)
         message = "User {} signed up to event {} as {}" \
                  .format(user.display_name, event, role.name)
         if old_signup:
@@ -798,8 +723,7 @@ class CommandListener(Cog):
 
     # Remove signup on event of user command
     @command(aliases=['rs'])
-    async def removesignup(self, ctx: Context, eventMessage: EventMessage,
-                           user: Member):
+    async def removesignup(self, ctx: Context, event: EventEvent, user: Member):
         """
         Undo user signup (manually).
 
@@ -807,14 +731,9 @@ class CommandListener(Cog):
 
         Example: removesignup 1 "S. Gehock"
         """  # NOQA
-        event = await msgFnc.getEvent(eventMessage.id, ctx)
-        if event is None:
-            return
-
         # Remove signup, update event, export
         event.undoSignup(user)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
-        EventDatabase.toJson()  # Update JSON file
+        await self._update_event(event)
         await ctx.send("User {} removed from event {}"
                        .format(user.display_name, event))
 
@@ -829,17 +748,31 @@ class CommandListener(Cog):
 
         # Archive event and export
         EventDatabase.archiveEvent(event)
-        eventMessage = await msgFnc.getEventMessage(event, self.bot)
-        if eventMessage:
-            await eventMessage.delete()
-        else:
+        try:
+            eventMessage = await msgFnc.getEventMessage(event, self.bot)
+        except MessageNotFound:
             await ctx.send("Internal error: event {} without a message found"
                            .format(event))
+        else:
+            await eventMessage.delete()
 
         # Create new message
         await msgFnc.createEventMessage(event, self.bot.eventarchivechannel)
 
         await ctx.send("Event {} archived".format(event))
+
+    async def _delete(self, event: Event, archived=False):
+        # TODO: Move to a more appropriate location
+        EventDatabase.removeEvent(event.id, archived=archived)
+        try:
+            eventMessage = await msgFnc.getEventMessage(
+                event, self.bot, archived=archived)
+        except MessageNotFound:
+            # Message already deleted, nothing to be done
+            pass
+        else:
+            await eventMessage.delete()
+        EventDatabase.toJson(archive=archived)
 
     # Delete event command
     @command(aliases=['d'])
@@ -849,11 +782,7 @@ class CommandListener(Cog):
 
         Example: delete 1
         """
-        eventMessage = await msgFnc.getEventMessage(event, self.bot)
-        EventDatabase.removeEvent(event.id)
-        # TODO: handle missing events
-        await eventMessage.delete()
-        EventDatabase.toJson()
+        await self._delete(event)
         await ctx.send("Event {} removed".format(event))
 
     @command()
@@ -863,13 +792,7 @@ class CommandListener(Cog):
 
         Example: deletearchived 1
         """
-        eventMessage = await msgFnc.getEventMessage(
-            event, self.bot, archived=True)
-        EventDatabase.removeEvent(event.id, archived=True)
-        # TODO: handle missing events
-        # TODO: Check if archived message can be deleted
-        await eventMessage.delete()
-        EventDatabase.toJson(archive=True)
+        await self._delete(event, archived=True)
         await ctx.send("Event {} removed from archive".format(event))
 
     @command(name="list", aliases=["ls"])
@@ -888,7 +811,7 @@ class CommandListener(Cog):
     @command()
     async def sort(self, ctx: Context):
         """Sort events (manually)."""
-        await msgFnc.sortEventMessages(ctx)
+        await msgFnc.sortEventMessages(self.bot)
         await ctx.send("Events sorted")
 
     # export to json
@@ -914,30 +837,35 @@ class CommandListener(Cog):
     #     EventDatabase.toJson()
     #     await ctx.send("Event messages created")
 
-    async def _update_event(self, event: Event, import_db=False, reorder=True):
+    async def _update_event(self, event: Event, import_db=False,
+                            reorder=True, export=True):
+        # TODO: Move to a more appropriate location
         if import_db:
             await self.bot.import_database()
             # Event instance might have changed because of DB import, get again
-            event = await EventDatabase.getEventByMessage(event.messageID)
+            event = EventDatabase.getEventByMessage(event.messageID)
 
-        message = await msgFnc.getEventMessage(event, self.bot)
-        if not message:
-            message = await msgFnc.createEventMessage(
-                event, self.bot.eventchannel)
-        await msgFnc.updateReactions(event=event, message=message,
-                                     reorder=reorder)
+        try:
+            message = await msgFnc.getEventMessage(event, self.bot)
+        except MessageNotFound:
+            message = await msgFnc.createEventMessage(event,
+                                                      self.bot.eventchannel)
+
         await msgFnc.updateMessageEmbed(eventMessage=message,
                                         updatedEvent=event)
-        EventDatabase.toJson()
+        await msgFnc.updateReactions(event=event, message=message,
+                                     reorder=reorder)
+        if export:
+            EventDatabase.toJson()
 
-    @command()
+    @command(aliases=['upde'])
     async def updateevent(self, ctx: Context, event: EventEvent,
                           import_db: bool = False):
         """Import database, update embed and reactions on a single event message."""
-        await self._update_event(event, import_db)
+        await self._update_event(event, import_db=import_db)
         await ctx.send("Event updated")
 
-    @command()
+    @command(aliases=['syncm'])
     async def syncmessages(self, ctx: Context):
         """Import database, sync messages with events and create missing messages."""
         await self.bot.import_database()
@@ -964,14 +892,13 @@ class CommandListener(Cog):
             await ctx.send("Invalid argument: {}. See: `{}help {}`"
                            .format(error, CMD, ctx.command))
         else:
-            cmd = "Command `{}` caused an error:".format(
-                ctx.message.clean_content)
             print(''.join(traceback.format_exception(type(error),
                 error, error.__traceback__)))
             msg = ''.join(traceback.format_exception(type(error), error,
                 error.__traceback__, 2))
             await ctx.send(
-                "Unexpected error occured: ```{}```\nMessage: `{}`\n\n```py\n{}```"
+                "Unexpected error occured: ```{}```\nMessage: "
+                "`{}`\n\n```py\n{}```"
                 .format(error, ctx.message.clean_content, msg))
 
 def setup(bot):

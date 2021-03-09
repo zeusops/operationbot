@@ -3,15 +3,16 @@ from typing import Dict, List, Optional
 from discord import ClientUser, Emoji, Message, NotFound, TextChannel
 from discord.abc import Messageable
 from discord.ext.commands import Context
+from discord.ext.commands.bot import Bot
 
 import config as cfg
+from errors import MessageNotFound
 from event import Event
 
 # from operationbot import OperationBot
 
 
-async def getEventMessage(event: Event, bot, archived=False) \
-        -> Optional[Message]:
+async def getEventMessage(event: Event, bot, archived=False) -> Message:
     """Get a message related to an event."""
     if archived:
         channel = bot.eventarchivechannel
@@ -21,43 +22,34 @@ async def getEventMessage(event: Event, bot, archived=False) \
     try:
         return await channel.fetch_message(event.messageID)
     except NotFound:
-        return None
+        raise MessageNotFound("No event message found with message ID {}"
+                              .format(event.messageID))
 
 
-async def getEvent(messageID, ctx: Context) -> Optional[Event]:
-    """Get an event by a message id."""
+async def getEvent(messageID) -> Event:
+    """Deprecated. Use EventDatabase.getEventByMessage instead"""
+    print("WARNING: messageFunctions.getEvent is deprecated in favour of "
+          "EventDatabase.getEventByMessage")
     from eventDatabase import EventDatabase
-    eventToUpdate = EventDatabase.getEventByMessage(messageID)
-    if eventToUpdate is None:
-        await ctx.send("getEvent: No event found with that message ID: {}"
-                       .format(messageID))
-        return None
-    return eventToUpdate
+    return EventDatabase.getEventByMessage(messageID)
 
 
-async def sortEventMessages(target: Messageable, bot=None):
-    """Sort events in event database."""
-    if bot is None:
-        if isinstance(target, Context):
-            bot = target.bot
-        else:
-            raise ValueError("Requires either the bot argument or context.")
+async def sortEventMessages(bot: Bot):
+    """Sort events in event database.
 
+    Raises MessageNotFound if messages are missing."""
     from eventDatabase import EventDatabase
     EventDatabase.sortEvents()
     print(EventDatabase.events)
 
-
     event: Event
     for event in EventDatabase.events.values():
-        message = await getEventMessage(event, bot)
-        if message is None:
-            await target.send(
-                "sortEventMessages: No message found with that message ID: {}"
-                .format(event.messageID))
-            return
-        await updateReactions(event, message=message)
+        try:
+            message = await getEventMessage(event, bot)
+        except MessageNotFound as e:
+            raise MessageNotFound("sortEventMessages: {}".format(e))
         await updateMessageEmbed(message, event)
+        await updateReactions(event, message=message)
 
 
 # from EventDatabase
@@ -159,14 +151,24 @@ async def syncMessages(events: Dict[int, Event], bot):
     sorted_events = sorted(list(events.values()), key=lambda event: event.date)
     print(sorted_events)
     for event in sorted_events:
-        message = await getEventMessage(event, bot)
-        if message is not None and messageEventId(message) == event.id:
-            print("found message {} for event {}".format(message.id, event))
-        else:
+        try:
+            message = await getEventMessage(event, bot)
+        except MessageNotFound:
             print("missing a message for event {}, creating".format(event))
-            message = await createEventMessage(event, bot.eventchannel)
+            await createEventMessage(event, bot.eventchannel)
+        else:
+            if messageEventId(message) == event.id:
+                print("found message {} for event {}".format(message.id, event))
+            else:
+                print("found incorrect message for event {}, deleting and "
+                      "creating".format(event))
+                # Technically multiple events might have the same saved
+                # messageID but it's simpler to just recreate messages here if
+                # the event ID doesn't match
+                await message.delete()
+                await createEventMessage(event, bot.eventchannel)
 
-    await sortEventMessages(bot.commandchannel, bot)
+    await sortEventMessages(bot)
 
 
 # async def importMessages(events: Dict[int, Event], bot):

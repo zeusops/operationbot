@@ -6,6 +6,7 @@ from discord import Game, Member, Message, RawReactionActionEvent, Reaction
 from discord.ext.commands import Cog
 
 import config as cfg
+from errors import EventNotFound, RoleNotFound
 import messageFunctions as msgFnc
 from event import Event
 from eventDatabase import EventDatabase
@@ -60,9 +61,10 @@ class EventListener(Cog):
         await message.remove_reaction(payload.emoji, user)
 
         # Get event from database with message ID
-        event: Optional[Event] = EventDatabase.getEventByMessage(message.id)
-        if event is None:
-            print("No event found with that id", message.id)
+        try:
+            event: Event = EventDatabase.getEventByMessage(message.id)
+        except EventNotFound as e:
+            print(e)
             await self.bot.logchannel.send(
                 "NOTE: reaction to a non-existent event. "
                 "msg: {} role: {} user: {} ({}#{})"
@@ -81,12 +83,14 @@ class EventListener(Cog):
         signup: Optional[Role] = event.findSignupRole(user.id)
 
         # Get role with the emoji
-        role = event.findRoleWithEmoji(emoji)
-        if role is None or role.name == "ZEUS":
-            # No role found, or somebody with Nitro added the ZEUS
-            # reaction by hand
-            print("No role found with that emoji {} in event {} by user {}#{}"
-                  .format(emoji, event, user.name, user.discriminator))
+        try:
+            role = event.findRoleWithEmoji(emoji)
+        except RoleNotFound as e:
+            raise RoleNotFound("{} in event {} by user {}#{}"
+                               .format(str(e), event, user.name,
+                                       user.discriminator))
+        if role.name == "ZEUS":
+            # somebody with Nitro added the ZEUS reaction by hand
             return
 
         late_signoff = False

@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Tuple
 from discord import Embed, Emoji
 
 import config as cfg
+from errors import RoleNotFound
 from secret import PLATOON_SIZE
 from role import Role
 from roleGroup import RoleGroup
@@ -352,15 +353,15 @@ class Event:
 
         return reactions
 
-    def findRoleWithEmoji(self, emoji) -> Optional[Role]:
+    def findRoleWithEmoji(self, emoji) -> Role:
         """Find a role with given emoji."""
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role.emoji == emoji:
                     return role
-        return None
+        return RoleNotFound("No role found with emoji {}".format(emoji))
 
-    def findRoleWithName(self, roleName: str) -> Optional[Role]:
+    def findRoleWithName(self, roleName: str) -> Role:
         """Find a role with given name."""
         roleName = roleName.lower()
         for roleGroup in self.roleGroups.values():
@@ -368,13 +369,13 @@ class Event:
             for role in roleGroup.roles:
                 if role.name.lower() == roleName:
                     return role
-        return None
+        raise RoleNotFound("No role found with name {}".format(roleName))
 
     def hasRoleGroup(self, groupName: str) -> bool:
         """Check if a role group with given name exists in the event."""
         return groupName in self.roleGroups
 
-    def signup(self, roleToSet, user) -> Optional[List[Tuple[User, Role]]]:
+    def signup(self, roleToSet, user) -> Tuple[Optional[User], Role]:
         """Add username to role.
 
         Returns a tuple containing the role current user was removed from and
@@ -407,6 +408,7 @@ class Event:
             for role in roleGroup.roles:
                 if role.userID == int(userID):
                     return role
+        # TODO: raise RoleNotFound instead of returning None?
         return None
 
     def __str__(self):
