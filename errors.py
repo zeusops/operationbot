@@ -16,3 +16,7 @@ class UnexpectedRole(Exception):
 
 class RoleGroupNotFound(Exception):
     pass
+
+
+class RoleError(Exception):
+    pass

@@ -6,16 +6,16 @@ from datetime import date, datetime, time, timedelta
 from io import StringIO
 from typing import List
 
-from discord import Forbidden, Member, Message
+import yaml
+from discord import Member, Message
 from discord.ext.commands import (BadArgument, Cog, Context, Converter,
                                   MissingRequiredArgument, command)
 from discord.ext.commands.errors import CommandInvokeError
-import yaml
 
 import config as cfg
-from errors import EventNotFound, MessageNotFound, UnexpectedRole
 import messageFunctions as msgFnc
-from event import Event, RoleError
+from errors import EventNotFound, MessageNotFound, RoleError, UnexpectedRole
+from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
 from roleGroup import RoleGroup

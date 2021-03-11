@@ -1,18 +1,14 @@
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-from discord import ClientUser, Emoji, Message, NotFound, TextChannel
-from discord.abc import Messageable
-from discord.ext.commands import Context
+from discord import Emoji, Message, NotFound, TextChannel
+from discord.errors import Forbidden
 from discord.ext.commands.bot import Bot
 
-import config as cfg
-from errors import MessageNotFound
+from errors import MessageNotFound, RoleError
 from event import Event
 
-# from operationbot import OperationBot
 
-
-async def getEventMessage(event: Event, bot, archived=False) -> Message:
+async def getEventMessage(event: Event, bot: Bot, archived=False) -> Message:
     """Get a message related to an event."""
     if archived:
         channel = bot.eventarchivechannel

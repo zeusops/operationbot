@@ -4,10 +4,10 @@ from typing import Dict, List, Optional, Tuple
 from discord import Embed, Emoji
 
 import config as cfg
-from errors import RoleGroupNotFound, RoleNotFound
-from secret import PLATOON_SIZE
+from errors import RoleError, RoleGroupNotFound, RoleNotFound
 from role import Role
 from roleGroup import RoleGroup
+from secret import PLATOON_SIZE
 
 TITLE = "Operation"
 SIDEOP_TITLE = "Side Operation"
@@ -19,10 +19,6 @@ SIDEOP_COLOR = 0x0045FF
 WW2_SIDEOP_COLOR = 0x808080
 # Discord API limitation
 MAX_REACTIONS = 20
-
-
-class RoleError(Exception):
-    pass
 
 
 class User:
