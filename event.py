@@ -249,7 +249,7 @@ class Event:
         # Find next emoji for additional role
 
         if self.countReactions() >= MAX_REACTIONS:
-            raise RoleError("Too many roles.")
+            raise RoleError("Too many roles, not adding role {}".format(name))
         emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additionalRoleCount]
 
         # Create role
@@ -265,13 +265,7 @@ class Event:
         """Remove an additional role from the event."""
         # Remove role from additional roles
         self.roleGroups["Additional"].removeRole(role)
-
-        # Reorder the emotes of all the additional roles
-        self.additionalRoleCount = 0
-        for roleInstance in self.roleGroups["Additional"].roles:
-            emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additionalRoleCount]
-            roleInstance.emoji = emoji
-            self.additionalRoleCount += 1
+        self.additionalRoleCount -= 1
 
     def removeRoleGroup(self, groupName: str) -> bool:
         """

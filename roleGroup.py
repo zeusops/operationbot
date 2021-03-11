@@ -3,7 +3,7 @@ from typing import List, Tuple
 from discord import Emoji, Guild
 
 import config as cfg
-from errors import UnexpectedRole
+from errors import RoleNotFound, UnexpectedRole
 from role import Role
 
 
@@ -36,6 +36,9 @@ class RoleGroup:
         for role in self.roles:
             if role.name == roleName:
                 self.roles.remove(role)
+                return
+        raise RoleNotFound("Could not find a role to remove with name {}"
+                           .format(roleName))
 
     def __str__(self) -> str:
         roleGroupString = ""

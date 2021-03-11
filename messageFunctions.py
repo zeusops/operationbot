@@ -122,8 +122,12 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
 
     # Add missing emojis
     for emoji in reactionEmojisToAdd:
-        await message.add_reaction(emoji)
-
+        try:
+            await message.add_reaction(emoji)
+        except Forbidden as e:
+            if e.code == 30010:
+                raise RoleError("Too many reactions, not adding role {}. "
+                                "This should not happen.".format(emoji))
 
 # async def createMessages(events: Dict[int, Event], bot):
 #     # Update event message contents and add reactions

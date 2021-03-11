@@ -5,6 +5,7 @@ import traceback
 from datetime import date, datetime, time, timedelta
 from io import StringIO
 from typing import List
+from discord.ext.commands.bot import Bot
 
 import yaml
 from discord import Member, Message
@@ -14,7 +15,8 @@ from discord.ext.commands.errors import CommandInvokeError
 
 import config as cfg
 import messageFunctions as msgFnc
-from errors import EventNotFound, MessageNotFound, RoleError, UnexpectedRole
+from errors import (EventNotFound, MessageNotFound, RoleError, RoleNotFound,
+                    UnexpectedRole)
 from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
@@ -456,40 +458,42 @@ class CommandListener(Cog):
         await ctx.send("All events reordered succesfully")
         EventDatabase.toJson()
 
-    @command(aliases=['ar'])
-    async def addrole(self, ctx: Context, eventMessage: EventMessage, *,
-                      rolename: str):
-        """
-        Add a new additional role to the event.
-
-        Example: addrole 1 Y1 (Bradley) Driver
-        """
-        event = EventDatabase.getEventByMessage(eventMessage.id)
-
+    async def _add_role(self, event: Event, rolename: str, batch=False):
         try:
-            reaction = event.addAdditionalRole(rolename)
+            event.addAdditionalRole(rolename)
         except IndexError:
             user = self.bot.owner
-            await ctx.send("Too many additional roles. This should not "
-                           "happen. Nag at {}".format(user.mention))
-            return
-        except RoleError:
-            await ctx.send("Too many roles, not adding role {}"
-                            .format(rolename))
-            return
-        try:
-            await eventMessage.add_reaction(reaction)
-        except Forbidden as e:
-            if e.code == 30010:
-                await ctx.send("Too many reactions, not adding role {}."
-                               "This should not happen. Nag at {}"
-                               .format(rolename, self.bot.owner.mention))
-                return
+            raise RoleError("Too many additional roles. This should not "
+                            "happen. Nag at {}".format(user.mention))
+        except RoleError as e:
+            if batch:
+                # Adding the latest role failed, saving previously added roles
+                await self._update_event(event, reorder=False)
+            raise RoleError(str(e))
+        await self._update_event(event, reorder=False, export=(not batch))
 
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+    @command(aliases=['ar'])
+    async def addrole(self, ctx: Context, event: EventEvent, *,
+                      rolename: str):
+        """
+        Add a new additional role or multiple roles to the event.
 
-        EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Role {} added to event {}".format(rolename, event))
+        Separate different roles with a newline
+
+        Example: addrole 1 Y1 (Bradley) Driver
+
+                 addrole 1 Y1 (Bradley) Driver
+                   Y1 (Bradley) Gunner
+        """
+        if '\n' in rolename:
+            for role in rolename.split('\n'):
+                role = role.strip()
+                await self._add_role(event, role, batch=True)
+                await ctx.send("Role {} added to event {}".format(role, event))
+            await self._update_event(event)
+        else:
+            await self._add_role(event, rolename)
+            await ctx.send("Role {} added to event {}".format(rolename, event))
 
     # Remove additional role from event command
     @command(aliases=['rr'])
@@ -500,11 +504,8 @@ class CommandListener(Cog):
 
         Example: removerole 1 Y1 (Bradley) Driver
         """
-        # Find role
-        role = event.findRoleWithName(rolename)
-
         event.removeAdditionalRole(rolename)
-        await self._update_event(event)
+        await self._update_event(event, reorder=False)
         await ctx.send("Role {} removed from {}".format(rolename, event))
 
     @command(aliases=['rra'])
@@ -950,36 +951,45 @@ class CommandListener(Cog):
         if isinstance(error, MissingRequiredArgument):
             await ctx.send("Missing argument. See: `{}help {}`"
                            .format(CMD, ctx.command))
+            return
         elif isinstance(error, BadArgument):
             await ctx.send("Invalid argument: {}. See: `{}help {}`"
                            .format(error, CMD, ctx.command))
-        elif isinstance(error, CommandInvokeError) and \
-                isinstance(error.original, UnexpectedRole):
-            await ctx.send("Malformed data: {}. See: `{}help {}`"
-                           .format(error.original, CMD, ctx.command))
+            return
+        elif isinstance(error, CommandInvokeError):
+            if isinstance(error.original, UnexpectedRole):
+                await ctx.send("Malformed data: {}. See: `{}help {}`"
+                            .format(error.original, CMD, ctx.command))
+                return
+            elif isinstance(error.original, RoleError):
+                await ctx.send("An error occured: ```{}```\n"
+                               "Message: `{}`".format(error.original,
+                                    ctx.message.clean_content))
+                return
+            else:
+                error = error.original
+        print(''.join(traceback.format_exception(type(error),
+            error, error.__traceback__)))
+        trace = ''.join(traceback.format_exception(type(error), error,
+            error.__traceback__, 2))
+
+        message = ctx.message.clean_content.split('\n')
+        if len(message) >= 1:
+            # Show only first line of the message
+            message = "{} [...]".format(message[0])
         else:
-            print(''.join(traceback.format_exception(type(error),
-                error, error.__traceback__)))
-            trace = ''.join(traceback.format_exception(type(error), error,
-                error.__traceback__, 2))
+            message = message[0]
+        msg = "Unexpected error occured: ```{}```\nMessage: " \
+                "`{}`\n\n```py\n{}```" \
+                .format(error, message, trace)
+        if len(msg) >= 2000:
+            await ctx.send("Received error message that's over 2000 "
+                            "characters, check log.")
+            print("Message:", ctx.message.clean_content)
+        else:
+            await ctx.send(msg)
 
-            message = ctx.message.clean_content.split('\n')
-            if len(message) >= 1:
-                # Show only first line of the message
-                message = "{} [...]".format(message[0])
-            else:
-                message = message[0]
-            msg = "Unexpected error occured: ```{}```\nMessage: " \
-                  "`{}`\n\n```py\n{}```" \
-                  .format(error, message, trace)
-            if len(msg) >= 2000:
-                await ctx.send("Received error message that's over 2000 "
-                               "characters, check log.")
-                print("Message:", ctx.message.clean_content)
-            else:
-                await ctx.send(msg)
-
-def setup(bot):
+def setup(bot: Bot):
     # importlib.reload(Event)
     importlib.reload(cfg)
     bot.add_cog(CommandListener(bot))
