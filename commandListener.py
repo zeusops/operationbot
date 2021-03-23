@@ -535,7 +535,8 @@ class CommandListener(Cog):
         Example: removegroup 1 Bravo
         """
         event = EventDatabase.getEventByMessage(eventMessage.id)
-
+        groupName = groupName.strip('"')
+        
         if not event.hasRoleGroup(groupName):
             await ctx.send("No role group found with name {}"
                            .format(groupName))
