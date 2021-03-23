@@ -736,10 +736,15 @@ class CommandListener(Cog):
         Example: removesignup 1 "S. Gehock"
         """  # NOQA
         # Remove signup, update event, export
-        event.undoSignup(user)
+        role = event.undoSignup(user)
         await self._update_event(event)
-        await ctx.send("User {} removed from event {}"
-                       .format(user.display_name, event))
+
+        if role.displayName:
+            role_name = " {}".format(role.name)
+        else:
+            role_name = ""
+        await ctx.send("User {} removed from role {}{} in event {}"
+                       .format(user.display_name, role.emoji, role_name, event))
 
     # Archive event command
     @command(aliases=['a'])
