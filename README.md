@@ -3,13 +3,19 @@ Copy `secret.py.example` to `secret.py` and add your bot token.
 
 Create a virtual environment:
 
-```virtualenv -p python3.7 venv```
+```
+sudo apt install python3-venv
+python3 -m venv venv
+```
 
 Activate the virtual environment:
 
-```source venv/bin/activate```
+```
+source venv/bin/activate
+```
 
-Install discord.py rewrite:
+Install required packages:
 
-```python3 -m pip install -U https://github.com/Rapptz/discord.py/archive/rewrite.zip```
-
+```
+pip install -r requirements.txt
+```
