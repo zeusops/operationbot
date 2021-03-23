@@ -536,7 +536,7 @@ class CommandListener(Cog):
         """
         event = EventDatabase.getEventByMessage(eventMessage.id)
 
-        if not event.hasRoleGroup:
+        if not event.hasRoleGroup(groupName):
             await ctx.send("No role group found with name {}"
                            .format(groupName))
             return
