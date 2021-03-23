@@ -1,21 +1,31 @@
+# Operationbot for the Zeus Operations discord
+
 ## Setting up
-Copy `secret.py.example` to `secret.py` and add your bot token.
 
-Create a virtual environment:
+1. Create a new Discord bot at <https://discord.com/developers/applications>
 
-```
-sudo apt install python3-venv
-python3 -m venv venv
-```
+   See [here](https://discordpy.readthedocs.io/en/latest/discord.html) for more
+   detailed instructions. Note that the bot does not have to be marked as
+   public.
 
-Activate the virtual environment:
+2. Copy `secret.py.example` to `secret.py` and add your bot token. Other values
+   can be customised as well but they are not critical for a basic setup.
 
-```
-source venv/bin/activate
-```
+3. Create a virtual environment:
 
-Install required packages:
+   ```
+   sudo apt install python3-venv python3-pip
+   python3 -m venv venv
+   ```
 
-```
-pip install -r requirements.txt
-```
+4. Activate the virtual environment:
+
+   ```
+   source venv/bin/activate
+   ```
+
+5. Install required packages:
+
+   ```
+   pip install -r requirements.txt
+   ```
