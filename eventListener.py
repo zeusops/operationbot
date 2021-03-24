@@ -165,11 +165,11 @@ class EventListener(Cog):
                               user.name,
                               user.discriminator,
                               event,
-                              role.emoji,
+                              role.display_name,
                               timestring)
         else:
             message = "{}: event: {} role: {} user: {} ({}#{})" \
-                      .format(message_action, event, emoji,
+                      .format(message_action, event, role.display_name,
                               user.display_name,
                               user.name,
                               user.discriminator)

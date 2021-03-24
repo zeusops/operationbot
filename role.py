@@ -46,3 +46,9 @@ class Role:
         if not manual_load:
             self.userID = data["userID"]
             self.userName = data["userName"]
+
+    @property
+    def display_name(self) -> Union[str, Emoji]:
+        if self.show_name:
+            return "{} {}".format(self.emoji, self.name)
+        return self.emoji
