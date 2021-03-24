@@ -81,13 +81,13 @@ class RoleGroup:
                 # Only create new roles if we're not loading data manually from
                 # the command channel
                 role = Role(roleData["name"], roleEmoji,
-                            roleData["displayName"])
+                            roleData["show_name"])
                 self.roles.append(role)
             else:
                 try:
                     role = next(x for x in self.roles if x.emoji == roleEmoji)
                 except StopIteration:
-                    name = roleData.get("displayName") or roleData["name"]
+                    name = roleData.get("show_name") or roleData["name"]
                     raise UnexpectedRole("Cannot import unexpected role '{}'"
                                          .format(name))
                 roles.append(roleEmoji)
