@@ -739,13 +739,8 @@ class CommandListener(Cog):
         # Remove signup, update event, export
         role = event.undoSignup(user)
         await self._update_event(event)
-
-        if role.displayName:
-            role_name = " {}".format(role.name)
-        else:
-            role_name = ""
-        await ctx.send("User {} removed from role {}{} in event {}"
-                       .format(user.display_name, role.emoji, role_name, event))
+        await ctx.send("User {} removed from role {} in event {}"
+                       .format(user.display_name, role.display_name, event))
 
     # Archive event command
     @command(aliases=['a'])
