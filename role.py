@@ -5,16 +5,16 @@ from discord import Emoji
 
 class Role:
 
-    def __init__(self, name: str, emoji: Union[str, Emoji], displayName: bool):
+    def __init__(self, name: str, emoji: Union[str, Emoji], show_name: bool):
         self.name = name
         self.emoji = emoji
-        self.displayName = displayName
+        self.show_name = show_name
         self.userID: Optional[int] = None
         self.userName = ""
 
     def __str__(self):
         # Add name after emote if it should display
-        if self.displayName:
+        if self.show_name:
             return "{} {}: {}\n".format(str(self.emoji),
                                         self.name,
                                         self.userName)
@@ -26,13 +26,13 @@ class Role:
 
     def toJson(self, brief_output=False):
         data = {}
-        if not brief_output or self.displayName:
+        if not brief_output or self.show_name:
             # Name is displayed when exporting full data (not brief_output) or
-            # when role is an additional role (displayName is set)
+            # when role is an additional role (show_name is set)
             data["name"] = self.name
         if not brief_output:
             # These are not relevant when exporting brief data
-            data["displayName"] = self.displayName
+            data["show_name"] = self.show_name
             data["userID"] = self.userID
         data["userName"] = self.userName
         return data
