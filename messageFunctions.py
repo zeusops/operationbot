@@ -22,14 +22,6 @@ async def getEventMessage(event: Event, bot: Bot, archived=False) -> Message:
                               .format(event.messageID))
 
 
-async def getEvent(messageID) -> Event:
-    """Deprecated. Use EventDatabase.getEventByMessage instead"""
-    print("WARNING: messageFunctions.getEvent is deprecated in favour of "
-          "EventDatabase.getEventByMessage")
-    from eventDatabase import EventDatabase
-    return EventDatabase.getEventByMessage(messageID)
-
-
 async def sortEventMessages(bot: Bot):
     """Sort events in event database.
 
