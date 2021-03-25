@@ -81,7 +81,7 @@ class RoleGroup:
                 # Only create new roles if we're not loading data manually from
                 # the command channel
                 role = Role(roleData["name"], roleEmoji,
-                            roleData["show_name"])
+                            self.get_corrected_name(roleData))
                 self.roles.append(role)
             else:
                 try:
@@ -96,3 +96,12 @@ class RoleGroup:
         if manual_load:
             # Remove roles that were not present in imported data
             self.roles = [x for x in self.roles if x.emoji in roles]
+
+    # TODO: this should be handled in EventDatabase instead based on the DB
+    #       version
+    def get_corrected_name(self, roleData):
+        if "displayName" in roleData:
+            show_name =  roleData["displayName"]
+        else:
+            show_name = roleData["show_name"]
+        return show_name
