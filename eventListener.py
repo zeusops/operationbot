@@ -149,7 +149,8 @@ class EventListener(Cog):
                     timestring = "{}{}{}".format(days_str, hours_str,
                                                  minutes_str)
 
-                    if time_delta < cfg.SIGNOFF_NOTIFY_TIME:
+                    if time_delta < cfg.SIGNOFF_NOTIFY_TIME and \
+                            self.bot.signoff_notify_user != user:
                         print("Delta:", time_delta)
                         print("Date delta smaller than notify period")
                         late_signoff = True
