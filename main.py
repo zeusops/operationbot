@@ -11,7 +11,10 @@ if cfg.VERSION != CONFIG_VERSION:
         .format(CONFIG_VERSION, cfg.VERSION))
 
 initial_extensions = ['commandListener', 'eventListener', 'cogs.repl']
-bot = OperationBot(command_prefix=COMMAND_CHAR, intents=discord.Intents.all())
+
+intents = discord.Intents.default()
+intents.members = True
+bot = OperationBot(command_prefix=COMMAND_CHAR, intents=intents)
 # bot.remove_command("help")
 
 if __name__ == '__main__':
