@@ -111,9 +111,9 @@ class EventListener(Cog):
         if message_action is None:
             return
 
-        late_signoff = calculate_signoff_delta(event, role)
+        late_signoff_delta = calculate_signoff_delta(event, role)
 
-        if late_signoff is not None and not event.sideop:
+        if late_signoff_delta is not None and not event.sideop:
             message = "{}: User {} ({}#{}) signed off from {} role {} " \
                        "{} before the operation." \
                         .format(self.bot.signoff_notify_user.mention,
@@ -122,7 +122,7 @@ class EventListener(Cog):
                                 user.discriminator,
                                 event,
                                 role.emoji,
-                                late_signoff)
+                                late_signoff_delta)
         else:
             message = "{}: event: {} role: {} user: {} ({}#{})" \
                         .format(message_action, event, emoji,
