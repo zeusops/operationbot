@@ -102,79 +102,35 @@ class EventListener(Cog):
         if user is     signed up and they select a different role, do nothing
         """
         if signup is None:
-
-            # Sign up if role is free
-            if role.userID is None:
-                # signup
-                event.signup(role, user)
-
-                # Update event
-                await msgFnc.updateMessageEmbed(message, event)
-                EventDatabase.toJson()
-            else:
-                # Role is already taken, ignoring sign up attempt
-                return
-            message_action = "Signup"
-
-        elif signup.emoji == emoji:
-            # undo signup
-            event.undoSignup(user)
-
-            # Update event
-            await msgFnc.updateMessageEmbed(message, event)
-            EventDatabase.toJson()
-
-            message_action = "Signoff"
-
-            print("Signed off role name:", role.name)
-            if role.name in cfg.SIGNOFF_NOTIFY_ROLES[event.platoon_size]:
-                print("Signoff in to be notified")
-                date = event.date
-                print("Event date:", date)
-                time_delta = date - datetime.today()
-                if time_delta > timedelta(days=0):
-                    days_str = ""
-                    hours_str = ""
-                    minutes_str = ""
-                    days = time_delta.days
-                    hours = time_delta.seconds // (60 * 60)
-                    minutes = (time_delta.seconds - hours * 60 * 60) // 60
-                    if days > 0:
-                        days_str = "{} days ".format(days)
-                    if hours > 0:
-                        hours_str = "{} hours ".format(hours)
-                    if minutes > 0:
-                        minutes_str = "{} minutes".format(minutes)
-
-                    timestring = "{}{}{}".format(days_str, hours_str,
-                                                 minutes_str)
-
-                    if time_delta < cfg.SIGNOFF_NOTIFY_TIME:
-                        print("Delta:", time_delta)
-                        print("Date delta smaller than notify period")
-                        late_signoff = True
+            message_action = msignup(event, role, user)
         else:
-            # user reacted to another role while signed up
+            message_action = signoff_or_change(event, role, user, signup, emoji)
+        
+        await msgFnc.updateMessageEmbed(message, event)
+        EventDatabase.toJson()
+        if message_action is None:
             return
 
-        if late_signoff and not event.sideop:
+        late_signoff = calculate_signoff_delta(event, role)
+
+        if late_signoff is not None and not event.sideop:
             message = "{}: User {} ({}#{}) signed off from {} role {} " \
-                      "{} before the operation." \
-                      .format(self.bot.signoff_notify_user.mention,
-                              user.display_name,
-                              user.name,
-                              user.discriminator,
-                              event,
-                              role.emoji,
-                              timestring)
+                       "{} before the operation." \
+                        .format(self.bot.signoff_notify_user.mention,
+                                user.display_name,
+                                user.name,
+                                user.discriminator,
+                                event,
+                                role.emoji,
+                                timestring)
         else:
             message = "{}: event: {} role: {} user: {} ({}#{})" \
-                      .format(message_action, event, emoji,
-                              user.display_name,
-                              user.name,
-                              user.discriminator)
-
+                        .format(message_action, event, emoji,
+                                user.display_name,
+                                user.name,
+                                user.discriminator)
         await self.bot.logchannel.send(message)
+
 
     @Cog.listener()
     async def on_message(self, message: Message):
@@ -189,3 +145,31 @@ class EventListener(Cog):
 def setup(bot: OperationBot):
     importlib.reload(cfg)
     bot.add_cog(EventListener(bot))
+
+#KOSI START REFRACTORING (needs improvements with naming xD)
+def msignup(given_event : Event,  given_role : Role, given_user):
+        if given_role.userID is None:
+            given_event.signup(given_role, given_user)
+            return "Signup"
+        else:
+            return None
+        
+def signoff_or_change(given_event : Event,  given_role : Role, given_user, given_signup: Optional[Role], given_emoji):
+    given_event.undoSignup(given_user)
+    if given_signup.emoji == given_emoji:
+        return "Signoff"
+    else:
+        changed = msignup(given_event, given_role, given_user)
+        if changed is not None:
+            return "Change"
+        else:
+            return None
+
+def calculate_signoff_delta(given_event : Event, given_role : Role):
+    if given_role.name in cfg.SIGNOFF_NOTIFY_ROLES[given_event.platoon_size]:
+        time_delta = given_event.date - datetime.today()
+        if time_delta > timedelta(days=0):
+            if time_delta < cfg.SIGNOFF_NOTIFY_TIME:
+                return time_delta
+    return None  
+#KOSI END
