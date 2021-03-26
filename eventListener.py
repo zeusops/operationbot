@@ -175,8 +175,7 @@ def calculate_signoff_delta(given_event : Event, given_role : Role):
             timeframe = "{} days".format(days)
         else
             timeframe = "{}h{}min".format(hours, mins)
-        if time_delta > timedelta(days=0):
-            if time_delta < cfg.SIGNOFF_NOTIFY_TIME:
-                return timeframe
+        if time_delta > timedelta(days=0) and time_delta < cfg.SIGNOFF_NOTIFY_TIME:
+            return timeframe
     return None  
 #KOSI END
