@@ -20,6 +20,7 @@ from errors import (EventNotFound, MessageNotFound, RoleError, RoleNotFound,
 from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
+from role import Role
 from roleGroup import RoleGroup
 from secret import ADMINS
 from secret import COMMAND_CHAR as CMD
@@ -54,7 +55,7 @@ class EventTime(Converter):
             except ValueError:
                 pass
         raise BadArgument("Invalid time format {}. Has to be HH:MM or HHMM"
-                            .format(arg))
+                          .format(arg))
 
 
 class EventMessage(Converter):
@@ -536,7 +537,7 @@ class CommandListener(Cog):
         """
         event = EventDatabase.getEventByMessage(eventMessage.id)
         groupName = groupName.strip('"')
-        
+
         if not event.hasRoleGroup(groupName):
             await ctx.send("No role group found with name {}"
                            .format(groupName))
@@ -737,7 +738,7 @@ class CommandListener(Cog):
         Example: removesignup 1 "S. Gehock"
         """  # NOQA
         # Remove signup, update event, export
-        role = event.undoSignup(user)
+        role: Role = event.undoSignup(user)
         await self._update_event(event)
         await ctx.send("User {} removed from role {} in event {}"
                        .format(user.display_name, role.display_name, event))
