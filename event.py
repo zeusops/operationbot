@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
+import discord
 from discord import Embed, Emoji
 
 import config as cfg
@@ -372,7 +373,8 @@ class Event:
         """Check if a role group with given name exists in the event."""
         return groupName in self.roleGroups
 
-    def signup(self, roleToSet, user) -> Tuple[Optional[Role], User]:
+    def signup(self, roleToSet, user: discord.User) \
+            -> Tuple[Optional[Role], User]:
         """Add username to role.
 
         Returns a tuple containing the role current user was removed from and
