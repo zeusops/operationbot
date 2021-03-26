@@ -176,7 +176,7 @@ class EventDatabase:
             EventDatabase.readJson(cfg.JSON_FILEPATH['archive'])
 
     @staticmethod
-    def readJson(filename=str) -> Tuple[Dict[int, Event], int]:
+    def readJson(filename: str) -> Tuple[Dict[int, Event], int]:
         """Fill events and eventsArchive with data from JSON."""
         print("Importing")
 
@@ -188,7 +188,7 @@ class EventDatabase:
         try:
             try:
                 with open(filename) as jsonFile:
-                    data = json.load(jsonFile)
+                    data: Dict = json.load(jsonFile)
             except json.decoder.JSONDecodeError:
                 print("Malformed JSON file! Backing up and",
                       "creating an empty database")
@@ -213,7 +213,7 @@ class EventDatabase:
             # Try to import again
             return EventDatabase.readJson(filename)
 
-        databaseVersion: int = int(data.get('version', 0))
+        databaseVersion = int(data.get('version', 0))
         if databaseVersion != DATABASE_VERSION:
             msg = "Incorrect database version. Expected: {}, got: {}." \
                   .format(DATABASE_VERSION, databaseVersion)
