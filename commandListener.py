@@ -668,16 +668,6 @@ class CommandListener(Cog):
         """
         await self._set_description(ctx, event)
 
-    @command(aliases=['dbg'])
-    async def debugMessage(self, ctx: Context):
-        """
-        Debug Message. Sends the specified message to discord
-
-        Example: debugMessage
-        """
-        message = self.bot.signoff_notify_user.mention
-        await self.bot.logchannel.send(message)
-
     async def _set_quick(self, ctx: Context, event: Event, terrain: str,
                          faction: str, zeus: Member = None,
                          time: EventTime = None, quiet=False):
