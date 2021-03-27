@@ -372,11 +372,11 @@ class Event:
         """Check if a role group with given name exists in the event."""
         return groupName in self.roleGroups
 
-    def signup(self, roleToSet, user) -> Tuple[Optional[User], Role]:
+    def signup(self, roleToSet, user) -> Tuple[Optional[Role], User]:
         """Add username to role.
 
         Returns a tuple containing the role current user was removed from and
-        the sign-up that this command replaced."""
+        the signed-up user that this command replaced (if any)."""
         old_role = self.undoSignup(user)
         old_user = None
         for roleGroup in self.roleGroups.values():
