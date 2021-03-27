@@ -153,7 +153,7 @@ def msignup(given_event : Event,  given_role : Role, given_user):
             return "Signup"
         else:
             return None
-        
+
 def signoff_or_change(given_event : Event,  given_role : Role, given_user, given_signup: Optional[Role], given_emoji):
     given_event.undoSignup(given_user)
     if given_signup.emoji == given_emoji:
@@ -168,14 +168,16 @@ def signoff_or_change(given_event : Event,  given_role : Role, given_user, given
 def calculate_signoff_delta(given_event : Event, given_role : Role):
     if given_role.name in cfg.SIGNOFF_NOTIFY_ROLES[given_event.platoon_size]:
         time_delta = given_event.date - datetime.today()
-        days = time_delta.days
-        hours = time_delta.seconds // (60 * 60)
-        mins = (time_delta.seconds - hours * 60 * 60) // 60
-        if days > 0:
-            timeframe = "{} days".format(days)
-        else
-            timeframe = "{}h{}min".format(hours, mins)
-        if time_delta > timedelta(days=0) and time_delta < cfg.SIGNOFF_NOTIFY_TIME:
+        if time_delta > timedelta(days=0)
+            days = time_delta.days
+            hours = time_delta.seconds // (60 * 60)
+            mins = (time_delta.seconds - hours * 60 * 60) // 60
+            if days > 0:
+                timeframe = "{} days".format(days)
+            else
+                timeframe = "{}h{}min".format(hours, mins)
+            if time_delta < cfg.SIGNOFF_NOTIFY_TIME and \
+                self.bot.signoff_notify_user != user:
             return timeframe
-    return None  
+    return None
 #KOSI END
