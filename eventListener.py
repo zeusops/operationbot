@@ -138,12 +138,9 @@ class EventListener(Cog):
                             .format(self.bot.signoff_notify_user.mention,
                                     late_signoff_delta)
 
-        message = "{}{}: event: {} role: {}{} user: {} ({}#{})" \
-                  .format(delta_message, message_action, event, old_role,
-                          role.display_name,
-                          user.display_name,
-                          user.name,
-                          user.discriminator)
+        message = f"{delta_message}{message_action}: {event}, role: " \
+                  f"{old_role}{role.display_name}, user: {user.display_name} " \
+                  f"({user.name}#{user.discriminator})"
 
         await self.bot.logchannel.send(message)
 
