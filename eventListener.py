@@ -51,6 +51,14 @@ class EventListener(Cog):
         if payload.emoji.name in cfg.EXTRA_EMOJIS:
             return
 
+        message: Message = await self.bot.eventchannel.fetch_message(
+            payload.message_id)
+        if message.author != self.bot.user:
+            # We don't care about reactions to other messages than our own.
+            # Makes it easier to test multiple bot instances on the same
+            # channel
+            return
+
         # Remove the reaction
         message = await self.bot.eventchannel.fetch_message(payload.message_id)
         user: User = payload.member
