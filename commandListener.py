@@ -5,18 +5,17 @@ import traceback
 from datetime import date, datetime, time, timedelta
 from io import StringIO
 from typing import List
-from discord.ext.commands.bot import Bot
 
 import yaml
 from discord import Member, Message
 from discord.ext.commands import (BadArgument, Cog, Context, Converter,
                                   MissingRequiredArgument, command)
+from discord.ext.commands.bot import Bot
 from discord.ext.commands.errors import CommandInvokeError
 
 import config as cfg
 import messageFunctions as msgFnc
-from errors import (EventNotFound, MessageNotFound, RoleError, RoleNotFound,
-                    UnexpectedRole)
+from errors import EventNotFound, MessageNotFound, RoleError, UnexpectedRole
 from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
@@ -49,7 +48,7 @@ class EventDate(Converter):
 
 class EventTime(Converter):
     async def convert(self, ctx: Context, arg: str) -> datetime:
-        for fmt in('%H:%M', '%H%M'):
+        for fmt in ('%H:%M', '%H%M'):
             try:
                 return datetime.strptime(arg, fmt)
             except ValueError:
@@ -76,6 +75,9 @@ class EventMessage(Converter):
 
 class EventEvent(Converter):
     async def convert(self, ctx: Context, arg: str) -> Event:
+        return self._convert(arg)
+
+    async def _convert(self, arg: str, archived=False) -> Event:
         try:
             eventID = int(arg)
         except ValueError:
@@ -83,27 +85,19 @@ class EventEvent(Converter):
                               "integer".format(arg))
 
         try:
-            event = EventDatabase.getEventByID(eventID)
+            if not archived:
+                event = EventDatabase.getEventByID(eventID)
+            else:
+                event = EventDatabase.getArchivedEventByID(eventID)
         except EventNotFound as e:
             raise BadArgument(str(e))
 
         return event
 
 
-class ArchivedEvent(Converter):
+class ArchivedEvent(EventEvent):
     async def convert(self, ctx: Context, arg: str) -> Event:
-        try:
-            eventID = int(arg)
-        except ValueError:
-            raise BadArgument("Invalid message ID {}, needs to be an "
-                              "integer".format(arg))
-
-        try:
-            event = EventDatabase.getArchivedEventByID(eventID)
-        except EventNotFound as e:
-            raise BadArgument(str(e))
-
-        return event
+        return self._convert(arg, archived=True)
 
 
 class CommandListener(Cog):
@@ -254,7 +248,8 @@ class CommandListener(Cog):
                  createside2 2019-01-01 force
         """
 
-        await self._create_event(ctx, date, sideop=True, platoon_size="WW2side", force=force)
+        await self._create_event(ctx, date, sideop=True,
+                                 platoon_size="WW2side", force=force)
 
     async def _create_side_quick(self, ctx: Context, date: EventDateTime,
                                  terrain: str, faction: str,
@@ -303,11 +298,12 @@ class CommandListener(Cog):
         Example: createside2quick 2019-01-01 Altis USMC Stroker
                  createside2quick 2019-01-01 Altis USMC Stroker 17:30
         """  # NOQA
-        event = await self._create_side_quick(ctx, date, terrain, faction, zeus,
-                                              time, platoon_size="WW2side")
+        event = await self._create_side_quick(ctx, date, terrain, faction,
+                                              zeus, time,
+                                              platoon_size="WW2side")
         if WW2_DESCRIPTION:
-            await self._set_description(ctx, event, description=WW2_DESCRIPTION)
-
+            await self._set_description(ctx, event,
+                                        description=WW2_DESCRIPTION)
 
     @command(aliases=['mc'])
     async def multicreate(self, ctx: Context, start: EventDate,
@@ -403,6 +399,9 @@ class CommandListener(Cog):
             ctx.send("Invalid new size {}".format(new_size))
             return
 
+        await self._change_size(ctx, event, new_size)
+
+    async def _change_size(self, ctx: Context, event: Event, new_size: str):
         ret = event.changeSize(new_size)
         if ret is None:
             await ctx.send("{}: nothing to be done".format(event))
@@ -421,15 +420,7 @@ class CommandListener(Cog):
 
         for event in EventDatabase.events.values():
             print("converting", event)
-            ret = event.changeSize(new_size)
-            if ret is None:
-                await ctx.send("{}: nothing to be done".format(event))
-                continue
-            if ret.strip() != "":
-                await ctx.send(ret)
-
-            await self._update_event(event, export=False)
-            await ctx.send("Event {} resized succesfully".format(event))
+            await self._change_size(ctx, event, new_size)
         await ctx.send("All events resized succesfully")
         EventDatabase.toJson()
 
@@ -516,7 +507,7 @@ class CommandListener(Cog):
                              reaction: str):
         """
         Removes a role and the corresponding reaction from the event and updates the message.
-        """
+        """  # NOQA
         self._find_remove_reaction(reaction, event)
         await self._update_event(event, reorder=False)
         await ctx.send("Reaction {} removed from {}".format(reaction, event))
@@ -687,8 +678,8 @@ class CommandListener(Cog):
 
     @command(aliases=['sq'])
     async def setquick(self, ctx: Context, event: EventEvent,
-                             terrain: str, faction: str, zeus: Member = None,
-                             time: EventTime = None):
+                       terrain: str, faction: str, zeus: Member = None,
+                       time: EventTime = None):
         """
         Quickly set event details.
 
@@ -720,7 +711,7 @@ class CommandListener(Cog):
         old_signup, replaced_user = event.signup(role, user)
         await self._update_event(event)
         message = "User {} signed up to event {} as {}" \
-                 .format(user.display_name, event, role.name)
+                  .format(user.display_name, event, role.name)
         if old_signup:
             # User was signed on to a different role previously
             message += ". Signed off from {}".format(old_signup.name)
@@ -731,7 +722,8 @@ class CommandListener(Cog):
 
     # Remove signup on event of user command
     @command(aliases=['rs'])
-    async def removesignup(self, ctx: Context, event: EventEvent, user: Member):
+    async def removesignup(self, ctx: Context, event: EventEvent,
+                           user: Member):
         """
         Undo user signup (manually).
 
@@ -862,8 +854,8 @@ class CommandListener(Cog):
         Code tags (`\u200b`\u200b`) are optional. This command can be used to
         remove existing roles and role groups, to change the basic details of
         the operation and to rename additional roles. Note: this command cannot
-        create new roles or sign up users to roles, userName is displayed in the
-        output of `dump` only for convenience.
+        create new roles or sign up users to roles, userName is displayed in
+        the output of `dump` only for convenience.
 
         Example: load 0
                  `\u200b`\u200b`yaml
@@ -928,13 +920,13 @@ class CommandListener(Cog):
     @command(aliases=['upde'])
     async def updateevent(self, ctx: Context, event: EventEvent,
                           import_db: bool = False):
-        """Import database, update embed and reactions on a single event message."""
+        """Import database, update embed and reactions on a single event message."""  # NOQA
         await self._update_event(event, import_db=import_db)
         await ctx.send("Event updated")
 
     @command(aliases=['syncm'])
     async def syncmessages(self, ctx: Context):
-        """Import database, sync messages with events and create missing messages."""
+        """Import database, sync messages with events and create missing messages."""  # NOQA
         await self.bot.import_database()
         await msgFnc.syncMessages(EventDatabase.events, self.bot)
         EventDatabase.toJson()
@@ -963,19 +955,19 @@ class CommandListener(Cog):
         elif isinstance(error, CommandInvokeError):
             if isinstance(error.original, UnexpectedRole):
                 await ctx.send("Malformed data: {}. See: `{}help {}`"
-                            .format(error.original, CMD, ctx.command))
+                               .format(error.original, CMD, ctx.command))
                 return
             elif isinstance(error.original, RoleError):
-                await ctx.send("An error occured: ```{}```\n"
-                               "Message: `{}`".format(error.original,
-                                    ctx.message.clean_content))
+                await ctx.send("An error occured: ```{}```\nMessage: `{}`"
+                               .format(error.original,
+                                       ctx.message.clean_content))
                 return
             else:
                 error = error.original
         print(''.join(traceback.format_exception(type(error),
-            error, error.__traceback__)))
+              error, error.__traceback__)))
         trace = ''.join(traceback.format_exception(type(error), error,
-            error.__traceback__, 2))
+                        error.__traceback__, 2))
 
         message = ctx.message.clean_content.split('\n')
         if len(message) >= 1:
@@ -984,14 +976,15 @@ class CommandListener(Cog):
         else:
             message = message[0]
         msg = "Unexpected error occured: ```{}```\nMessage: " \
-                "`{}`\n\n```py\n{}```" \
-                .format(error, message, trace)
+              "`{}`\n\n```py\n{}```" \
+              .format(error, message, trace)
         if len(msg) >= 2000:
             await ctx.send("Received error message that's over 2000 "
-                            "characters, check log.")
+                           "characters, check log.")
             print("Message:", ctx.message.clean_content)
         else:
             await ctx.send(msg)
+
 
 def setup(bot: Bot):
     # importlib.reload(Event)

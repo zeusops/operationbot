@@ -143,7 +143,8 @@ class EventListener(Cog):
                                         late_signoff_delta)
 
         message = f"{delta_message}{message_action}: {event}, role: " \
-                  f"{old_role}{role.display_name}, user: {user.display_name} " \
+                  f"{old_role}{role.display_name}, " \
+                  f"user: {user.display_name} " \
                   f"({user.name}#{user.discriminator})"
 
         await self.bot.logchannel.send(message)

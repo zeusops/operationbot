@@ -9,9 +9,8 @@ from typing import Set
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import (BadArgument, Bot, Cog, Context,
-                                  MissingRequiredArgument, command)
-
+from discord.ext.commands import (BadArgument, Bot, Context,
+                                  MissingRequiredArgument)
 from eventDatabase import EventDatabase  # noqa
 from secret import COMMAND_CHAR as CMD
 
