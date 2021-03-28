@@ -20,3 +20,7 @@ class RoleGroupNotFound(Exception):
 
 class RoleError(Exception):
     pass
+
+
+class RoleTaken(Exception):
+    pass

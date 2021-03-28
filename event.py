@@ -5,7 +5,7 @@ import discord
 from discord import Embed, Emoji
 
 import config as cfg
-from errors import RoleError, RoleGroupNotFound, RoleNotFound
+from errors import RoleError, RoleGroupNotFound, RoleNotFound, RoleTaken
 from role import Role
 from roleGroup import RoleGroup
 from secret import PLATOON_SIZE
@@ -373,22 +373,30 @@ class Event:
         """Check if a role group with given name exists in the event."""
         return groupName in self.roleGroups
 
-    def signup(self, roleToSet, user: discord.User) \
+    def signup(self, roleToSet: Role, user: discord.User, replace=False) \
             -> Tuple[Optional[Role], User]:
         """Add username to role.
 
-        Returns a tuple containing the role current user was removed from and
-        the signed-up user that this command replaced (if any)."""
-        old_role = self.undoSignup(user)
-        old_user = None
+        Raises an error if the role is taken, unless replace is set to True.
+
+        Returns a tuple containing the role current user was removed from (if
+        any) and the signed-up user that this command replaced. If no user was
+        replaced, the returned User has ID = None, name = ''
+        """
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role == roleToSet:
+                    if role.userID and not replace:
+                        raise RoleTaken(f"Can't sign up {user.display_name}, "
+                                        f"role {roleToSet.name} is already "
+                                        "taken")
                     old_user = User(role.userID, role.userName)
+                    old_role = self.undoSignup(user)
                     role.userID = user.id
                     role.userName = user.display_name
                     return old_role, old_user
-        return old_role, User()
+        # Probably shouldn't ever reach this
+        raise RoleNotFound("Could not find role: {}".format(roleToSet))
 
     def undoSignup(self, user) -> Optional[Role]:
         """Remove username from any signups.
