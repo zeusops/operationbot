@@ -2,12 +2,13 @@ import importlib
 from datetime import datetime, timedelta
 from typing import Optional
 
-from discord import Game, Member, Message, RawReactionActionEvent, Reaction
+from discord import Game, Message, RawReactionActionEvent
 from discord.ext.commands import Cog
+from discord.user import User
 
 import config as cfg
-from errors import EventNotFound, RoleNotFound
 import messageFunctions as msgFnc
+from errors import EventNotFound, RoleNotFound, RoleTaken
 from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
@@ -34,11 +35,6 @@ class EventListener(Cog):
         await msgFnc.syncMessages(EventDatabase.events, self.bot)
         await commandchannel.send("synced")
         EventDatabase.toJson()
-        # TODO: add conditional message creation
-        # if debug:
-        #   create messages
-        # else:
-        #   detect existing messages
         msg = "{} events imported".format(len(EventDatabase.events))
         print(msg)
         await commandchannel.send(msg)
@@ -47,6 +43,7 @@ class EventListener(Cog):
 
     @Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
+
         if payload.member == self.bot.user or \
                 payload.channel_id != self.bot.eventchannel.id:
             # Bot's own reaction, or reaction outside of the event channel
@@ -55,9 +52,17 @@ class EventListener(Cog):
         if payload.emoji.name in cfg.EXTRA_EMOJIS:
             return
 
+        message: Message = await self.bot.eventchannel.fetch_message(
+            payload.message_id)
+        if message.author != self.bot.user:
+            # We don't care about reactions to other messages than our own.
+            # Makes it easier to test multiple bot instances on the same
+            # channel
+            return
+
         # Remove the reaction
         message = await self.bot.eventchannel.fetch_message(payload.message_id)
-        user = payload.member
+        user: User = payload.member
         await message.remove_reaction(payload.emoji, user)
 
         # Get event from database with message ID
@@ -80,100 +85,66 @@ class EventListener(Cog):
             emoji = payload.emoji.name
 
         # Find signup of user
-        signup: Optional[Role] = event.findSignupRole(user.id)
+        old_signup: Optional[Role] = event.findSignupRole(user.id)
 
         # Get role with the emoji
+        # TODO: remove when converter exists
         try:
             role = event.findRoleWithEmoji(emoji)
         except RoleNotFound as e:
             raise RoleNotFound("{} in event {} by user {}#{}"
                                .format(str(e), event, user.name,
                                        user.discriminator))
+
         if role.name == "ZEUS":
-            # somebody with Nitro added the ZEUS reaction by hand
+            # Somebody with Nitro added the ZEUS reaction by hand, ignoring
             return
 
-        late_signoff = False
+        late_signoff_delta = None
+        old_role = ""
 
         """
-        if user is not signed up and the role is     free, sign up
+        if user is not signed up and the role is free, sign up
         if user is not signed up and the role is not free, do nothing
-        if user is     signed up and they select    the same role, sign off
-        if user is     signed up and they select a different role, do nothing
-        """
-        if signup is None:
-
-            # Sign up if role is free
-            if role.userID is None:
-                # signup
-                event.signup(role, user)
-
-                # Update event
-                await msgFnc.updateMessageEmbed(message, event)
-                EventDatabase.toJson()
-            else:
-                # Role is already taken, ignoring sign up attempt
+        if user is signed up and they select the same role, sign off
+        if user is signed up and they select a different role, change to that role
+        """  # NOQA
+        if old_signup and emoji == old_signup.emoji:
+            # User clicked a reaction of the current signed up role
+            removed_role = event.undoSignup(user)
+            message_action = "SIGNOFF"
+        else:
+            try:
+                removed_role, _ = event.signup(role, user)
+            except RoleTaken:
+                # Users can't take priority with a reaction
                 return
-            message_action = "Signup"
+            if removed_role is None:
+                # User wasn't signed up to any roles previously
+                message_action = "SIGNUP"
+            else:
+                # User switched from a different role
+                message_action = "CHANGE"
+                old_role = "{} -> ".format(removed_role.display_name)
 
-        elif signup.emoji == emoji:
-            # undo signup
-            event.undoSignup(user)
+        # Update discord embed
+        await msgFnc.updateMessageEmbed(message, event)
+        EventDatabase.toJson()
 
-            # Update event
-            await msgFnc.updateMessageEmbed(message, event)
-            EventDatabase.toJson()
+        delta_message = ""
+        if removed_role and not event.sideop:
+            # User signed off or changed role, checking if there's a need to
+            # ping
+            late_signoff_delta = self._calculate_signoff_delta(
+                event, removed_role, user)
+            if late_signoff_delta is not None and not event.sideop:
+                delta_message = "{}: {} before the operation:\n" \
+                                .format(self.bot.signoff_notify_user.mention,
+                                        late_signoff_delta)
 
-            message_action = "Signoff"
-
-            print("Signed off role name:", role.name)
-            if role.name in cfg.SIGNOFF_NOTIFY_ROLES[event.platoon_size]:
-                print("Signoff in to be notified")
-                date = event.date
-                print("Event date:", date)
-                time_delta = date - datetime.today()
-                if time_delta > timedelta(days=0):
-                    days_str = ""
-                    hours_str = ""
-                    minutes_str = ""
-                    days = time_delta.days
-                    hours = time_delta.seconds // (60 * 60)
-                    minutes = (time_delta.seconds - hours * 60 * 60) // 60
-                    if days > 0:
-                        days_str = "{} days ".format(days)
-                    if hours > 0:
-                        hours_str = "{} hours ".format(hours)
-                    if minutes > 0:
-                        minutes_str = "{} minutes".format(minutes)
-
-                    timestring = "{}{}{}".format(days_str, hours_str,
-                                                 minutes_str)
-
-                    if time_delta < cfg.SIGNOFF_NOTIFY_TIME and \
-                            self.bot.signoff_notify_user != user:
-                        print("Delta:", time_delta)
-                        print("Date delta smaller than notify period")
-                        late_signoff = True
-        else:
-            # user reacted to another role while signed up
-            return
-
-        if late_signoff and not event.sideop:
-            message = "{}: User {} ({}#{}) signed off from {} role {} " \
-                      "{} before the operation." \
-                      .format(self.bot.signoff_notify_user.mention,
-                              user.display_name,
-                              user.name,
-                              user.discriminator,
-                              event,
-                              role.display_name,
-                              timestring)
-        else:
-            message = "{}: event: {} role: {} user: {} ({}#{})" \
-                      .format(message_action, event, role.display_name,
-                              user.display_name,
-                              user.name,
-                              user.discriminator)
+        message = f"{delta_message}{message_action}: {event}, role: " \
+                  f"{old_role}{role.display_name}, user: {user.display_name} " \
+                  f"({user.name}#{user.discriminator})"
 
         await self.bot.logchannel.send(message)
 
@@ -185,6 +156,24 @@ class EventListener(Cog):
             owner = self.bot.owner
             await owner.send("DM: [{}]: {}".format(
                 message.author, message.content))
+
+    def _calculate_signoff_delta(self, event: Event, role: Role, user):
+        """return a string (days or hours/mins) if it is shortly before op
+        else None"""
+        if role.name in cfg.SIGNOFF_NOTIFY_ROLES[event.platoon_size]:
+            time_delta = event.date - datetime.today()
+            if time_delta > timedelta(days=0):
+                days = time_delta.days
+                hours = time_delta.seconds // (60 * 60)
+                mins = (time_delta.seconds - hours * 60 * 60) // 60
+                if days > 0:
+                    timeframe = "{} days".format(days)
+                else:
+                    timeframe = "{}h{}min".format(hours, mins)
+                if time_delta < cfg.SIGNOFF_NOTIFY_TIME and \
+                        self.bot.signoff_notify_user != user:
+                    return timeframe
+        return None
 
 
 def setup(bot: OperationBot):
