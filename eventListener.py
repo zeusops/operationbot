@@ -4,10 +4,11 @@ from typing import Optional
 
 from discord import Game, Message, RawReactionActionEvent
 from discord.ext.commands import Cog
+from discord.user import User
 
 import config as cfg
 import messageFunctions as msgFnc
-from errors import EventNotFound, RoleNotFound
+from errors import EventNotFound, RoleNotFound, RoleTaken
 from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
@@ -84,7 +85,7 @@ class EventListener(Cog):
             emoji = payload.emoji.name
 
         # Find signup of user
-        signup: Optional[Role] = event.findSignupRole(user.id)
+        old_signup: Optional[Role] = event.findSignupRole(user.id)
 
         # Get role with the emoji
         # TODO: remove when converter exists
@@ -103,40 +104,43 @@ class EventListener(Cog):
         old_role = ""
 
         """
-        if user is not signed up and the role is     free, sign up
+        if user is not signed up and the role is free, sign up
         if user is not signed up and the role is not free, do nothing
-        if user is     signed up and they select    the same role, sign off
-        if user is     signed up and they select a different role, do nothing
-        """
-        if signup is None:
-            self.signup_user(event, role, user)
-            message_action = "SIGNUP"
-        else:
+        if user is signed up and they select the same role, sign off
+        if user is signed up and they select a different role, change to that role
+        """  # NOQA
+        if old_signup and emoji == old_signup.emoji:
+            # User clicked a reaction of the current signed up role
             removed_role = event.undoSignup(user)
-            result = self.signoff_or_change_user(event, role, user, signup,
-                                                 emoji)
-            if result is None:
-                message_action = "SIGNOFF"
+            message_action = "SIGNOFF"
+        else:
+            try:
+                removed_role, _ = event.signup(role, user)
+            except RoleTaken:
+                # Users can't take priority with a reaction
+                return
+            if removed_role is None:
+                # User wasn't signed up to any roles previously
+                message_action = "SIGNUP"
             else:
+                # User switched from a different role
                 message_action = "CHANGE"
                 old_role = "{} -> ".format(removed_role.display_name)
-            late_signoff_delta = self.calculate_signoff_delta(
-                event, removed_role, user)
 
         # Update discord embed
         await msgFnc.updateMessageEmbed(message, event)
         EventDatabase.toJson()
-        if message_action is None:
-            return
 
         delta_message = ""
-
-        # ping Moderator if shortly before op
-        # else without ping
-        if late_signoff_delta is not None and not event.sideop:
-            delta_message = "{}: {} before the operation:\n" \
-                            .format(self.bot.signoff_notify_user.mention,
-                                    late_signoff_delta)
+        if removed_role and not event.sideop:
+            # User signed off or changed role, checking if there's a need to
+            # ping
+            late_signoff_delta = self._calculate_signoff_delta(
+                event, removed_role, user)
+            if late_signoff_delta is not None and not event.sideop:
+                delta_message = "{}: {} before the operation:\n" \
+                                .format(self.bot.signoff_notify_user.mention,
+                                        late_signoff_delta)
 
         message = f"{delta_message}{message_action}: {event}, role: " \
                   f"{old_role}{role.display_name}, user: {user.display_name} " \
@@ -153,23 +157,7 @@ class EventListener(Cog):
             await owner.send("DM: [{}]: {}".format(
                 message.author, message.content))
 
-    # return the signed up role if its empty
-    # else None
-    def signup_user(self, event: Event, role: Role, user) -> Role:
-        if role.userID is None:
-            event.signup(role, user)
-            return role
-        return None
-
-    # return None
-    # else the newly signed up role
-    def signoff_or_change_user(self, event: Event,  role: Role, user,
-                               signup: Optional[Role], emoji) -> Role:
-        if signup.emoji == emoji:
-            return None
-        return self.signup_user(event, role, user)
-
-    def calculate_signoff_delta(self, event: Event, role: Role, user):
+    def _calculate_signoff_delta(self, event: Event, role: Role, user):
         """return a string (days or hours/mins) if it is shortly before op
         else None"""
         if role.name in cfg.SIGNOFF_NOTIFY_ROLES[event.platoon_size]:
