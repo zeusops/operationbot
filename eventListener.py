@@ -61,7 +61,6 @@ class EventListener(Cog):
             return
 
         # Remove the reaction
-        message = await self.bot.eventchannel.fetch_message(payload.message_id)
         user: User = payload.member
         await message.remove_reaction(payload.emoji, user)
 
