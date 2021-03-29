@@ -22,7 +22,7 @@ class Role:
             return "{} {}\n".format(str(self.emoji), self.userName)
 
     def __repr__(self):
-        return "<Role name='{}' userName='{}'>".format(self.name, self.userName)
+        return f"<Role name='{self.name}' userName='{self.userName}'>"
 
     def toJson(self, brief_output=False):
         data = {}

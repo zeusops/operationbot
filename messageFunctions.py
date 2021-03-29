@@ -42,7 +42,7 @@ async def sortEventMessages(bot: Bot):
 
 # from EventDatabase
 async def createEventMessage(event: Event, channel: TextChannel,
-        update_id=True) -> Message:
+                             update_id=True) -> Message:
     """Create a new event message."""
     # Create embed and message
     embed = event.createEmbed()
@@ -135,9 +135,11 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
 #         await updateMessageEmbed(message, event)
 #         await updateReactions(event, bot=bot)
 
+
 def messageEventId(message: Message) -> int:
     footer = message.embeds[0].footer.text
     return int(footer.split(' ')[-1])
+
 
 async def syncMessages(events: Dict[int, Event], bot):
     sorted_events = sorted(list(events.values()), key=lambda event: event.date)
@@ -150,7 +152,7 @@ async def syncMessages(events: Dict[int, Event], bot):
             await createEventMessage(event, bot.eventchannel)
         else:
             if messageEventId(message) == event.id:
-                print("found message {} for event {}".format(message.id, event))
+                print(f"found message {message.id} for event {event}")
             else:
                 print("found incorrect message for event {}, deleting and "
                       "creating".format(event))

@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from discord import Emoji, Guild
+from discord import Emoji
 
 import config as cfg
 from errors import RoleNotFound, UnexpectedRole
@@ -101,7 +101,7 @@ class RoleGroup:
     #       version
     def get_corrected_name(self, roleData):
         if "displayName" in roleData:
-            show_name =  roleData["displayName"]
+            show_name = roleData["displayName"]
         else:
             show_name = roleData["show_name"]
         return show_name

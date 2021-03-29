@@ -23,7 +23,7 @@ MAX_REACTIONS = 20
 
 
 class User:
-    def __init__(self, id: id = None, display_name: str = None):
+    def __init__(self, id: int = None, display_name: str = None):
         self.id = id
         self.display_name = display_name
 
@@ -82,7 +82,8 @@ class Event:
             print("sourcegroup", type(sourceGroup), sourceGroup.name)
             msg = ""
             role = sourceGroup[roleName]
-            print("moving role {} from {} to {}".format(roleName, sourceGroup.name, targetGroupName))
+            print(f"moving role {roleName} from {sourceGroup.name} to "
+                  f"{targetGroupName}")
             if targetGroupName is None:
                 if role.userID is not None:
                     msg = "Warning: removing an active role {} from {}, {}" \
@@ -175,18 +176,18 @@ class Event:
                 self.platoon_size = "1PLT"
 
             else:
-                raise ValueError("Unsupported platoon size conversion: {} -> {}"
-                                 .format(self.platoon_size, new_size))
+                raise ValueError("Unsupported platoon size conversion: "
+                                 f"{self.platoon_size} -> {new_size}")
         elif self.platoon_size == "1PLT":
             if new_size == "2PLT":
                 # TODO: implement 1PLT -> 2PLT conversion
-                raise NotImplementedError("Conversion from 1PLT to 2PLT " \
+                raise NotImplementedError("Conversion from 1PLT to 2PLT "
                                           "not implemented")
-            raise ValueError("Unsupported platoon size conversion: {} -> {}"
-                             .format(self.platoon_size, new_size))
+            raise ValueError("Unsupported platoon size conversion: "
+                             f"{self.platoon_size} -> {new_size}")
         else:
-            raise ValueError("Unsupported current platoon size: {}"
-                             .format(self.platoon_size))
+            raise ValueError("Unsupported current platoon size: "
+                             f"{self.platoon_size}")
         return warnings
 
     def reorder(self):
@@ -195,7 +196,8 @@ class Event:
 
         newGroups = {}
         warnings = ""
-        for groupName in cfg.DEFAULT_GROUPS[self.platoon_size] + ["Additional"]:
+        for groupName in cfg.DEFAULT_GROUPS[self.platoon_size] + \
+                ["Additional"]:
             try:
                 group = self.roleGroups[groupName]
             except KeyError:
@@ -206,7 +208,6 @@ class Event:
             newGroups[groupName] = group
         self.roleGroups = newGroups
         return warnings
-
 
     # Return an embed for the event
     def createEmbed(self) -> Embed:
@@ -350,7 +351,7 @@ class Event:
             for role in roleGroup.roles:
                 if role.emoji == emoji:
                     return role
-        return RoleNotFound("No role found with emoji {}".format(emoji))
+        raise RoleNotFound("No role found with emoji {}".format(emoji))
 
     def findRoleWithName(self, roleName: str) -> Role:
         """Find a role with given name."""
@@ -408,6 +409,7 @@ class Event:
                     role.userID = None
                     role.userName = ""
                     return role
+        return None
 
     def findSignupRole(self, userID) -> Optional[Role]:
         """Check if given user is already signed up."""
@@ -464,8 +466,8 @@ class Event:
         groups: List[str] = []
         for groupName, roleGroupData in data["roleGroups"].items():
             if not manual_load:
-                # Only create new role groups if we're not loading data manually
-                # from the command channel
+                # Only create new role groups if we're not loading data
+                # manually from the command channel
                 roleGroup = RoleGroup(groupName)
                 self.roleGroups[groupName] = roleGroup
             else:
@@ -474,7 +476,6 @@ class Event:
             roleGroup.fromJson(roleGroupData, emojis, manual_load)
         if manual_load:
             # Remove role groups that were not present in imported data
-            # self.roleGroups = [x for x in self.roleGroups if x.name in groups]
             for roleGroup in list(self.roleGroups.keys()):
                 if roleGroup not in groups:
                     del self.roleGroups[roleGroup]

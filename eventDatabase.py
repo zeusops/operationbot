@@ -6,8 +6,8 @@ from typing import Any, Dict, Optional, Tuple
 from discord import Emoji
 
 import config as cfg
-from event import Event
 from errors import EventNotFound
+from event import Event
 
 DATABASE_VERSION = 4
 
@@ -66,7 +66,7 @@ class EventDatabase:
         Does not remove the message associated with the event.
         """
         events = EventDatabase.events if not archived \
-                else EventDatabase.eventsArchive
+            else EventDatabase.eventsArchive
         return events.pop(eventID, None)
 
     # was: findEvent
@@ -83,8 +83,7 @@ class EventDatabase:
         for event in collection.values():
             if event.messageID == messageID:
                 return event
-        raise EventNotFound("No event found with message ID "
-                            .format(messageID))
+        raise EventNotFound(f"No event found with message ID {messageID}")
 
     @staticmethod
     def getEventByID(eventID: int, archived=False) -> Event:

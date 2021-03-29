@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+import discord
+
 import config as cfg
 from operationbot import OperationBot
 from secret import COMMAND_CHAR, TOKEN
-import discord
 
 CONFIG_VERSION = 8
 if cfg.VERSION != CONFIG_VERSION:

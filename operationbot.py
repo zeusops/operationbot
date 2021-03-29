@@ -66,12 +66,12 @@ class OperationBot(Bot):
             self.help_command = help_command
 
     def fetch_data(self) -> None:
-        self.commandchannel      = self.get_channel(cfg.COMMAND_CHANNEL)
-        self.logchannel          = self.get_channel(cfg.LOG_CHANNEL)
-        self.eventchannel        = self.get_channel(cfg.EVENT_CHANNEL)
+        self.commandchannel = self.get_channel(cfg.COMMAND_CHANNEL)
+        self.logchannel = self.get_channel(cfg.LOG_CHANNEL)
+        self.eventchannel = self.get_channel(cfg.EVENT_CHANNEL)
         self.eventarchivechannel = self.get_channel(cfg.EVENT_ARCHIVE_CHANNEL)
-        self.owner_id            = ADMIN
-        self.owner               = self.get_user(self.owner_id)
+        self.owner_id = ADMIN
+        self.owner = self.get_user(self.owner_id)
         self.signoff_notify_user = self.get_user(SIGNOFF_NOTIFY_USER)
 
     async def import_database(self):
