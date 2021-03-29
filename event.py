@@ -211,11 +211,10 @@ class Event:
 
     # Return an embed for the event
     def createEmbed(self) -> Embed:
-        title = "{} ({})".format(
-            self.title, self.date.strftime("%a %Y-%m-%d - %H:%M {}"
-                                           .format(cfg.TIME_ZONE)))
-        description = "Terrain: {} - Faction: {}\n\n{}".format(
-            self.terrain, self.faction, self.description)
+        date = self.date.strftime(f"%a %Y-%m-%d - %H:%M {cfg.TIME_ZONE}")
+        title = f"{self.title} ({date})"
+        description = (f"Terrain: {self.terrain} - Faction: {self.faction}"
+                       f"\n\n{self.description}")
         eventEmbed = Embed(title=title, description=description,
                            colour=self.color)
 
