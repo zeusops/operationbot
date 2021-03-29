@@ -384,7 +384,9 @@ class Event:
         raise RoleNotFound(f"No role found with emoji {emoji}")
 
     def findRoleWithName(self, roleName: str) -> Role:
-        """Find a role with given name."""
+        """Find a role with given name.
+
+        Raises a RoleNotFound if the role cannot be found."""
         roleName = roleName.lower()
         for roleGroup in self.roleGroups.values():
             role: Role
@@ -403,6 +405,9 @@ class Event:
     def hasRoleGroup(self, groupName: str) -> bool:
         """Check if a role group with given name exists in the event."""
         return groupName in self.roleGroups
+
+    def get_additional_role(self, role_name: str) -> Role:
+        return self.roleGroups["Additional"][role_name]
 
     def signup(self, roleToSet: Role, user: discord.abc.User, replace=False) \
             -> Tuple[Optional[Role], User]:

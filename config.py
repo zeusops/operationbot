@@ -49,6 +49,29 @@ ADDITIONAL_ROLE_EMOJIS = [
     "\N{REGIONAL INDICATOR SYMBOL LETTER J}",
 ]
 
+ADDITIONAL_ROLE_NAMES = [
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+]
+
 # ATTENDANCE_EMOJI = "\N{HEAVY PLUS SIGN}"
 ATTENDANCE_EMOJI = None
 

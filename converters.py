@@ -1,15 +1,110 @@
+import re
 from datetime import date, datetime, time
 from typing import cast
 
 from discord import Message
 from discord.ext.commands.context import Context
-from discord.ext.commands.errors import BadArgument
+from discord.ext.commands.errors import BadArgument, CommandError
 
+import config as cfg
 import messageFunctions as msgFnc
-from errors import EventNotFound, MessageNotFound
+from errors import EventNotFound, MessageNotFound, RoleNotFound
 from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
+from role import Role
+
+NUMBERS = {
+    1: "one",
+    2: "two",
+    3: "three",
+    4: "four",
+    5: "five",
+    6: "six",
+    7: "seven",
+    8: "eight",
+    9: "nine",
+    10: "ten",
+}
+
+
+def _get_index(argument: str) -> int:
+    if argument in cfg.ADDITIONAL_ROLE_EMOJIS:
+        return cfg.ADDITIONAL_ROLE_EMOJIS.index(argument)
+
+    try:
+        argument = NUMBERS[int(argument)]
+    except ValueError:
+        # Argument might already be a numeral
+        pass
+    except KeyError as e:
+        raise ValueError(f"{argument} is not a number or a numeral.") \
+            from e
+    try:
+        return cfg.ADDITIONAL_ROLE_NAMES.index(argument)
+    except ValueError as e:
+        raise ValueError(f"{argument} is not a number or a numeral.") \
+            from e
+
+
+class ArgRole(Role):
+    """Converts argument into a Role
+
+    NOTE: A command that uses this converter **must have** the event as the
+    first argument to the command.
+
+    Converts the following types of arguments in the following order:
+        - Additional role emoji (e.g. :one:)
+        - Additional role numeral (e.g. one)
+        - Additional role number (e.g. 1)
+        - Any role emoji (e.g. :ZEUS:)
+        - Any role name (e.g. Zeus)
+
+    Finally, raises a BadArgument if no role was found.
+    """
+    # NOTE: the third chapter of the docstring (Converts the following [..]) is
+    # dynamically parsed and displayed as a part of the `roleparserinfo`
+    # command. If the structure of the docstring is changed, the command must
+    # be ajusted accordingly.
+
+    EMOJI_PATTERN = r'<a?:([a-zA-Z0-9_])+:[0-9]+>'
+
+    @classmethod
+    async def convert(cls, ctx: Context, argument: str) -> Role:
+        try:
+            event: Event = ctx.args[2]
+            assert isinstance(event, Event)
+        except (IndexError, AssertionError) as e:
+            raise CommandError(f"The command {ctx.command} is invalid. "
+                               "The ArgRole converter requires an Event to be "
+                               "the first argument of the calling command") \
+                from e
+        additional = event.getRoleGroup("Additional")
+
+        try:
+            index = _get_index(argument)
+        except ValueError:
+            # Argument is not a number or a numeral, so it must be either an
+            # emoji, an emoji name, or a role name
+            pass
+        else:
+            try:
+                return additional.roles[index]
+            except IndexError as e:
+                raise BadArgument(f"{argument} is not a valid role") from e
+
+        match = re.search(cls.EMOJI_PATTERN, argument)
+        if match:
+            # Argument is an emoji
+            argument = match.group(1)
+        try:
+            return event.findRoleWithName(argument)
+        except RoleNotFound as e:
+            raise BadArgument(f"{argument} is not a valid role") from e
+
+
+def get_name(s):
+    return s.encode('ascii', 'namereplace')
 
 
 class ArgEvent(Event):

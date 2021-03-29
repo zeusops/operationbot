@@ -17,7 +17,7 @@ from discord.ext.commands.errors import CommandError, CommandInvokeError
 import config as cfg
 import messageFunctions as msgFnc
 from converters import (ArgArchivedEvent, ArgDate, ArgDateTime, ArgEvent,
-                        ArgMessage, ArgTime)
+                        ArgMessage, ArgRole, ArgTime)
 from errors import MessageNotFound, RoleError, UnexpectedRole
 from event import Event
 from eventDatabase import EventDatabase
@@ -52,6 +52,29 @@ class CommandListener(Cog):
             # pylint: disable=protected-access
             return (ctx.channel == self.bot.commandchannel
                     or ctx.channel.id == cfg._test_channel)
+
+    @command(aliases=['t'])
+    async def testrole(self, ctx: Context, event: ArgEvent,
+                       role: ArgRole):
+        """
+        Test role parser.
+
+        This command finds and displays roles from the given event. For testing purposes only.
+        """  # NOQA
+        await ctx.send(f"event {event.id}: {role}")
+
+    @command()
+    async def roleparserinfo(self, ctx: Context):
+        """
+        Display information about parsing roles.
+        """
+
+        if ArgRole.__doc__:
+            doc = ArgRole.__doc__.split('\n\n')[2]
+            await ctx.send(f"How to use commands that use ArgRole for "
+                           f"parsing roles: \n\n{doc}")
+        else:
+            await ctx.send("No documentation found")
 
     @command()
     async def reloadreload(self, ctx: Context):

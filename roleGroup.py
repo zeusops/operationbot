@@ -101,7 +101,7 @@ class RoleGroup:
 
     # TODO: this should be handled in EventDatabase instead based on the DB
     #       version
-    def get_corrected_name(self, roleData):
+    def get_corrected_name(self, roleData: Dict[str, bool]) -> bool:
         if "displayName" in roleData:
             show_name = roleData["displayName"]
         else:
