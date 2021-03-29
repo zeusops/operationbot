@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Dict, List
 
 import secret
 
@@ -48,7 +49,7 @@ ADDITIONAL_ROLE_EMOJIS = [
 # ATTENDANCE_EMOJI = "\N{HEAVY PLUS SIGN}"
 ATTENDANCE_EMOJI = None
 
-EXTRA_EMOJIS = [
+EXTRA_EMOJIS: List[str] = [
     # ATTENDANCE_EMOJI
 ]
 
@@ -154,7 +155,7 @@ EMOJI_ZEUS = "ZEUS"
 # there is less than SIGNOFF_NOTIFY_TIME left until the operation start,
 # a user defined in secrets.py gets notified about that.
 SIGNOFF_NOTIFY_TIME = timedelta(days=1)
-SIGNOFF_NOTIFY_ROLES = {
+SIGNOFF_NOTIFY_ROLES: Dict[str, List] = {
     "1PLT": [
         "1PLT", "HQ", "ASL", "BSL", "CSL"
     ],

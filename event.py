@@ -23,7 +23,7 @@ MAX_REACTIONS = 20
 
 
 class User:
-    def __init__(self, id: id = None, display_name: str = None):
+    def __init__(self, id: int = None, display_name: str = None):
         self.id = id
         self.display_name = display_name
 
@@ -351,7 +351,7 @@ class Event:
             for role in roleGroup.roles:
                 if role.emoji == emoji:
                     return role
-        return RoleNotFound("No role found with emoji {}".format(emoji))
+        raise RoleNotFound("No role found with emoji {}".format(emoji))
 
     def findRoleWithName(self, roleName: str) -> Role:
         """Find a role with given name."""
@@ -409,6 +409,7 @@ class Event:
                     role.userID = None
                     role.userName = ""
                     return role
+        return None
 
     def findSignupRole(self, userID) -> Optional[Role]:
         """Check if given user is already signed up."""
