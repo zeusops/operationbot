@@ -168,5 +168,5 @@ SIGNOFF_NOTIFY_ROLES: Dict[str, List] = {
     "WW2side": [],
 }
 
-#Timezone location: has to be in following Format: Continent.Capital
+# Timezone location: has to be in following Format: Continent.Capital
 TIME_ZONE_LOCATION = "Europe.Amsterdam"
