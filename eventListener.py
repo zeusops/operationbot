@@ -86,6 +86,10 @@ class EventListener(Cog):
         # Find signup of user
         old_signup: Optional[Role] = event.findSignupRole(user.id)
 
+        # If user is already signed up as Zeus he can't signup/change/signoff automatically
+        if old_signup is not None and emoji == old_signup.emoji
+            return
+
         # Get role with the emoji
         # TODO: remove when converter exists
         try:
