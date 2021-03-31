@@ -673,7 +673,8 @@ class CommandListener(Cog):
         event.setTerrain(terrain)
         event.setFaction(faction)
         if zeus is not None:
-            event.signup(event.findRoleWithName("ZEUS"), zeus, replace=True)
+            event.signup(event.findRoleWithName(cfg.EMOJI_ZEUS), zeus,
+                         replace=True)
         if time is not None:
             event.setTime(time)
 

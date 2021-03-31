@@ -100,7 +100,7 @@ class EventListener(Cog):
                                .format(str(e), event, user.name,
                                        user.discriminator))
 
-        if role.name == "ZEUS":
+        if role.name == cfg.EMOJI_ZEUS:
             # Somebody with Nitro added the ZEUS reaction by hand, ignoring
             return
 
