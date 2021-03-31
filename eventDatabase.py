@@ -167,15 +167,16 @@ class EventDatabase:
     def loadDatabase(emojis: Optional[Tuple[Emoji]] = None):
         if EventDatabase.emojis is None:
             EventDatabase.emojis = emojis
-        print("import events")
+        print("Importing events")
         EventDatabase.events, EventDatabase.nextID = \
             EventDatabase.readJson(cfg.JSON_FILEPATH['events'])
-        print("import archive")
-        EventDatabase.eventsArchive, _ = \
-            EventDatabase.readJson(cfg.JSON_FILEPATH['archive'])
+        print("Importing archive")
+        EventDatabase.eventsArchive, _ = EventDatabase.readJson(
+            cfg.JSON_FILEPATH['archive'], output_events=False)
 
     @staticmethod
-    def readJson(filename: str) -> Tuple[Dict[int, Event], int]:
+    def readJson(filename: str, output_events=True) \
+            -> Tuple[Dict[int, Event], int]:
         """Fill events and eventsArchive with data from JSON."""
         print("Importing")
 
@@ -234,8 +235,9 @@ class EventDatabase:
             event.fromJson(eventID, eventData, emojis)
             events[event.id] = event
 
-        for eventID, event in events.items():
-            print(eventID, event)
+        if output_events:
+            for eventID, event in events.items():
+                print(eventID, event)
 
         print("Import done")
         return events, nextID

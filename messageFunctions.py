@@ -6,6 +6,7 @@ from discord.ext.commands.bot import Bot
 
 from errors import MessageNotFound, RoleError
 from event import Event
+from operationbot import OperationBot
 
 
 async def getEventMessage(event: Event, bot: Bot, archived=False) -> Message:
@@ -28,7 +29,6 @@ async def sortEventMessages(bot: Bot):
     Raises MessageNotFound if messages are missing."""
     from eventDatabase import EventDatabase
     EventDatabase.sortEvents()
-    print(EventDatabase.events)
 
     event: Event
     for event in EventDatabase.events.values():
@@ -141,20 +141,19 @@ def messageEventId(message: Message) -> int:
     return int(footer.split(' ')[-1])
 
 
-async def syncMessages(events: Dict[int, Event], bot):
+async def syncMessages(events: Dict[int, Event], bot: OperationBot):
     sorted_events = sorted(list(events.values()), key=lambda event: event.date)
-    print(sorted_events)
     for event in sorted_events:
         try:
             message = await getEventMessage(event, bot)
         except MessageNotFound:
-            print("missing a message for event {}, creating".format(event))
+            print("Missing a message for event {}, creating".format(event))
             await createEventMessage(event, bot.eventchannel)
         else:
             if messageEventId(message) == event.id:
-                print(f"found message {message.id} for event {event}")
+                print(f"Found message {message.id} for event {event}")
             else:
-                print("found incorrect message for event {}, deleting and "
+                print("Found incorrect message for event {}, deleting and "
                       "creating".format(event))
                 # Technically multiple events might have the same saved
                 # messageID but it's simpler to just recreate messages here if
