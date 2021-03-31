@@ -3,7 +3,7 @@ from typing import Dict, List
 
 import secret
 
-VERSION = 8
+VERSION = 9
 # PURGE_ON_CONNECT = False
 _test_channel = 530411066585382912
 if secret.DEBUG:
@@ -167,3 +167,5 @@ SIGNOFF_NOTIFY_ROLES: Dict[str, List] = {
     "sideop": [],
     "WW2side": [],
 }
+
+TIME_ZONE = "CEST"
