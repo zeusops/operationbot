@@ -86,6 +86,11 @@ class EventListener(Cog):
         # Find signup of user
         old_signup: Optional[Role] = event.findSignupRole(user.id)
 
+        # If a user is already signed up as Zeus they can't sign off or change
+        # roles without the Event Moderator
+        if old_signup and old_signup.name == cfg.EMOJI_ZEUS:
+            return
+
         # Get role with the emoji
         # TODO: remove when converter exists
         try:
@@ -95,7 +100,7 @@ class EventListener(Cog):
                                .format(str(e), event, user.name,
                                        user.discriminator))
 
-        if role.name == "ZEUS":
+        if role.name == cfg.EMOJI_ZEUS:
             # Somebody with Nitro added the ZEUS reaction by hand, ignoring
             return
 
