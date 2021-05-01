@@ -214,7 +214,7 @@ class Event:
         linkbuilder = "https://www.inyourowntime.zone/{}_{}".format(
             self.date.strftime("%Y-%m-%d_%H.%M"), cfg.TIME_ZONE_LOCATION)
         title = "{} ({})".format(
-            self.title, self.date.strftime("%a %Y-%m-%d - %H:%M CEST"))
+            self.title, self.date.strftime(f"%a %Y-%m-%d - %H:%M {cfg.TIME_ZONE}"))
         description = "[Show local time]({})\nTerrain: {} - Faction: {}\n\n{}".format(
             linkbuilder, self.terrain, self.faction, self.description)
         eventEmbed = Embed(title=title, description=description,
