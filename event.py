@@ -213,7 +213,10 @@ class Event:
     def createEmbed(self) -> Embed:
         date = self.date.strftime(f"%a %Y-%m-%d - %H:%M {cfg.TIME_ZONE}")
         title = f"{self.title} ({date})"
-        description = (f"Terrain: {self.terrain} - Faction: {self.faction}"
+        linkbuilder = "https://www.inyourowntime.zone/{}_{}".format(
+            self.date.strftime("%Y-%m-%d_%H.%M"), cfg.TIME_ZONE_LOCATION)
+        description = (f"[Show local time]({linkbuilder})\n"
+                       f"Terrain: {self.terrain} - Faction: {self.faction}"
                        f"\n\n{self.description}")
         eventEmbed = Embed(title=title, description=description,
                            colour=self.color)
