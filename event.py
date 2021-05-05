@@ -251,8 +251,15 @@ class Event:
 
     # Add an additional role to the event
     def addAdditionalRole(self, name: str) -> str:
-        # Find next emoji for additional role
 
+        #check if this role already exists
+        for roleGroup in self.roleGroups.values():
+            role: Role
+            for role in roleGroup.roles:
+                if role.name == name:
+                    raise RoleError("Role with name {} already exists, not adding new role".format(name))
+            
+        # Find next emoji for additional role
         if self.countReactions() >= MAX_REACTIONS:
             raise RoleError("Too many roles, not adding role {}".format(name))
         emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additionalRoleCount]
