@@ -298,6 +298,11 @@ class Event:
         if role not in self.roleGroups["Additional"].roles:
             raise RoleError(f"Role {role.name} is not an additional role")
 
+    def renameAdditionalRole(self, role: Role, new_name: str):
+        """Rename an additional role in the event."""
+        self._check_additional(role)
+        role.name = new_name
+
     def removeAdditionalRole(self, role: Union[str, Role]):
         """Remove an additional role from the event."""
         # Remove role from additional roles

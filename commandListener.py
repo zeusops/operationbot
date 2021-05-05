@@ -373,8 +373,7 @@ class CommandListener(Cog):
             self.bot.awaiting_reply = False
 
     @command(aliases=['csz'])
-    async def changesize(self, ctx: Context, event: ArgEvent,
-                         new_size: str):
+    async def changesize(self, ctx: Context, event: ArgEvent, new_size: str):
         if new_size not in cfg.PLATOON_SIZES:
             ctx.send(f"Invalid new size {new_size}")
             return
@@ -482,6 +481,21 @@ class CommandListener(Cog):
         event.removeAdditionalRole(role)
         await self._update_event(event, reorder=False)
         await ctx.send(f"Role {role_name} removed from {event}")
+
+    @command(aliases=['rnr', 'rename'])
+    async def renamerole(self, ctx: Context, event: ArgEvent,
+                         role: ArgRole, *, new_name: UnquotedStr):
+        """
+        Rename an additional role of the event.
+
+        Example: renamerole 1 1 "Y2 (Bradley) Driver"
+                 rename 1 two "Y2 (Bradley) Driver"
+        """
+        old_name = role.name
+        event.renameAdditionalRole(role, new_name)
+        await self._update_event(event, reorder=False)
+        await ctx.send(f"Role renamed. Old name: {old_name}, "
+                       f"new name: {role} @ {event}")
 
     @command(aliases=['rra'])
     async def removereaction(self, ctx: Context, event: ArgEvent,
