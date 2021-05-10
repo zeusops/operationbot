@@ -2,14 +2,14 @@ from typing import Dict, List
 
 from discord import Emoji, Message, NotFound, TextChannel
 from discord.errors import Forbidden
-from discord.ext.commands.bot import Bot
 
 from errors import MessageNotFound, RoleError
 from event import Event
 from operationbot import OperationBot
 
 
-async def getEventMessage(event: Event, bot: Bot, archived=False) -> Message:
+async def getEventMessage(event: Event, bot: OperationBot, archived=False) \
+        -> Message:
     """Get a message related to an event."""
     if archived:
         channel = bot.eventarchivechannel
@@ -23,7 +23,7 @@ async def getEventMessage(event: Event, bot: Bot, archived=False) -> Message:
                               .format(event.messageID))
 
 
-async def sortEventMessages(bot: Bot):
+async def sortEventMessages(bot: OperationBot):
     """Sort events in event database.
 
     Raises MessageNotFound if messages are missing."""

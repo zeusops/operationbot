@@ -203,7 +203,7 @@ class CommandListener(Cog):
 
     @command(aliases=["cat"])
     async def show(self, ctx: Context, event: EventEvent):
-        message = await self.bot.eventchannel.fetch_message(event.messageID)
+        message = await msgFnc.getEventMessage(event, self.bot)
         await ctx.send(message.jump_url)
         await msgFnc.createEventMessage(event, ctx.channel, update_id=False)
 
