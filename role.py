@@ -19,7 +19,10 @@ class Role:
                                         self.name,
                                         self.userName)
         else:
-            return "{} {}\n".format(str(self.emoji), self.userName)
+            if self.userName:
+                return f"{str(self.emoji)} {self.userName}\n"
+            else:
+                return f"{str(self.emoji)}\N{ZERO WIDTH SPACE}\n"
 
     def __repr__(self):
         return f"<Role name='{self.name}' userName='{self.userName}'>"
