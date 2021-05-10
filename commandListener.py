@@ -253,15 +253,15 @@ class CommandListener(Cog):
         await self._create_event(ctx, date, sideop=True,
                                  platoon_size="WW2side", force=force)
 
-    async def _create_side_quick(self, ctx: Context, date: EventDateTime,
-                                 terrain: str, faction: str,
-                                 zeus: Member = None, time: EventTime = None,
-                                 platoon_size: str = None, quiet=False):
+    async def _create_quick(
+            self, ctx: Context, date: EventDateTime, terrain: str,
+            faction: str, zeus: Member = None, time: EventTime = None,
+            sideop=False, platoon_size: str = None, quiet=False):
         if time is not None:
             date = date.replace(hour=time.hour, minute=time.minute)
 
         event = await self._create_event(
-            ctx, date, sideop=True, platoon_size=platoon_size,
+            ctx, date, sideop=sideop, platoon_size=platoon_size,
             force=(time is not None), batch=True, silent=True)
 
         await self._set_quick(ctx, event, terrain, faction, zeus, quiet=True)
@@ -270,10 +270,27 @@ class CommandListener(Cog):
             await ctx.send("Created event {}".format(event))
         return event
 
+    @command(aliases=['cq'])
+    async def createquick(
+            self, ctx: Context, date: EventDateTime, terrain: str,
+            faction: str, zeus: Member = None, time: EventTime = None):
+        """
+        Create and pre-fill a main op event.
+
+        Define the event time to force creation of past events.
+
+        Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:30
+
+        Example: createquick 2019-01-01 Altis USMC Stroker
+                 createquick 2019-01-01 Altis USMC Stroker 17:30
+        """  # NOQA
+        await self._create_quick(ctx, date, terrain, faction, zeus, time,
+                                 sideop=False)
+
     @command(aliases=['csq'])
-    async def createsidequick(self, ctx: Context, date: EventDateTime,
-                              terrain: str, faction: str, zeus: Member = None,
-                              time: EventTime = None):
+    async def createsidequick(
+            self, ctx: Context, date: EventDateTime, terrain: str,
+            faction: str, zeus: Member = None, time: EventTime = None):
         """
         Create and pre-fill a side op event.
 
@@ -284,12 +301,13 @@ class CommandListener(Cog):
         Example: createsidequick 2019-01-01 Altis USMC Stroker
                  createsidequick 2019-01-01 Altis USMC Stroker 17:30
         """  # NOQA
-        await self._create_side_quick(ctx, date, terrain, faction, zeus, time)
+        await self._create_quick(ctx, date, terrain, faction, zeus, time,
+                                 sideop=True)
 
     @command(aliases=['csq2'])
-    async def createside2quick(self, ctx: Context, date: EventDateTime,
-                               terrain: str, faction: str, zeus: Member = None,
-                               time: EventTime = None):
+    async def createside2quick(
+            self, ctx: Context, date: EventDateTime, terrain: str,
+            faction: str, zeus: Member = None, time: EventTime = None):
         """
         Create and pre-fill a WW2 side op event. Automatically sets description.
 
@@ -300,9 +318,9 @@ class CommandListener(Cog):
         Example: createside2quick 2019-01-01 Altis USMC Stroker
                  createside2quick 2019-01-01 Altis USMC Stroker 17:30
         """  # NOQA
-        event = await self._create_side_quick(ctx, date, terrain, faction,
-                                              zeus, time,
-                                              platoon_size="WW2side")
+        event = await self._create_quick(ctx, date, terrain, faction, zeus,
+                                         time, sideop=True,
+                                         platoon_size="WW2side")
         if WW2_DESCRIPTION:
             await self._set_description(ctx, event,
                                         description=WW2_DESCRIPTION)
