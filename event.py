@@ -231,6 +231,8 @@ class Event:
                                      value="\N{ZERO WIDTH SPACE}",
                                      inline=group.isInline)
 
+        eventEmbed.set_footer(text="Event ID: " + str(self.id))
+
         return eventEmbed
 
     # Add default role groups

@@ -46,7 +46,6 @@ async def createEventMessage(event: Event, channel: TextChannel,
     """Create a new event message."""
     # Create embed and message
     embed = event.createEmbed()
-    embed.set_footer(text="Event ID: " + str(event.id))
     message = await channel.send(embed=embed)
     if update_id:
         event.messageID = message.id
@@ -59,7 +58,6 @@ async def updateMessageEmbed(eventMessage: Message, updatedEvent: Event) \
         -> None:
     """Update the embed and footer of a message."""
     newEventEmbed = updatedEvent.createEmbed()
-    newEventEmbed.set_footer(text="Event ID: " + str(updatedEvent.id))
     await eventMessage.edit(embed=newEventEmbed)
 
 
