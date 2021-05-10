@@ -259,7 +259,8 @@ class Event:
             role: Role
             for role in roleGroup.roles:
                 if role.name == name:
-                    raise RoleError("Role with name {} already exists, not adding new role".format(name))
+                    raise RoleError(f"Role with name {name} already exists, "
+                                    "not adding new role")
 
         # Find next emoji for additional role
         if self.countReactions() >= MAX_REACTIONS:
