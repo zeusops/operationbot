@@ -685,6 +685,34 @@ class CommandListener(Cog):
         """
         await self._set_description(ctx, event)
 
+    async def _set_port(self, ctx: Context, event: Event,
+                        port: int = cfg.PORT_DEFAULT):
+        event.port = port
+        await self._update_event(event)
+        if port != cfg.PORT_DEFAULT:
+            await ctx.send(f"Port \"{event.port}\" set for operation {event}")
+        else:
+            await ctx.send(f"Default port set for operation {event}")
+
+    @command(aliases=['sp'])
+    async def setport(self, ctx: Context, event: EventEvent,
+                      port: int = cfg.PORT_DEFAULT):
+        """
+        Set or clear event server port. To clear the port, run `setport [ID]` without the port parameter
+
+        Example: setport 1 2402
+        """  # NOQA
+        await self._set_port(ctx, event, port)
+
+    @command(aliases=['clp'])
+    async def clearport(self, ctx: Context, event: EventEvent):
+        """
+        Clear event port. Alias for `setport [ID]`
+
+        Example: clearport 1
+        """
+        await self._set_port(ctx, event)
+
     async def _set_quick(self, ctx: Context, event: Event, terrain: str,
                          faction: str, zeus: Member = None,
                          time: EventTime = None, quiet=False):
