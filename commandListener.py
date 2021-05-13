@@ -25,7 +25,7 @@ from role import Role
 from roleGroup import RoleGroup
 from secret import ADMINS
 from secret import COMMAND_CHAR as CMD
-from secret import WW2_DESCRIPTION
+from secret import WW2_MODS
 
 
 class EventDateTime(Converter):
@@ -321,9 +321,8 @@ class CommandListener(Cog):
         event = await self._create_quick(ctx, date, terrain, faction, zeus,
                                          time, sideop=True,
                                          platoon_size="WW2side")
-        if WW2_DESCRIPTION:
-            await self._set_description(ctx, event,
-                                        description=WW2_DESCRIPTION)
+        if WW2_MODS:
+            await self._set_mods(ctx, event, WW2_MODS)
 
     @command(aliases=['mc'])
     async def multicreate(self, ctx: Context, start: EventDate,
@@ -712,6 +711,42 @@ class CommandListener(Cog):
         Example: clearport 1
         """
         await self._set_port(ctx, event)
+
+    async def _set_mods(self, ctx: Context, event: Event,
+                        mods: str = ""):
+        event.mods = mods
+        await self._update_event(event)
+        if mods:
+            await ctx.send(f"Mods ```\n{event.mods}\n``` "
+                           f"set for operation {event}")
+            await self._set_port(ctx, event, cfg.PORT_MODDED)
+        else:
+            await ctx.send(f"Mods cleared from operation {event}")
+            await self._set_port(ctx, event, cfg.PORT_DEFAULT)
+
+    @command(aliases=['sm', 'setmod'])
+    async def setmods(self, ctx: Context, event: EventEvent,
+                      *, mods: str = ""):
+        """
+        Set or clear event server mods.
+
+        To clear the mods, run `setmods [ID]` without the mods parameter. Adding mods also sets the server port to the configured sideop port. Removing the mods sets the server port to the default port.
+
+        Example: setmods 1 Custom modset
+                 setmods 1 Mod 1
+                   Mod 2
+                   Mod 3
+        """  # NOQA
+        await self._set_mods(ctx, event, mods)
+
+    @command(aliases=['clm', 'clearmod'])
+    async def clearmods(self, ctx: Context, event: EventEvent):
+        """
+        Clear event mods. Alias for `setmods [ID]`
+
+        Example: clearmods 1
+        """
+        await self._set_mods(ctx, event)
 
     async def _set_quick(self, ctx: Context, event: Event, terrain: str,
                          faction: str, zeus: Member = None,
