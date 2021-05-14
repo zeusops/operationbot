@@ -15,6 +15,7 @@ SIDEOP_TITLE = "Side Operation"
 TERRAIN = "unknown"
 FACTION = "unknown"
 DESCRIPTION = ""
+MODS = ""
 COLOR = 0xFF4500
 SIDEOP_COLOR = 0x0045FF
 WW2_SIDEOP_COLOR = 0x808080
@@ -38,6 +39,7 @@ class Event:
         self.faction = FACTION
         self.description = DESCRIPTION
         self.port = cfg.PORT_DEFAULT
+        self.mods = MODS
         self.color = COLOR if not sideop else SIDEOP_COLOR
         self.roleGroups: Dict[str, RoleGroup] = {}
         self.additionalRoleCount = 0
@@ -218,11 +220,20 @@ class Event:
             self.date.strftime("%Y-%m-%d_%H.%M"), cfg.TIME_ZONE_LOCATION)
         server_port = (f"\nServer port: **{self.port}**"
                        if self.port != cfg.PORT_DEFAULT else "")
-        event_description = f"\n\n{self.description}"
+        event_description = (f"\n\n{self.description}"
+                             if self.description else "")
+        if self.mods:
+            if '\n' in self.mods:
+                mods = f"\n\nMods:\n{self.mods}\n"
+            else:
+                mods = f"\n\nMods: {self.mods}\n"
+        else:
+            mods = ""
         description = (f"[Show local time]({linkbuilder})\n"
                        f"Terrain: {self.terrain} - Faction: {self.faction}"
                        f"{server_port}"
-                       f"{event_description}")
+                       f"{event_description}"
+                       f"{mods}")
         eventEmbed = Embed(title=title, description=description,
                            colour=self.color)
 
@@ -458,6 +469,7 @@ class Event:
         data["terrain"] = self.terrain
         data["faction"] = self.faction
         data["port"] = self.port
+        data["mods"] = self.mods
         if not brief_output:
             data["color"] = self.color
             data["messageID"] = self.messageID
@@ -476,6 +488,7 @@ class Event:
         self.faction = data.get("faction", FACTION)
         self.port = data.get("port", cfg.PORT_DEFAULT)
         self.description = data.get("description", DESCRIPTION)
+        self.mods = data.get("mods", MODS)
         if not manual_load:
             self.color = data.get("color", COLOR)
             self.messageID = data.get("messageID", 0)
