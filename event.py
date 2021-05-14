@@ -37,6 +37,7 @@ class Event:
         self.terrain = TERRAIN
         self.faction = FACTION
         self.description = DESCRIPTION
+        self.port = cfg.PORT_DEFAULT
         self.color = COLOR if not sideop else SIDEOP_COLOR
         self.roleGroups: Dict[str, RoleGroup] = {}
         self.additionalRoleCount = 0
@@ -215,9 +216,13 @@ class Event:
         title = f"{self.title} ({date})"
         linkbuilder = "https://www.inyourowntime.zone/{}_{}".format(
             self.date.strftime("%Y-%m-%d_%H.%M"), cfg.TIME_ZONE_LOCATION)
+        server_port = (f"\nServer port: **{self.port}**"
+                       if self.port != cfg.PORT_DEFAULT else "")
+        event_description = f"\n\n{self.description}"
         description = (f"[Show local time]({linkbuilder})\n"
                        f"Terrain: {self.terrain} - Faction: {self.faction}"
-                       f"\n\n{self.description}")
+                       f"{server_port}"
+                       f"{event_description}")
         eventEmbed = Embed(title=title, description=description,
                            colour=self.color)
 
@@ -452,6 +457,7 @@ class Event:
         data["time"] = self.date.strftime("%H:%M")
         data["terrain"] = self.terrain
         data["faction"] = self.faction
+        data["port"] = self.port
         if not brief_output:
             data["color"] = self.color
             data["messageID"] = self.messageID
@@ -468,6 +474,7 @@ class Event:
         self.setTime(time)
         self.setTerrain(data.get("terrain", TERRAIN))
         self.faction = data.get("faction", FACTION)
+        self.port = data.get("port", cfg.PORT_DEFAULT)
         self.description = data.get("description", DESCRIPTION)
         if not manual_load:
             self.color = data.get("color", COLOR)
