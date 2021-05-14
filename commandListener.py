@@ -758,9 +758,13 @@ class CommandListener(Cog):
         """  # NOQA
         # Remove signup, update event, export
         role: Role = event.undoSignup(user)
-        await self._update_event(event)
-        await ctx.send("User {} removed from role {} in event {}"
-                       .format(user.display_name, role.display_name, event))
+        if role:
+            await self._update_event(event)
+            await ctx.send(f"User {user.display_name} removed from role "
+                           f"{role.display_name} in event {event}")
+        else:
+            await ctx.send(f"No signup to remove for user {user.display_name} "
+                           f"in event {event}")
 
     # Archive event command
     @command(aliases=['a'])
