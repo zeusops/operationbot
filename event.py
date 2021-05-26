@@ -20,8 +20,11 @@ MODS = ""
 COLOR = 0xFF4500
 SIDEOP_COLOR = 0x0045FF
 WW2_SIDEOP_COLOR = 0x808080
+# TODO: Change to some reasonable number or remove completely
+MAX_REACTIONS = 200
 # Discord API limitation
-MAX_REACTIONS = 20
+# TODO: Change back to 20, the lower number is just for easier testing
+REACTIONS_PER_MESSAGE = 5
 
 
 class User:
@@ -46,6 +49,7 @@ class Event:
         self.mods = MODS
         self.color = COLOR if not sideop else SIDEOP_COLOR
         self.roleGroups: Dict[str, RoleGroup] = {}
+        # TODO: Handle multiple message IDs
         self.messageID = 0
         self.id = eventID
         self.sideop = sideop
@@ -246,7 +250,7 @@ class Event:
         # Add field to embed for every rolegroup
         for group in self.roleGroups.values():
             if len(group.roles) > 0 and group.name != "Additional":
-                # excluding the group Additional
+                # The Additional group is handled separately
                 eventEmbed.add_field(name=group.name, value=str(group),
                                      inline=group.isInline)
             elif group.name == "Dummy":
@@ -256,53 +260,46 @@ class Event:
         eventEmbed.set_footer(text="Event ID: " + str(self.id))
 
         eventEmbedList = [eventEmbed]
-        additionalEmbedList = self.createAdditionalEmbed(date, description)
-        for embed in additionalEmbedList:
-            eventEmbedList.append(embed)
+        if len(self.roleGroups["Additional"].roles) > 0:
+            eventEmbedList += self.createAdditionalEmbed(date, description)
         return eventEmbedList
 
-    # creates additional embeds. Amount depends on the Additional roles group
     def createAdditionalEmbed(self, date, description) -> List[Embed]:
+        """Creates additional embeds.
+
+        The number of embeds depend on the Additional roles group"""
         title = f"Additional Roles ({date})"
-        eventEmbedList = []
+        embeds = []
 
-        for group in self.roleGroups.values():
-            if group.name == "Additional":
-                roleList = ""
-                min_ = 0
-                max_ = 0
-                counter = int(len(group.roles)/20)
-                odd = False
-                if len(group.roles) % 20 != 0:
-                    odd = True
+        group = self.roleGroups["Additional"]
 
-                if counter > 0:
-                    max_ = 20
-                    for i in range(counter):
+        # Substract 1 because REACTIONS_PER_MESSAGE roles still fit in a single
+        # message, otherwise we'd get an empty extra embed on the threshold
+        embed_count = ((len(group.roles) - 1) // REACTIONS_PER_MESSAGE) + 1
 
-                        for _ in range(min_, max_):
-                            roleList += str(group.roles[i])
-                        min_ = max_
-                        max_ += 20
-                        eventEmbed = Embed(title=title,
-                                           description=description,
-                                           colour=self.color)
-                        eventEmbed.add_field(name=group.name, value=roleList,
-                                             inline=group.isInline)
-                        eventEmbed.set_footer(text="Event ID: " + str(self.id))
-                        eventEmbedList.append(eventEmbed)
-                        roleList = ""
-                if odd:
-                    max_ = min_ + (len(group.roles) % 20)
-                    for i in range(min_, max_):
-                        roleList += str(group.roles[i])
-                    eventEmbed = Embed(title=title, description=description,
-                                       colour=self.color)
-                    eventEmbed.add_field(name=group.name, value=roleList,
-                                         inline=group.isInline)
-                    eventEmbed.set_footer(text="Event ID: " + str(self.id))
-                    eventEmbedList.append(eventEmbed)
-        return eventEmbedList
+        for embed_number in range(embed_count):
+            role_list = ""
+            first = embed_number * REACTIONS_PER_MESSAGE
+            last = (embed_number + 1) * REACTIONS_PER_MESSAGE
+            for role in group.roles[first:last]:
+                role_list += str(role)
+            if role_list == "":
+                # Didn't add any roles -> skipping this embed. Discord doesn't
+                # like embeds with empty fields. This should only happen if
+                # this function was called when Additional group is empty
+                continue
+            eventEmbed = Embed(title=title, description=description,
+                               colour=self.color)
+            # TODO: Display the counter in name only if > 1 embeds.
+            #       Alternatively display the counter in title instead of name
+            eventEmbed.add_field(name=f"{group.name} "
+                                      f"({embed_number + 1}/{embed_count})",
+                                 value=role_list,
+                                 inline=False)
+            eventEmbed.set_footer(text="Event ID: " + str(self.id))
+            embeds.append(eventEmbed)
+
+        return embeds
 
     # Add default role groups
     def _add_default_role_groups(self):

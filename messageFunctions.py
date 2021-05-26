@@ -29,6 +29,8 @@ async def sortEventMessages(bot: OperationBot):
     """Sort events in event database.
 
     Raises MessageNotFound if messages are missing."""
+    # TODO: Handle multiple message IDs
+    return
     EventDatabase.sortEvents()
 
     event: Event
@@ -46,10 +48,14 @@ async def createEventMessage(event: Event, channel: TextChannel,
                              update_id=True) -> Message:
     """Create a new event message."""
     # Create embed and message
-    embed = event.createEmbed()[0]
-    message = await channel.send(embed=embed)
+    # TODO: Handle multiple message IDs
+    embeds = event.createEmbed()
+    for embed in embeds:
+        print(embed.fields[0].name)
+        message = await channel.send(embed=embed)
     if update_id:
-        event.messageID = message.id
+        # event.messageID = message.id
+        pass
 
     return message
 
@@ -58,8 +64,10 @@ async def createEventMessage(event: Event, channel: TextChannel,
 async def updateMessageEmbed(eventMessage: Message, updatedEvent: Event) \
         -> None:
     """Update the embed and footer of a message."""
-    newEventEmbed = updatedEvent.createEmbed()[0]
-    await eventMessage.edit(embed=newEventEmbed)
+    # TODO: Handle multiple message IDs
+    # newEventEmbed = updatedEvent.createEmbed()[0]
+    # await eventMessage.edit(embed=newEventEmbed)
+    pass
 
 
 # from EventDatabase
@@ -114,7 +122,9 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
     # Add missing emojis
     for emoji in reactionEmojisToAdd:
         try:
-            await message.add_reaction(emoji)
+            # TODO: Handle multiple message IDs
+            # await message.add_reaction(emoji)
+            pass
         except Forbidden as e:
             if e.code == 30010:
                 raise RoleError("Too many reactions, not adding role "
@@ -147,6 +157,8 @@ def messageEventId(message: Message) -> int:
 
 
 async def syncMessages(events: Dict[int, Event], bot: OperationBot):
+    # TODO: Handle multiple message IDs
+    return
     sorted_events = sorted(list(events.values()), key=lambda event: event.date)
     for event in sorted_events:
         try:
