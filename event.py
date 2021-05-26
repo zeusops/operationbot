@@ -219,8 +219,8 @@ class Event:
         self.roleGroups = newGroups
         return warnings
 
-    # Return an embed for the event
-    def createEmbed(self) -> Embed:
+    # Return a list of embeds for the event
+    def createEmbed(self) -> List[Embed]:
         date = self.date.strftime(f"%a %Y-%m-%d - %H:%M {cfg.TIME_ZONE}")
         title = f"{self.title} ({date})"
         local_time = f"<t:{int(self.date.timestamp())}>"
@@ -245,17 +245,64 @@ class Event:
 
         # Add field to embed for every rolegroup
         for group in self.roleGroups.values():
-            if len(group.roles) > 0:
+            if len(group.roles) > 0 and group.name != "Additional":
+                # excluding the group Additional
                 eventEmbed.add_field(name=group.name, value=str(group),
                                      inline=group.isInline)
             elif group.name == "Dummy":
                 eventEmbed.add_field(name="\N{ZERO WIDTH SPACE}",
                                      value="\N{ZERO WIDTH SPACE}",
                                      inline=group.isInline)
-
         eventEmbed.set_footer(text="Event ID: " + str(self.id))
 
-        return eventEmbed
+        eventEmbedList = [eventEmbed]
+        additionalEmbedList = self.createAdditionalEmbed(date, description)
+        for embed in additionalEmbedList:
+            eventEmbedList.append(embed)
+        return eventEmbedList
+
+    # creates additional embeds. Amount depends on the Additional roles group
+    def createAdditionalEmbed(self, date, description) -> List[Embed]:
+        title = f"Additional Roles ({date})"
+        eventEmbedList = []
+
+        for group in self.roleGroups.values():
+            if group.name == "Additional":
+                roleList = ""
+                min_ = 0
+                max_ = 0
+                counter = int(len(group.roles)/20)
+                odd = False
+                if len(group.roles) % 20 != 0:
+                    odd = True
+
+                if counter > 0:
+                    max_ = 20
+                    for i in range(counter):
+
+                        for _ in range(min_, max_):
+                            roleList += str(group.roles[i])
+                        min_ = max_
+                        max_ += 20
+                        eventEmbed = Embed(title=title,
+                                           description=description,
+                                           colour=self.color)
+                        eventEmbed.add_field(name=group.name, value=roleList,
+                                             inline=group.isInline)
+                        eventEmbed.set_footer(text="Event ID: " + str(self.id))
+                        eventEmbedList.append(eventEmbed)
+                        roleList = ""
+                if odd:
+                    max_ = min_ + (len(group.roles) % 20)
+                    for i in range(min_, max_):
+                        roleList += str(group.roles[i])
+                    eventEmbed = Embed(title=title, description=description,
+                                       colour=self.color)
+                    eventEmbed.add_field(name=group.name, value=roleList,
+                                         inline=group.isInline)
+                    eventEmbed.set_footer(text="Event ID: " + str(self.id))
+                    eventEmbedList.append(eventEmbed)
+        return eventEmbedList
 
     # Add default role groups
     def _add_default_role_groups(self):
