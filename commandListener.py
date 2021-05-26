@@ -785,7 +785,9 @@ class CommandListener(Cog):
     async def signup(self, ctx: Context, event: EventEvent, user: Member, *,
                      roleName: str):
         """
-        Sign user up (manually).
+        Sign user up to a role.
+
+        Removes user's previous signup from another role and overrides existing signup to the target role, if any.
 
         <user> can either be: ID, mention, nickname in quotes, username or username#discriminator
         <roleName> is case-insensitive
@@ -796,7 +798,7 @@ class CommandListener(Cog):
         role = event.findRoleWithName(roleName)
 
         # Sign user up, update event, export
-        old_signup, replaced_user = event.signup(role, user)
+        old_signup, replaced_user = event.signup(role, user, replace=True)
         await self._update_event(event)
         message = "User {} signed up to event {} as {}" \
                   .format(user.display_name, event, role.name)
