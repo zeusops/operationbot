@@ -47,15 +47,13 @@ async def sortEventMessages(bot: OperationBot):
 async def createEventMessage(event: Event, channel: TextChannel,
                              update_id=True) -> Message:
     """Create a new event message."""
-    # Create embed and message
-    # TODO: Handle multiple message IDs
+    # Create embeds and messages
     embeds = event.createEmbed()
+    event.messageIDList.clear()
     for embed in embeds:
         print(embed.fields[0].name)
         message = await channel.send(embed=embed)
-    if update_id:
-        # event.messageID = message.id
-        pass
+        event.messageIDList.append(message.id)
 
     return message
 

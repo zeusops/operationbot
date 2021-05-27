@@ -49,8 +49,9 @@ class Event:
         self.mods = MODS
         self.color = COLOR if not sideop else SIDEOP_COLOR
         self.roleGroups: Dict[str, RoleGroup] = {}
-        # TODO: Handle multiple message IDs
+        # TODO: Remove when everything is fixed
         self.messageID = 0
+        self.messageIDList: List[int] = []
         self.id = eventID
         self.sideop = sideop
         if platoon_size is None:
@@ -291,8 +292,6 @@ class Event:
                 continue
             eventEmbed = Embed(title=title, description=description,
                                colour=self.color)
-            # TODO: Display the counter in name only if > 1 embeds.
-            #       Alternatively display the counter in title instead of name
             if embed_count > 1:
                 embed_count_view = f"({embed_number + 1}/{embed_count})"
             eventEmbed.add_field(name=f"{group.name} {embed_count_view}",
