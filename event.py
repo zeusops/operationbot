@@ -276,6 +276,7 @@ class Event:
         # Substract 1 because REACTIONS_PER_MESSAGE roles still fit in a single
         # message, otherwise we'd get an empty extra embed on the threshold
         embed_count = ((len(group.roles) - 1) // REACTIONS_PER_MESSAGE) + 1
+        embed_count_view = ""
 
         for embed_number in range(embed_count):
             role_list = ""
@@ -292,8 +293,9 @@ class Event:
                                colour=self.color)
             # TODO: Display the counter in name only if > 1 embeds.
             #       Alternatively display the counter in title instead of name
-            eventEmbed.add_field(name=f"{group.name} "
-                                      f"({embed_number + 1}/{embed_count})",
+            if embed_count > 1:
+                embed_count_view = f"({embed_number + 1}/{embed_count})"
+            eventEmbed.add_field(name=f"{group.name} {embed_count_view}",
                                  value=role_list,
                                  inline=False)
             eventEmbed.set_footer(text="Event ID: " + str(self.id))
