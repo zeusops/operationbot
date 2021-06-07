@@ -1,6 +1,6 @@
 import re
 from datetime import date, datetime, time
-from typing import cast
+from typing import List, cast
 
 from discord import Message
 from discord.ext.commands.context import Context
@@ -184,7 +184,7 @@ class ArgTime(time):
 
 class ArgMessage(Message):
     @classmethod
-    async def convert(cls, ctx: Context, arg: str) -> Message:
+    async def convert(cls, ctx: Context, arg: str) -> List[Message]:
         try:
             event_id = int(arg)
         except ValueError as e:

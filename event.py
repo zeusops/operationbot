@@ -468,6 +468,9 @@ class Event:
     def get_additional_role(self, role_name: str) -> Role:
         return self.roleGroups["Additional"][role_name]
 
+    def getReactionsPerMessage(self) -> int:
+        return REACTIONS_PER_MESSAGE
+
     def signup(self, roleToSet: Role, user: discord.abc.User, replace=False) \
             -> Tuple[Optional[Role], User]:
         """Add username to role.
@@ -536,7 +539,7 @@ class Event:
         data["mods"] = self.mods
         if not brief_output:
             data["color"] = self.color
-            data["messageID"] = self.messageID
+            data["messageIDList"] = self.messageIDList
             data["platoon_size"] = self.platoon_size
             data["sideop"] = self.sideop
         data["roleGroups"] = roleGroupsData
@@ -554,7 +557,7 @@ class Event:
         self.mods = str(data.get("mods", MODS))
         if not manual_load:
             self.color = int(data.get("color", COLOR))
-            self.messageID = int(data.get("messageID", 0))
+            self.messageIDList = list(data.get("messageIDList", [0]))
             self.platoon_size = str(data.get("platoon_size", PLATOON_SIZE))
             self.sideop = bool(data.get("sideop", False))
         # TODO: Handle missing roleGroups

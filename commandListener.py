@@ -164,7 +164,7 @@ class CommandListener(Cog):
     @command(aliases=["cat"])
     async def show(self, ctx: Context, event: ArgEvent):
         message = await msgFnc.getEventMessage(event, self.bot)
-        await ctx.send(message.jump_url)
+        await ctx.send(message[0].jump_url)
         await msgFnc.createEventMessage(event, cast(TextChannel, ctx.channel),
                                         update_id=False)
 
@@ -546,7 +546,8 @@ class CommandListener(Cog):
         for reaction in event.getReactionsOfGroup(groupName):
             await eventMessage.remove_reaction(reaction, self.bot.user)
         event.removeRoleGroup(groupName)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateMessageEmbed([eventMessage], event,
+                                        self.bot.eventchannel)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send(f"Group {groupName} removed from {event}")
 
@@ -821,7 +822,7 @@ class CommandListener(Cog):
             await ctx.send(f"Internal error: event {event} without "
                            "a message found")
         else:
-            await eventMessage.delete()
+            await eventMessage[0].delete()
 
         # Create new message
         await msgFnc.createEventMessage(event, self.bot.eventarchivechannel)
@@ -832,13 +833,14 @@ class CommandListener(Cog):
         # TODO: Move to a more appropriate location
         EventDatabase.removeEvent(event.id, archived=archived)
         try:
-            eventMessage = await msgFnc.getEventMessage(
+            eventMessageList = await msgFnc.getEventMessage(
                 event, self.bot, archived=archived)
         except MessageNotFound:
             # Message already deleted, nothing to be done
             pass
         else:
-            await eventMessage.delete()
+            for eventMessage in eventMessageList:
+                await eventMessage.delete()
         EventDatabase.toJson(archive=archived)
 
     # Delete event command
@@ -982,12 +984,16 @@ class CommandListener(Cog):
         try:
             message = await msgFnc.getEventMessage(event, self.bot)
         except MessageNotFound:
-            message = await msgFnc.createEventMessage(event,
-                                                      self.bot.eventchannel)
+            message = [await msgFnc.createEventMessage(event,
+                                                       self.bot.eventchannel)]
 
-        await msgFnc.updateMessageEmbed(eventMessage=message,
-                                        updatedEvent=event)
-        await msgFnc.updateReactions(event=event, message=message,
+        await msgFnc.updateMessageEmbed(eventMessageList=message,
+                                        updatedEvent=event,
+                                        channel=self.bot.eventchannel)
+
+        message = await msgFnc.getEventMessage(event, self.bot)
+
+        await msgFnc.updateReactions(event=event, messageList=message,
                                      reorder=reorder)
         if export:
             EventDatabase.toJson()

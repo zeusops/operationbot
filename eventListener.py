@@ -135,7 +135,8 @@ class EventListener(Cog):
                 old_role = f"{removed_role.display_name} -> "
 
         # Update discord embed
-        await msgFnc.updateMessageEmbed(message, event)
+        await msgFnc.updateMessageEmbed([message], event,
+                                        self.bot.eventchannel)
         EventDatabase.toJson()
 
         delta_message = ""

@@ -127,22 +127,22 @@ class EventDatabase:
     @classmethod
     def sortEvents(cls):
         sortedEvents = []
-        messageIDs = []
+        messageIDLists = []
 
         # Store existing events
         for event in cls.events.values():
             sortedEvents.append(event)
-            messageIDs.append(event.messageID)
+            messageIDLists.append(event.messageIDList)
 
         # Sort events based on date and time
         sortedEvents.sort(key=lambda event: event.date, reverse=True)
-        messageIDs.sort(reverse=True)
+        messageIDLists.sort(reverse=True)
 
         # Fill events again
         cls.events = {}
         for event in sortedEvents:
             # event = sortedEvents[index]
-            event.messageID = messageIDs.pop()
+            event.messageIDList = messageIDLists.pop()
             cls.events[event.id] = event
 
     @classmethod

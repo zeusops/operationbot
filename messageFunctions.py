@@ -2,16 +2,15 @@ from typing import Dict, List, Union, cast
 
 from discord import Emoji, Message, NotFound, TextChannel
 from discord.embeds import Embed
-from discord.errors import Forbidden
 
-from errors import MessageNotFound, RoleError
+from errors import MessageNotFound
 from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
 
 
 async def getEventMessage(event: Event, bot: OperationBot, archived=False) \
-        -> Message:
+        -> List[Message]:
     """Get a message related to an event."""
     if archived:
         channel = bot.eventarchivechannel
@@ -19,7 +18,10 @@ async def getEventMessage(event: Event, bot: OperationBot, archived=False) \
         channel = bot.eventchannel
 
     try:
-        return await channel.fetch_message(event.messageID)
+        messageIDList = []
+        for messageID in event.messageIDList:
+            messageIDList.append(await channel.fetch_message(messageID))
+        return messageIDList
     except NotFound as e:
         raise MessageNotFound("No event message found with "
                               f"message ID {event.messageID}") from e
@@ -29,18 +31,16 @@ async def sortEventMessages(bot: OperationBot):
     """Sort events in event database.
 
     Raises MessageNotFound if messages are missing."""
-    # TODO: Handle multiple message IDs
-    return
     EventDatabase.sortEvents()
 
     event: Event
     for event in EventDatabase.events.values():
         try:
-            message = await getEventMessage(event, bot)
+            messageList = await getEventMessage(event, bot)
         except MessageNotFound as e:
             raise MessageNotFound(f"sortEventMessages: {e}") from e
-        await updateMessageEmbed(message, event)
-        await updateReactions(event, message=message)
+        await updateMessageEmbed(messageList, event, bot.eventchannel)
+        await updateReactions(event, messageList=messageList)
 
 
 # from EventDatabase
@@ -49,28 +49,34 @@ async def createEventMessage(event: Event, channel: TextChannel,
     """Create a new event message."""
     # Create embeds and messages
     embeds = event.createEmbed()
-    event.messageIDList.clear()
-    for embed in embeds:
-        print(embed.fields[0].name)
-        message = await channel.send(embed=embed)
-        event.messageIDList.append(message.id)
+    if update_id:
+        event.messageIDList.clear()
+        for embed in embeds:
+            print(embed.fields[0].name)
+            message = await channel.send(embed=embed)
+            event.messageIDList.append(message.id)
 
     return message
 
 
 # was: EventDatabase.updateEvent
-async def updateMessageEmbed(eventMessage: Message, updatedEvent: Event) \
+async def updateMessageEmbed(eventMessageList: List[Message],
+                             updatedEvent: Event, channel: TextChannel) \
         -> None:
     """Update the embed and footer of a message."""
-    # TODO: Handle multiple message IDs
-    # newEventEmbed = updatedEvent.createEmbed()[0]
-    # await eventMessage.edit(embed=newEventEmbed)
-    pass
+    newEventEmbedList = updatedEvent.createEmbed()
+    if len(newEventEmbedList) == len(eventMessageList):
+        for i in range(len(newEventEmbedList)):
+            await eventMessageList[i].edit(embed=newEventEmbedList[i])
+    else:
+        for eventMessage in eventMessageList:
+            await eventMessage.delete()
+        await createEventMessage(updatedEvent, channel)
 
 
 # from EventDatabase
-async def updateReactions(event: Event, message: Message = None, bot=None,
-                          reorder=False):
+async def updateReactions(event: Event, messageList: List[Message] = None,
+                          bot=None, reorder=False):
     """
     Update reactions of an event message.
 
@@ -78,17 +84,18 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
     the function with reorder = True causes all reactions to be removed and
     reinserted in the correct order.
     """
-    if message is None:
+    # TODO make efficient again
+    if not messageList:
         if bot is None:
-            raise ValueError("Requires either the `message` or `bot` argument"
-                             " to be provided")
-        message = await getEventMessage(event, bot)
+            raise ValueError("Requires either the `messageList` or `bot` "
+                             "argument to be provided")
+        messageList = await getEventMessage(event, bot)
 
     reactions: List[Union[Emoji, str]] = event.getReactions()
-    reactionsCurrent = message.reactions
+    reactionsCurrent = []
     reactionEmojisCurrent = {}
-    reactionsToRemove = []
-    reactionEmojisToAdd = []
+    for message in messageList:
+        reactionsCurrent.extend(message.reactions)
 
     # Find current reaction emojis
     for reaction in reactionsCurrent:
@@ -98,49 +105,25 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
         # Emojis are already correct, no need for further edits
         return
 
-    if reorder:
-        # Re-adding all reactions in order to put them in the correct order
+    for message in messageList:
         await message.clear_reactions()
-        reactionEmojisToAdd = reactions
-    else:
-        # Find emojis to remove
-        for emoji, reaction in reactionEmojisCurrent.items():
-            if emoji not in reactions:
-                reactionsToRemove.append(reaction)
 
-        # Find emojis to add
-        for emoji in reactions:
-            if emoji not in reactionEmojisCurrent.keys():
-                reactionEmojisToAdd.append(emoji)
+    # Add Emojis for the first embed without additional Roles
+    for i in range((len(reactions) - event.additionalRoleCount)):
+        emoji = reactions.pop(0)
+        await messageList[0].add_reaction(emoji)
 
-        # Remove existing unintended reactions
-        for reaction in reactionsToRemove:
-            await message.clear_reaction(reaction)
+    # Add Emojis to following embeds
+    counter = 0
+    messageNumber = 1
+    for i in range(len(reactions)):
+        emoji = reactions.pop(0)
+        await messageList[messageNumber].add_reaction(emoji)
 
-    # Add missing emojis
-    for emoji in reactionEmojisToAdd:
-        try:
-            # TODO: Handle multiple message IDs
-            # await message.add_reaction(emoji)
-            pass
-        except Forbidden as e:
-            if e.code == 30010:
-                raise RoleError("Too many reactions, not adding role "
-                                f"{emoji}. This should not happen.") from e
-
-# async def createMessages(events: Dict[int, Event], bot):
-#     # Update event message contents and add reactions
-
-#     # Clear events channel
-#     if cfg.PURGE_ON_CONNECT:
-#         await bot.eventchannel.purge(limit=100)
-
-#     for event in events.values():
-#         await createEventMessage(event, bot.eventchannel)
-#     for event in events.values():
-#         message = await getEventMessage(event, bot)
-#         await updateMessageEmbed(message, event)
-#         await updateReactions(event, bot=bot)
+        counter += 1
+        if counter == event.getReactionsPerMessage():
+            messageNumber += 1
+            counter = 0
 
 
 def messageEventId(message: Message) -> int:
