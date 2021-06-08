@@ -21,10 +21,11 @@ COLOR = 0xFF4500
 SIDEOP_COLOR = 0x0045FF
 WW2_SIDEOP_COLOR = 0x808080
 # TODO: Change to some reasonable number or remove completely
-MAX_REACTIONS = 200
+# 35 additional Emotes # first embed - better: len(cfg.ADDITIONAL_ROLE_EMOJIS)
+# + something
+MAX_REACTIONS = 55
 # Discord API limitation
-# TODO: Change back to 20, the lower number is just for easier testing
-REACTIONS_PER_MESSAGE = 5
+REACTIONS_PER_MESSAGE = 20
 
 
 class User:
@@ -49,9 +50,7 @@ class Event:
         self.mods = MODS
         self.color = COLOR if not sideop else SIDEOP_COLOR
         self.roleGroups: Dict[str, RoleGroup] = {}
-        # TODO: Remove when everything is fixed
-        self.messageID = 0
-        self.messageIDList: List[int] = []
+        self.messageIDList = [0]
         self.id = eventID
         self.sideop = sideop
         if platoon_size is None:
@@ -260,9 +259,17 @@ class Event:
                                      inline=group.isInline)
         eventEmbed.set_footer(text="Event ID: " + str(self.id))
 
-        eventEmbedList = [eventEmbed]
-        if len(self.roleGroups["Additional"].roles) > 0:
-            eventEmbedList += self.createAdditionalEmbed(date, description)
+        if len(self.getReactions()) <= REACTIONS_PER_MESSAGE:
+            for group in self.roleGroups.values():
+                if group.name == "Additional" and \
+                   len(self.roleGroups["Additional"].roles) > 0:
+                    eventEmbed.add_field(name=group.name, value=str(group),
+                                         inline=group.isInline)
+            eventEmbedList = [eventEmbed]
+        else:
+            eventEmbedList = [eventEmbed]
+            if len(self.roleGroups["Additional"].roles) > 0:
+                eventEmbedList += self.createAdditionalEmbed(date, description)
         return eventEmbedList
 
     def createAdditionalEmbed(self, date, description) -> List[Embed]:

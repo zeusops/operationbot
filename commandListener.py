@@ -447,7 +447,8 @@ class CommandListener(Cog):
                 # Adding the latest role failed, saving previously added roles
                 await self._update_event(event, reorder=False)
             raise e
-        await self._update_event(event, reorder=False, export=(not batch))
+        if not batch:
+            await self._update_event(event, reorder=False, export=(not batch))
 
     @command(aliases=['ar'])
     async def addrole(self, ctx: Context, event: ArgEvent, *,
@@ -979,7 +980,7 @@ class CommandListener(Cog):
         if import_db:
             await self.bot.import_database()
             # Event instance might have changed because of DB import, get again
-            event = EventDatabase.getEventByMessage(event.messageID)
+            event = EventDatabase.getEventByMessage(event.messageIDList[0])
 
         try:
             message = await msgFnc.getEventMessage(event, self.bot)

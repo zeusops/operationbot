@@ -24,7 +24,7 @@ async def getEventMessage(event: Event, bot: OperationBot, archived=False) \
         return messageIDList
     except NotFound as e:
         raise MessageNotFound("No event message found with "
-                              f"message ID {event.messageID}") from e
+                              f"message ID {event.messageIDList}") from e
 
 
 async def sortEventMessages(bot: OperationBot):
@@ -84,7 +84,7 @@ async def updateReactions(event: Event, messageList: List[Message] = None,
     the function with reorder = True causes all reactions to be removed and
     reinserted in the correct order.
     """
-    # TODO make efficient again
+    # TODO make efficient again (if necessary, works quiet well rn)
     if not messageList:
         if bot is None:
             raise ValueError("Requires either the `messageList` or `bot` "
@@ -108,22 +108,27 @@ async def updateReactions(event: Event, messageList: List[Message] = None,
     for message in messageList:
         await message.clear_reactions()
 
-    # Add Emojis for the first embed without additional Roles
-    for i in range((len(reactions) - event.additionalRoleCount)):
-        emoji = reactions.pop(0)
-        await messageList[0].add_reaction(emoji)
+    if len(reactions) <= event.getReactionsPerMessage():
+        # Add Emojis for the first embed with additional Roles
+        for emoji in reactions:
+            await messageList[0].add_reaction(emoji)
+    else:
+        # Add Emojis for the first embed without additional Roles
+        for i in range((len(reactions) - event.additional_role_count)):
+            emoji = reactions.pop(0)
+            await messageList[0].add_reaction(emoji)
 
-    # Add Emojis to following embeds
-    counter = 0
-    messageNumber = 1
-    for i in range(len(reactions)):
-        emoji = reactions.pop(0)
-        await messageList[messageNumber].add_reaction(emoji)
+        # Add Emojis to following embeds
+        counter = 0
+        messageNumber = 1
+        for i in range(len(reactions)):
+            emoji = reactions.pop(0)
+            await messageList[messageNumber].add_reaction(emoji)
 
-        counter += 1
-        if counter == event.getReactionsPerMessage():
-            messageNumber += 1
-            counter = 0
+            counter += 1
+            if counter == event.getReactionsPerMessage():
+                messageNumber += 1
+                counter = 0
 
 
 def messageEventId(message: Message) -> int:

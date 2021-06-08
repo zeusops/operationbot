@@ -88,7 +88,7 @@ class EventDatabase:
             collection = cls.events
 
         for event in collection.values():
-            if event.messageID == messageID:
+            if event.messageIDList[0] == messageID:
                 return event
         raise EventNotFound(f"No event found with message ID {messageID}")
 
