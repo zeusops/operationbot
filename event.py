@@ -21,9 +21,9 @@ COLOR = 0xFF4500
 SIDEOP_COLOR = 0x0045FF
 WW2_SIDEOP_COLOR = 0x808080
 # TODO: Change to some reasonable number or remove completely
-# 35 additional Emotes # first embed - better: len(cfg.ADDITIONAL_ROLE_EMOJIS)
+# 36 additional Emotes # first embed - better: len(cfg.ADDITIONAL_ROLE_EMOJIS)
 # + something
-MAX_REACTIONS = 55
+MAX_REACTIONS = 56
 # Discord API limitation
 REACTIONS_PER_MESSAGE = 20
 
