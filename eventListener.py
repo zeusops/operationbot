@@ -4,7 +4,8 @@ from typing import Optional
 
 from discord import Game, Message, RawReactionActionEvent
 from discord.ext.commands import Cog
-from discord.user import User
+from discord.member import Member
+from discord.partial_emoji import PartialEmoji
 
 import config as cfg
 import messageFunctions as msgFnc
@@ -60,7 +61,7 @@ class EventListener(Cog):
             return
 
         # Remove the reaction
-        user: User = payload.member
+        user: Member = payload.member
         await message.remove_reaction(payload.emoji, user)
 
         # Get event from database with message ID
@@ -70,17 +71,20 @@ class EventListener(Cog):
             print(e)
             await self.bot.logchannel.send(
                 "NOTE: reaction to a non-existent event. "
-                "msg: {} role: {} user: {} ({}#{})"
-                .format(message.id, payload.emoji,
-                        user.display_name,
-                        user.name, user.discriminator))
+                f"msg: {message.id} role: {payload.emoji} "
+                f"user: {user.display_name} "
+                f"({user.name}#{user.discriminator})")
             return
-
-        # Get emoji string
-        if payload.emoji.is_custom_emoji():
-            emoji = payload.emoji
         else:
-            emoji = payload.emoji.name
+            await self._handle_signup(event, payload.emoji, user, message)
+
+    async def _handle_signup(self, event: Event, partial_emoji: PartialEmoji,
+                             user: Member, message: Message):
+        # Get emoji string
+        if partial_emoji.is_custom_emoji():
+            emoji = partial_emoji
+        else:
+            emoji = partial_emoji.name
 
         # Find signup of user
         old_signup: Optional[Role] = event.findSignupRole(user.id)
@@ -95,9 +99,8 @@ class EventListener(Cog):
         try:
             role = event.findRoleWithEmoji(emoji)
         except RoleNotFound as e:
-            raise RoleNotFound("{} in event {} by user {}#{}"
-                               .format(str(e), event, user.name,
-                                       user.discriminator))
+            raise RoleNotFound(f"{str(e)} in event {event} by user "
+                               f"{user.name}#{user.discriminator}") from e
 
         if role.name == cfg.EMOJI_ZEUS:
             # Somebody with Nitro added the ZEUS reaction by hand, ignoring
