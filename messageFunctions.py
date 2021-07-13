@@ -52,9 +52,11 @@ async def createEventMessage(event: Event, channel: TextChannel,
     if update_id:
         event.messageIDList.clear()
         for embed in embeds:
-            print(embed.fields[0].name)
             message = await channel.send(embed=embed)
             event.messageIDList.append(message.id)
+    else:
+        for embed in embeds:
+            message = await channel.send(embed=embed)
 
     return message
 
@@ -144,24 +146,24 @@ def messageEventId(message: Message) -> int:
 
 async def syncMessages(events: Dict[int, Event], bot: OperationBot):
     # TODO: Handle multiple message IDs
-    return
     sorted_events = sorted(list(events.values()), key=lambda event: event.date)
     for event in sorted_events:
         try:
-            message = await getEventMessage(event, bot)
+            messageList = await getEventMessage(event, bot)
         except MessageNotFound:
             print(f"Missing a message for event {event}, creating")
             await createEventMessage(event, bot.eventchannel)
         else:
-            if messageEventId(message) == event.id:
-                print(f"Found message {message.id} for event {event}")
+            if messageEventId(messageList[0]) == event.id:
+                print(f"Found message {messageList[0].id} for event {event}")
             else:
                 print(f"Found incorrect message for event {event}, deleting "
                       f"and creating")
                 # Technically multiple events might have the same saved
                 # messageID but it's simpler to just recreate messages here if
                 # the event ID doesn't match
-                await message.delete()
+                for message in messageList:
+                    await message.delete()
                 await createEventMessage(event, bot.eventchannel)
 
     await sortEventMessages(bot)

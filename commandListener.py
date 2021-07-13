@@ -511,6 +511,7 @@ class CommandListener(Cog):
         await ctx.send(f"Role renamed. Old name: {old_name}, "
                        f"new name: {role} @ {event}")
 
+    # TODO this doesnt work
     @command(aliases=['rra'])
     async def removereaction(self, ctx: Context, event: ArgEvent,
                              reaction: str):
@@ -537,15 +538,13 @@ class CommandListener(Cog):
 
         Example: removegroup 1 Bravo
         """
-        event = EventDatabase.getEventByMessage(eventMessage.id)
+        event = EventDatabase.getEventByMessage(eventMessage[0].id)
 
         if not event.hasRoleGroup(groupName):
             await ctx.send(f"No role group found with name {groupName}")
             return
 
         # Remove reactions, remove role, update event, add reactions, export
-        for reaction in event.getReactionsOfGroup(groupName):
-            await eventMessage.remove_reaction(reaction, self.bot.user)
         event.removeRoleGroup(groupName)
         await msgFnc.updateMessageEmbed([eventMessage], event,
                                         self.bot.eventchannel)
@@ -611,7 +610,7 @@ class CommandListener(Cog):
         """
         Set event terrain.
 
-        Example: settime 1 Takistan
+        Example: setterrain 1 Takistan
         """
         # Change terrain, update event, export
         event.setTerrain(terrain)
@@ -818,12 +817,13 @@ class CommandListener(Cog):
         # Archive event and export
         EventDatabase.archiveEvent(event)
         try:
-            eventMessage = await msgFnc.getEventMessage(event, self.bot)
+            eventMessageList = await msgFnc.getEventMessage(event, self.bot)
         except MessageNotFound:
             await ctx.send(f"Internal error: event {event} without "
                            "a message found")
         else:
-            await eventMessage[0].delete()
+            for eventMessage in eventMessageList:
+                await eventMessage.delete()
 
         # Create new message
         await msgFnc.createEventMessage(event, self.bot.eventarchivechannel)
