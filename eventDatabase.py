@@ -22,14 +22,13 @@ class EventDatabase:
 
     @classmethod
     @property
-    def emojis(cls):
+    def emojis(cls) -> Tuple[Emoji]:
         if cls._emojis is None:
             raise ValueError("No EventDatabase.emojis set")
         return cls._emojis
 
-
     @classmethod
-    def createEvent(cls, date: datetime, emojis: Tuple[Emoji], eventID: int = -1,
+    def createEvent(cls, date: datetime, eventID: int = -1,
                     sideop=False, platoon_size=None) -> Event:
         """Create a new event and store it.
 
@@ -43,7 +42,8 @@ class EventDatabase:
             importing = True
 
         # Create event
-        event = Event(date, emojis, eventID=eventID, importing=importing,
+        event = Event(date, cls.emojis, eventID=eventID,  # type: ignore
+                      importing=importing,
                       sideop=sideop, platoon_size=platoon_size)
 
         # Store event
@@ -238,7 +238,9 @@ class EventDatabase:
             # Create event
             date = datetime.strptime(eventData['date'],
                                      '%Y-%m-%d')
-            event = Event(date, emojis, importing=True)
+            # NOTE: Ignoring the type here because mypy is buggy and doesn't
+            # detect class properties correctly
+            event = Event(date, emojis, importing=True)  # type: ignore
             event.fromJson(eventID, eventData, emojis)
             events[event.id] = event
 
