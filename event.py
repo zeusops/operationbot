@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import discord
 from discord import Embed, Emoji
@@ -31,8 +31,8 @@ class User:
 
 class Event:
 
-    def __init__(self, date: datetime, guildEmojis: Tuple[Emoji], eventID=0,
-                 importing=False, sideop=False, platoon_size=None):
+    def __init__(self, date: datetime, guildEmojis: Tuple[Emoji, ...],
+                 eventID=0, importing=False, sideop=False, platoon_size=None):
         self.title = TITLE if not sideop else SIDEOP_TITLE
         self.date = date
         self.terrain = TERRAIN
@@ -340,7 +340,7 @@ class Event:
 
         return normalEmojis
 
-    def getReactions(self) -> List[Emoji]:
+    def getReactions(self) -> List[Union[str, Emoji]]:
         """Return reactions of all roles and extra reactions"""
         reactions = []
 
@@ -364,7 +364,7 @@ class Event:
         """Count how many reactions a message should have."""
         return len(self.getReactions())
 
-    def getReactionsOfGroup(self, groupName: str) -> List[Emoji]:
+    def getReactionsOfGroup(self, groupName: str) -> List[Union[str, Emoji]]:
         """Find reactions of a given role group."""
         reactions = []
 
@@ -403,7 +403,7 @@ class Event:
         """Check if a role group with given name exists in the event."""
         return groupName in self.roleGroups
 
-    def signup(self, roleToSet: Role, user: discord.User, replace=False) \
+    def signup(self, roleToSet: Role, user: discord.abc.User, replace=False) \
             -> Tuple[Optional[Role], User]:
         """Add username to role.
 
@@ -456,12 +456,12 @@ class Event:
         return "<Event title='{}' id={} date='{}'>".format(
             self.title, self.id, self.date)
 
-    def toJson(self, brief_output=False):
+    def toJson(self, brief_output=False) -> Dict[str, Any]:
         roleGroupsData = {}
         for groupName, roleGroup in self.roleGroups.items():
             roleGroupsData[groupName] = roleGroup.toJson(brief_output)
 
-        data = {}
+        data: Dict[str, Any] = {}
         data["title"] = self.title
         data["date"] = self.date.strftime("%Y-%m-%d")
         data["description"] = self.description
@@ -509,6 +509,6 @@ class Event:
             roleGroup.fromJson(roleGroupData, emojis, manual_load)
         if manual_load:
             # Remove role groups that were not present in imported data
-            for roleGroup in list(self.roleGroups.keys()):
-                if roleGroup not in groups:
-                    del self.roleGroups[roleGroup]
+            for group in list(self.roleGroups.keys()):
+                if group not in groups:
+                    del self.roleGroups[group]

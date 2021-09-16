@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from discord import Emoji
 
@@ -48,22 +48,24 @@ class RoleGroup:
 
         return roleGroupString
 
-    def toJson(self, brief_output=False):
+    def toJson(self, brief_output=False) -> Dict[str, Any]:
         rolesData = {}
         for role in self.roles:
-            if type(role.emoji) is str:
+            emoji: Union[int, str]
+            if isinstance(role.emoji, str):
                 emoji = cfg.ADDITIONAL_ROLE_EMOJIS.index(role.emoji)
             else:
                 emoji = role.emoji.name
             rolesData[emoji] = role.toJson(brief_output=brief_output)
 
-        data = {}
+        data: Dict[str, Any] = {}
         data["name"] = self.name
         data["isInline"] = self.isInline
         data["roles"] = rolesData
         return data
 
-    def fromJson(self, data: dict, emojis: Tuple[Emoji], manual_load=False):
+    def fromJson(self, data: dict, emojis: Tuple[Emoji, ...],
+                 manual_load=False):
         self.name = data["name"]
         if not manual_load:
             self.isInline = data["isInline"]

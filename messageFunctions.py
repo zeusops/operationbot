@@ -1,6 +1,7 @@
-from typing import Dict, List
+from typing import Dict, List, Union, cast
 
 from discord import Emoji, Message, NotFound, TextChannel
+from discord.embeds import Embed
 from discord.errors import Forbidden
 
 from errors import MessageNotFound, RoleError
@@ -77,7 +78,7 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
                              " to be provided")
         message = await getEventMessage(event, bot)
 
-    reactions: List[Emoji] = event.getReactions()
+    reactions: List[Union[Emoji, str]] = event.getReactions()
     reactionsCurrent = message.reactions
     reactionEmojisCurrent = {}
     reactionsToRemove = []
@@ -135,8 +136,14 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
 
 
 def messageEventId(message: Message) -> int:
-    footer = message.embeds[0].footer.text
-    return int(footer.split(' ')[-1])
+    if len(message.embeds) == 0:
+        raise ValueError("Message has no embeds")
+    footer = message.embeds[0].footer
+    if footer.text == Embed.Empty:
+        raise ValueError("Footer is empty")
+    # Casting because mypy doesn't detect correctly that the type of
+    # footer.text has been checked already
+    return int(cast(str, footer.text).split(' ')[-1])
 
 
 async def syncMessages(events: Dict[int, Event], bot: OperationBot):

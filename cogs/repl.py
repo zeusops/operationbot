@@ -36,7 +36,7 @@ class REPL(commands.Cog):
         return '```py\n{0.text}{1:>{0.offset}}\n{2}: {0}```'.format(
             e, '^', type(e).__name__)
 
-    @commands.command(pass_context=True, hidden=True, name='eval')
+    @commands.command(name='eval', hidden=True)
     @commands.is_owner()
     async def _eval(self, ctx: Context, *, body: str):
         env = {
@@ -84,7 +84,7 @@ class REPL(commands.Cog):
                 self._last_result = ret
                 await ctx.send('```py\n%s%s\n```' % (value, ret))
 
-    @commands.command(pass_context=True, hidden=True)
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def repl(self, ctx: Context):
         msg = ctx.message

@@ -1,11 +1,11 @@
 import importlib
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Union, cast
 
 from discord import Game, Message, RawReactionActionEvent
 from discord.ext.commands import Cog
-from discord.member import Member
 from discord.partial_emoji import PartialEmoji
+from discord.user import User
 
 import config as cfg
 import messageFunctions as msgFnc
@@ -38,7 +38,7 @@ class EventListener(Cog):
         msg = "{} events imported".format(len(EventDatabase.events))
         print(msg)
         await commandchannel.send(msg)
-        await self.bot.change_presence(activity=Game(name=cfg.GAME, type=2))
+        await self.bot.change_presence(activity=Game(name=cfg.GAME))
         print('Logged in as', self.bot.user.name, self.bot.user.id)
 
     @Cog.listener()
@@ -60,8 +60,8 @@ class EventListener(Cog):
             # channel
             return
 
-        # Remove the reaction
-        user: Member = payload.member
+        # The member is always defined because we're in the event channel
+        user = cast(User, payload.member)
         await message.remove_reaction(payload.emoji, user)
 
         # Get event from database with message ID
@@ -79,12 +79,12 @@ class EventListener(Cog):
             await self._handle_signup(event, payload.emoji, user, message)
 
     async def _handle_signup(self, event: Event, partial_emoji: PartialEmoji,
-                             user: Member, message: Message):
+                             user: User, message: Message):
         # Get emoji string
         if partial_emoji.is_custom_emoji():
-            emoji = partial_emoji
+            emoji: Union[PartialEmoji, str] = partial_emoji
         else:
-            emoji = partial_emoji.name
+            emoji = cast(str, partial_emoji.name)
 
         # Find signup of user
         old_signup: Optional[Role] = event.findSignupRole(user.id)
@@ -148,12 +148,12 @@ class EventListener(Cog):
                                 .format(self.bot.signoff_notify_user.mention,
                                         late_signoff_delta)
 
-        message = f"{delta_message}{message_action}: {event}, role: " \
-                  f"{old_role}{role.display_name}, " \
-                  f"user: {user.display_name} " \
-                  f"({user.name}#{user.discriminator})"
+        text = f"{delta_message}{message_action}: {event}, role: " \
+               f"{old_role}{role.display_name}, " \
+               f"user: {user.display_name} " \
+               f"({user.name}#{user.discriminator})"
 
-        await self.bot.logchannel.send(message)
+        await self.bot.logchannel.send(text)
 
     @Cog.listener()
     async def on_message(self, message: Message):

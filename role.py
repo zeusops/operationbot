@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from discord import Emoji
 
@@ -27,8 +27,8 @@ class Role:
     def __repr__(self):
         return f"<Role name='{self.name}' userName='{self.userName}'>"
 
-    def toJson(self, brief_output=False):
-        data = {}
+    def toJson(self, brief_output=False) -> Dict[str, Any]:
+        data: Dict[str, Any] = {}
         if not brief_output or self.show_name:
             # Name is displayed when exporting full data (not brief_output) or
             # when role is an additional role (show_name is set)
