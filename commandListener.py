@@ -190,8 +190,7 @@ class CommandListener(Cog):
                               .format(date))
 
         # Create event and sort events, export
-        event: Event = EventDatabase.createEvent(date, ctx.guild.emojis,
-                                                 sideop=sideop,
+        event: Event = EventDatabase.createEvent(date, sideop=sideop,
                                                  platoon_size=platoon_size)
         await msgFnc.createEventMessage(event, self.bot.eventchannel)
         if not batch:

@@ -29,7 +29,6 @@ class EventListener(Cog):
         await commandchannel.send("Connected")
         print("Ready, importing")
         await commandchannel.send("Importing events")
-        # await EventDatabase.fromJson(self.bot)
         await self.bot.import_database()
         await commandchannel.send("Syncing")
         await msgFnc.syncMessages(EventDatabase.events, self.bot)

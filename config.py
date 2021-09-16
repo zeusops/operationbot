@@ -3,7 +3,7 @@ from typing import Dict, List
 
 import secret
 
-VERSION = 9
+VERSION = 10
 # PURGE_ON_CONNECT = False
 _test_channel = 530411066585382912
 if secret.DEBUG:
@@ -12,12 +12,15 @@ if secret.DEBUG:
     COMMAND_CHANNEL = _test_channel
     LOG_CHANNEL = _test_channel
     GAME = 'with bugs'
+    EMOJI_GUILD = 219564389462704130
 else:
     EVENT_CHANNEL = 502824760036818964
     EVENT_ARCHIVE_CHANNEL = 528914471700267029
     COMMAND_CHANNEL = 528980590930821131
     LOG_CHANNEL = 621066917339201547
     GAME = 'with events'
+    # If set to 0, the bot uses Command Channel's guild
+    EMOJI_GUILD = 0
 
 JSON_FILEPATH = {
     "events":  "database/events.json",

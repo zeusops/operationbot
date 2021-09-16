@@ -18,111 +18,118 @@ class EventDatabase:
     events: Dict[int, Event] = {}
     eventsArchive: Dict[int, Event] = {}
     nextID: int = 0
-    emojis: Optional[Tuple[Emoji]] = None
+    _emojis: Optional[Tuple[Emoji]] = None
 
-    @staticmethod
-    def createEvent(date: datetime, emojis: Tuple[Emoji], eventID: int = -1,
+    @classmethod
+    @property
+    def emojis(cls) -> Tuple[Emoji]:
+        if cls._emojis is None:
+            raise ValueError("No EventDatabase.emojis set")
+        return cls._emojis
+
+    @classmethod
+    def createEvent(cls, date: datetime, eventID: int = -1,
                     sideop=False, platoon_size=None) -> Event:
         """Create a new event and store it.
 
         Does not create a message for the event.
         """
         if eventID == -1:
-            eventID = EventDatabase.nextID
-            EventDatabase.nextID += 1
+            eventID = cls.nextID
+            cls.nextID += 1
             importing = False
         else:
             importing = True
 
         # Create event
-        event = Event(date, emojis, eventID=eventID, importing=importing,
+        event = Event(date, cls.emojis, eventID=eventID,  # type: ignore
+                      importing=importing,
                       sideop=sideop, platoon_size=platoon_size)
 
         # Store event
-        EventDatabase.events[eventID] = event
+        cls.events[eventID] = event
 
         return event
 
-    @staticmethod
-    def archiveEvent(event: Event):
+    @classmethod
+    def archiveEvent(cls, event: Event):
         """
         Move event to archive.
 
         Does not remove or create messages.
         """
         # Remove event from events
-        EventDatabase.removeEvent(event.id)
+        cls.removeEvent(event.id)
 
         # Add event to eventsArchive
-        EventDatabase.eventsArchive[event.id] = event
-        EventDatabase.toJson(archive=False)
-        EventDatabase.toJson(archive=True)
+        cls.eventsArchive[event.id] = event
+        cls.toJson(archive=False)
+        cls.toJson(archive=True)
 
-    @staticmethod
-    def removeEvent(eventID: int, archived=False) -> Optional[Event]:
+    @classmethod
+    def removeEvent(cls, eventID: int, archived=False) -> Optional[Event]:
         """
         Remove event.
 
         Does not remove the message associated with the event.
         """
-        events = EventDatabase.events if not archived \
-            else EventDatabase.eventsArchive
+        events = cls.events if not archived else cls.eventsArchive
         return events.pop(eventID, None)
 
     # was: findEvent
-    @staticmethod
-    def getEventByMessage(messageID: int, archived=False) -> Event:
+    @classmethod
+    def getEventByMessage(cls, messageID: int, archived=False) -> Event:
         """Finds an event with its message ID.
 
         Raises EventNotFound if event cannot be found"""
         if archived:
-            collection = EventDatabase.eventsArchive
+            collection = cls.eventsArchive
         else:
-            collection = EventDatabase.events
+            collection = cls.events
 
         for event in collection.values():
             if event.messageID == messageID:
                 return event
         raise EventNotFound(f"No event found with message ID {messageID}")
 
-    @staticmethod
-    def getEventByID(eventID: int, archived=False) -> Event:
+    @classmethod
+    def getEventByID(cls, eventID: int, archived=False) -> Event:
         """Finds an event with its ID.
 
         Raises EventNotFound if event cannot be found."""
         if archived:
-            collection = EventDatabase.eventsArchive
+            collection = cls.eventsArchive
         else:
-            collection = EventDatabase.events
+            collection = cls.events
 
         try:
             return collection[eventID]
         except KeyError:
             raise EventNotFound("No event found with ID {}".format(eventID))
 
-    @staticmethod
-    def getArchivedEventByMessage(messageID: int) -> Event:
+    @classmethod
+    def getArchivedEventByMessage(cls, messageID: int) -> Event:
         """Finds an archived event with its message ID.
 
         Raises EventNotFound if event cannot be found"""
 
-        return EventDatabase.getEventByMessage(messageID, archived=True)
+        return cls.getEventByMessage(messageID, archived=True)
 
     # was: findEventInArchiveeventid
-    @staticmethod
-    def getArchivedEventByID(eventID: int):
+    @classmethod
+    def getArchivedEventByID(cls, eventID: int):
         """Finds an archived event with its ID.
 
         Raises EventNotFound if event cannot be found."""
-        return EventDatabase.getEventByID(eventID, archived=True)
+        return cls.getEventByID(eventID, archived=True)
 
-    @staticmethod
-    def sortEvents():
+    @classmethod
+    def sortEvents(cls):
         sortedEvents = []
         messageIDs = []
 
         # Store existing events
-        for event in EventDatabase.events.values():
+        for event in cls.events.values():
             sortedEvents.append(event)
             messageIDs.append(event.messageID)
 
@@ -131,23 +138,22 @@ class EventDatabase:
         messageIDs.sort(reverse=True)
 
         # Fill events again
-        EventDatabase.events = {}
+        cls.events = {}
         for event in sortedEvents:
             # event = sortedEvents[index]
             event.messageID = messageIDs.pop()
-            EventDatabase.events[event.id] = event
+            cls.events[event.id] = event
 
-    @staticmethod
-    def toJson(archive=False):
+    @classmethod
+    def toJson(cls, archive=False):
         # TODO: rename to saveDatabase
-        events = EventDatabase.events if not archive \
-                else EventDatabase.eventsArchive
+        events = cls.events if not archive else cls.eventsArchive
         filename = cfg.JSON_FILEPATH['events' if not archive else 'archive']
 
-        EventDatabase.writeJson(events, filename)
+        cls.writeJson(events, filename)
 
-    @staticmethod
-    def writeJson(events: Dict[int, Event], filename: str):
+    @classmethod
+    def writeJson(cls, events: Dict[int, Event], filename: str):
         # Get eventsData
         eventsData = {}
         for messageID, event in events.items():
@@ -156,33 +162,34 @@ class EventDatabase:
         # Store data and return
         data: Dict[str, Any] = {}
         data['version'] = DATABASE_VERSION
-        data['nextID'] = EventDatabase.nextID
+        data['nextID'] = cls.nextID
         data['events'] = eventsData
 
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, 'w') as jsonFile:
             json.dump(data, jsonFile, indent=2)
 
-    @staticmethod
-    def loadDatabase(emojis: Optional[Tuple[Emoji]] = None):
-        if EventDatabase.emojis is None:
-            EventDatabase.emojis = emojis
+    @classmethod
+    def loadDatabase(cls, emojis: Optional[Tuple[Emoji]] = None):
+        if cls._emojis is None:
+            if emojis is None:
+                raise ValueError("No emojis provided")
+            cls._emojis = emojis
         print("Importing events")
-        EventDatabase.events, EventDatabase.nextID = \
-            EventDatabase.readJson(cfg.JSON_FILEPATH['events'])
+        cls.events, cls.nextID = cls.readJson(cfg.JSON_FILEPATH['events'])
         print("Importing archive")
-        EventDatabase.eventsArchive, _ = EventDatabase.readJson(
+        cls.eventsArchive, _ = cls.readJson(
             cfg.JSON_FILEPATH['archive'], output_events=False)
 
-    @staticmethod
-    def readJson(filename: str, output_events=True) \
+    @classmethod
+    def readJson(cls, filename: str, output_events=True) \
             -> Tuple[Dict[int, Event], int]:
         """Fill events and eventsArchive with data from JSON."""
         print("Importing")
 
-        emojis = EventDatabase.emojis
-        if emojis is None:
-            raise ValueError("No EventDatabase.emojis set")
+        # Try to access emojis early so that we immediately bail out on error
+        # We don't need to touch the database file if emojis is not set
+        emojis = cls.emojis
 
         # Import events
         try:
@@ -211,7 +218,7 @@ class EventDatabase:
                     "events": {},
                 }, jsonFile, indent=2)
             # Try to import again
-            return EventDatabase.readJson(filename)
+            return cls.readJson(filename)
 
         databaseVersion = int(data.get('version', 0))
         if databaseVersion != DATABASE_VERSION:
@@ -231,7 +238,9 @@ class EventDatabase:
             # Create event
             date = datetime.strptime(eventData['date'],
                                      '%Y-%m-%d')
-            event = Event(date, emojis, importing=True)
+            # NOTE: Ignoring the type here because mypy is buggy and doesn't
+            # detect class properties correctly
+            event = Event(date, emojis, importing=True)  # type: ignore
             event.fromJson(eventID, eventData, emojis)
             events[event.id] = event
 

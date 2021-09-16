@@ -76,7 +76,11 @@ class OperationBot(Bot):
 
     async def import_database(self):
         try:
-            EventDatabase.loadDatabase(self.commandchannel.guild.emojis)
+            if cfg.EMOJI_GUILD:
+                emoji_guild = self.get_guild(cfg.EMOJI_GUILD)
+            else:
+                emoji_guild = self.commandchannel.guild
+            EventDatabase.loadDatabase(emoji_guild.emojis)
         except ValueError as e:
             await self.commandchannel.send(e)
             await self.logout()
