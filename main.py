@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys
+
 import discord
 
 import config as cfg
@@ -17,6 +19,9 @@ intents = discord.Intents.default()
 intents.members = True
 bot = OperationBot(command_prefix=COMMAND_CHAR, intents=intents)
 # bot.remove_command("help")
+
+if sys.version_info < (3, 9):
+    raise Exception("Must be run with Python 3.9 or higher")
 
 if __name__ == '__main__':
     print("Starting up")

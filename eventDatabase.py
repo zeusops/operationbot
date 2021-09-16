@@ -18,7 +18,15 @@ class EventDatabase:
     events: Dict[int, Event] = {}
     eventsArchive: Dict[int, Event] = {}
     nextID: int = 0
-    emojis: Optional[Tuple[Emoji]] = None
+    _emojis: Optional[Tuple[Emoji]] = None
+
+    @classmethod
+    @property
+    def emojis(cls):
+        if cls._emojis is None:
+            raise ValueError("No EventDatabase.emojis set")
+        return cls._emojis
+
 
     @classmethod
     def createEvent(cls, date: datetime, emojis: Tuple[Emoji], eventID: int = -1,
@@ -163,8 +171,10 @@ class EventDatabase:
 
     @classmethod
     def loadDatabase(cls, emojis: Optional[Tuple[Emoji]] = None):
-        if EventDatabase.emojis is None:
-            EventDatabase.emojis = emojis
+        if cls._emojis is None:
+            if emojis is None:
+                raise ValueError("No emojis provided")
+            cls._emojis = emojis
         print("Importing events")
         cls.events, cls.nextID = cls.readJson(cfg.JSON_FILEPATH['events'])
         print("Importing archive")
@@ -177,9 +187,9 @@ class EventDatabase:
         """Fill events and eventsArchive with data from JSON."""
         print("Importing")
 
-        emojis = EventDatabase.emojis
-        if emojis is None:
-            raise ValueError("No EventDatabase.emojis set")
+        # Try to access emojis early so that we immediately bail out on error
+        # We don't need to touch the database file if emojis is not set
+        emojis = cls.emojis
 
         # Import events
         try:

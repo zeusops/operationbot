@@ -1,5 +1,7 @@
 # Operationbot for the Zeus Operations discord
 
+**Note:** Requires Python 3.9 or newer.
+
 ## Setting up
 
 1. Create a new Discord bot at <https://discord.com/developers/applications>
@@ -27,7 +29,7 @@
    source venv/bin/activate
    ```
 
-5. Install required packages:
+6. Install required packages:
 
    ```shell
    pip install -r requirements.txt
