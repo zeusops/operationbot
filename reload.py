@@ -27,7 +27,7 @@ class Reload(Cog):
             try:
                 self.bot.load_extension(extension)
                 print("loaded", extension)
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 await ctx.send("An error occured while reloading: "
                                f"```py\n{traceback.format_exc()}```")
             else:

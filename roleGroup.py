@@ -88,10 +88,10 @@ class RoleGroup:
             else:
                 try:
                     role = next(x for x in self.roles if x.emoji == roleEmoji)
-                except StopIteration:
+                except StopIteration as e:
                     name = roleData.get("show_name") or roleData["name"]
                     raise UnexpectedRole(f"Cannot import unexpected role "
-                                         f"'{name}'")
+                                         f"'{name}'") from e
                 roles.append(roleEmoji)
 
             role.fromJson(roleData, manual_load=manual_load)
