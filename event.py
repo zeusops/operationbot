@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import discord
 from discord import Embed, Emoji
@@ -31,8 +31,8 @@ class User:
 
 class Event:
 
-    def __init__(self, date: datetime, guildEmojis: Tuple[Emoji], eventID=0,
-                 importing=False, sideop=False, platoon_size=None):
+    def __init__(self, date: datetime, guildEmojis: Tuple[Emoji, ...],
+                 eventID=0, importing=False, sideop=False, platoon_size=None):
         self.title = TITLE if not sideop else SIDEOP_TITLE
         self.date = date
         self.terrain = TERRAIN
@@ -54,8 +54,7 @@ class Event:
         elif platoon_size in cfg.PLATOON_SIZES:
             self.platoon_size = platoon_size
         else:
-            raise ValueError("Unsupported platoon size: {}"
-                             .format(platoon_size))
+            raise ValueError(f"Unsupported platoon size: {platoon_size}")
 
         if self.platoon_size.startswith("WW2"):
             self.title = "WW2 " + self.title
@@ -78,8 +77,7 @@ class Event:
             return None
 
         if new_size not in cfg.PLATOON_SIZES:
-            raise ValueError("Unsupported new platoon size: {}"
-                             .format(new_size))
+            raise ValueError(f"Unsupported new platoon size: {new_size}")
 
         def _moveRole(roleName, sourceGroup: RoleGroup, targetGroupName=None):
             print("sourcegroup", type(sourceGroup), sourceGroup.name)
@@ -89,8 +87,8 @@ class Event:
                   f"{targetGroupName}")
             if targetGroupName is None:
                 if role.userID is not None:
-                    msg = "Warning: removing an active role {} from {}, {}" \
-                          .format(role, sourceGroup.name, self)
+                    msg = (f"Warning: removing an active role {role} "
+                           f"from {sourceGroup.name}, {self}")
                     print("removing active role")
                 sourceGroup.removeRole(roleName)
             else:
@@ -205,7 +203,7 @@ class Event:
                 group = self.roleGroups[groupName]
             except KeyError:
                 group = RoleGroup("Dummy")
-                msg = "Could not find group {}".format(groupName)
+                msg = f"Could not find group {groupName}"
                 print(msg)
                 warnings += msg + '\n'
             newGroups[groupName] = group
@@ -216,8 +214,9 @@ class Event:
     def createEmbed(self) -> Embed:
         date = self.date.strftime(f"%a %Y-%m-%d - %H:%M {cfg.TIME_ZONE}")
         title = f"{self.title} ({date})"
-        linkbuilder = "https://www.inyourowntime.zone/{}_{}".format(
-            self.date.strftime("%Y-%m-%d_%H.%M"), cfg.TIME_ZONE_LOCATION)
+        linkbuilder = (f"https://www.inyourowntime.zone/"
+                       f"{self.date.strftime('%Y-%m-%d_%H.%M')}_"
+                       f"{cfg.TIME_ZONE_LOCATION}")
         server_port = (f"\nServer port: **{self.port}**"
                        if self.port != cfg.PORT_DEFAULT else "")
         event_description = (f"\n\n{self.description}"
@@ -280,7 +279,7 @@ class Event:
 
         # Find next emoji for additional role
         if self.countReactions() >= MAX_REACTIONS:
-            raise RoleError("Too many roles, not adding role {}".format(name))
+            raise RoleError(f"Too many roles, not adding role {name}")
         emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additionalRoleCount]
 
         # Create role
@@ -340,7 +339,7 @@ class Event:
 
         return normalEmojis
 
-    def getReactions(self) -> List[Emoji]:
+    def getReactions(self) -> List[Union[str, Emoji]]:
         """Return reactions of all roles and extra reactions"""
         reactions = []
 
@@ -364,7 +363,7 @@ class Event:
         """Count how many reactions a message should have."""
         return len(self.getReactions())
 
-    def getReactionsOfGroup(self, groupName: str) -> List[Emoji]:
+    def getReactionsOfGroup(self, groupName: str) -> List[Union[str, Emoji]]:
         """Find reactions of a given role group."""
         reactions = []
 
@@ -380,7 +379,7 @@ class Event:
             for role in roleGroup.roles:
                 if role.emoji == emoji:
                     return role
-        raise RoleNotFound("No role found with emoji {}".format(emoji))
+        raise RoleNotFound(f"No role found with emoji {emoji}")
 
     def findRoleWithName(self, roleName: str) -> Role:
         """Find a role with given name."""
@@ -390,20 +389,20 @@ class Event:
             for role in roleGroup.roles:
                 if role.name.lower() == roleName:
                     return role
-        raise RoleNotFound("No role found with name {}".format(roleName))
+        raise RoleNotFound(f"No role found with name {roleName}")
 
     def getRoleGroup(self, groupName: str) -> RoleGroup:
         try:
             return self.roleGroups[groupName]
         except KeyError:
-            raise RoleGroupNotFound("No role group found with name {}"
-                                    .format(groupName))
+            raise RoleGroupNotFound("No role group found with name "
+                                    f"{groupName}")
 
     def hasRoleGroup(self, groupName: str) -> bool:
         """Check if a role group with given name exists in the event."""
         return groupName in self.roleGroups
 
-    def signup(self, roleToSet: Role, user: discord.User, replace=False) \
+    def signup(self, roleToSet: Role, user: discord.abc.User, replace=False) \
             -> Tuple[Optional[Role], User]:
         """Add username to role.
 
@@ -426,7 +425,7 @@ class Event:
                     role.userName = user.display_name
                     return old_role, old_user
         # Probably shouldn't ever reach this
-        raise RoleNotFound("Could not find role: {}".format(roleToSet))
+        raise RoleNotFound(f"Could not find role: {roleToSet}")
 
     def undoSignup(self, user) -> Optional[Role]:
         """Remove username from any signups.
@@ -450,18 +449,17 @@ class Event:
         return None
 
     def __str__(self):
-        return "{} (ID {}) at {}".format(self.title, self.id, self.date)
+        return f"{self.title} (ID {self.id}) at {self.date}"
 
     def __repr__(self):
-        return "<Event title='{}' id={} date='{}'>".format(
-            self.title, self.id, self.date)
+        return f"<Event title='{self.title}' id={self.id} date='{self.date}'>"
 
-    def toJson(self, brief_output=False):
+    def toJson(self, brief_output=False) -> Dict[str, Any]:
         roleGroupsData = {}
         for groupName, roleGroup in self.roleGroups.items():
             roleGroupsData[groupName] = roleGroup.toJson(brief_output)
 
-        data = {}
+        data: Dict[str, Any] = {}
         data["title"] = self.title
         data["date"] = self.date.strftime("%Y-%m-%d")
         data["description"] = self.description
@@ -509,6 +507,6 @@ class Event:
             roleGroup.fromJson(roleGroupData, emojis, manual_load)
         if manual_load:
             # Remove role groups that were not present in imported data
-            for roleGroup in list(self.roleGroups.keys()):
-                if roleGroup not in groups:
-                    del self.roleGroups[roleGroup]
+            for group in list(self.roleGroups.keys()):
+                if group not in groups:
+                    del self.roleGroups[group]

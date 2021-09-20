@@ -32,11 +32,10 @@ class REPL(commands.Cog):
 
     def get_syntax_error(self, e):
         if e.text is None:
-            return '```py\n{0.__class__.__name__}: {0}\n```'.format(e)
-        return '```py\n{0.text}{1:>{0.offset}}\n{2}: {0}```'.format(
-            e, '^', type(e).__name__)
+            return f'```py\n{e.__class__.__name__}: {e}\n```'
+        return f'```py\n{e.text}{"^":>{e.offset}}\n{type(e).__name__}: {e}```'
 
-    @commands.command(pass_context=True, hidden=True, name='eval')
+    @commands.command(name='eval', hidden=True)
     @commands.is_owner()
     async def _eval(self, ctx: Context, *, body: str):
         env = {
@@ -54,7 +53,7 @@ class REPL(commands.Cog):
         body = self.cleanup_code(body)
         stdout = io.StringIO()
 
-        to_compile = 'async def func():\n%s' % textwrap.indent(body, '  ')
+        to_compile = f"async def func():\n{textwrap.indent(body, '  ')}"
 
         try:
             exec(to_compile, env)
@@ -67,24 +66,22 @@ class REPL(commands.Cog):
                 ret = await func()
         except Exception:
             value = stdout.getvalue()
-            await ctx.send('```py\n{}{}\n```'.format(
-                value, traceback.format_exc()))
+            await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
         else:
             value = stdout.getvalue()
             try:
                 await ctx.message.add_reaction('\u2705')
             except Exception:
-                await ctx.send('```py\n{}\n```'
-                               .format(traceback.format_exc()))
+                await ctx.send(f'```py\n{traceback.format_exc()}\n```')
 
             if ret is None:
                 if value:
-                    await ctx.send('```py\n%s\n```' % value)
+                    await ctx.send(f'```py\n{value}\n```')
             else:
                 self._last_result = ret
-                await ctx.send('```py\n%s%s\n```' % (value, ret))
+                await ctx.send(f'```py\n{value}{ret}\n```')
 
-    @commands.command(pass_context=True, hidden=True)
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def repl(self, ctx: Context):
         msg = ctx.message
@@ -153,14 +150,14 @@ class REPL(commands.Cog):
                         result = await result
             except Exception:
                 value = stdout.getvalue()
-                fmt = '```py\n{}{}\n```'.format(value, traceback.format_exc())
+                fmt = f'```py\n{value}{traceback.format_exc()}\n```'
             else:
                 value = stdout.getvalue()
                 if result is not None:
-                    fmt = '```py\n{}{}\n```'.format(value, result)
+                    fmt = f'```py\n{value}{result}\n```'
                     variables['_'] = result
                 elif value:
-                    fmt = '```py\n{}\n```'.format(value)
+                    fmt = f'```py\n{value}\n```'
 
             try:
                 if fmt is not None:
@@ -172,19 +169,18 @@ class REPL(commands.Cog):
             except discord.Forbidden:
                 pass
             except discord.HTTPException as e:
-                await ctx.send('Unexpected error: `{}`'.format(e))
+                await ctx.send(f'Unexpected error: `{e}`')
 
     @repl.error
     @_eval.error
     async def command_error(self, ctx: Context, error):
         if isinstance(error, MissingRequiredArgument):
-            await ctx.send("Missing argument. See: {}help {}"
-                           .format(CMD, ctx.command))
+            await ctx.send(f"Missing argument. See: {CMD}help {ctx.command}")
         elif isinstance(error, BadArgument):
-            await ctx.send("Invalid argument: {}. See: {}help {}"
-                           .format(error, CMD, ctx.command))
+            await ctx.send(f"Invalid argument: {error}. See: {CMD}help "
+                           f"{ctx.command}")
         else:
-            await ctx.send("Unexpected error occured: ```{}```".format(error))
+            await ctx.send(f"Unexpected error occured: ```{error}```")
             print(error)
 
 

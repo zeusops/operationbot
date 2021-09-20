@@ -5,9 +5,9 @@ import secret
 
 VERSION = 10
 # PURGE_ON_CONNECT = False
-_test_channel = 530411066585382912
+_test_channel = 867126221581451275
 if secret.DEBUG:
-    EVENT_CHANNEL = _test_channel
+    EVENT_CHANNEL = 867126265143623692
     EVENT_ARCHIVE_CHANNEL = _test_channel
     COMMAND_CHANNEL = _test_channel
     LOG_CHANNEL = _test_channel

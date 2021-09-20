@@ -1,6 +1,7 @@
-from typing import Dict, List
+from typing import Dict, List, Union, cast
 
 from discord import Emoji, Message, NotFound, TextChannel
+from discord.embeds import Embed
 from discord.errors import Forbidden
 
 from errors import MessageNotFound, RoleError
@@ -19,8 +20,8 @@ async def getEventMessage(event: Event, bot: OperationBot, archived=False) \
     try:
         return await channel.fetch_message(event.messageID)
     except NotFound:
-        raise MessageNotFound("No event message found with message ID {}"
-                              .format(event.messageID))
+        raise MessageNotFound("No event message found with "
+                              f"message ID {event.messageID}")
 
 
 async def sortEventMessages(bot: OperationBot):
@@ -35,7 +36,7 @@ async def sortEventMessages(bot: OperationBot):
         try:
             message = await getEventMessage(event, bot)
         except MessageNotFound as e:
-            raise MessageNotFound("sortEventMessages: {}".format(e))
+            raise MessageNotFound(f"sortEventMessages: {e}")
         await updateMessageEmbed(message, event)
         await updateReactions(event, message=message)
 
@@ -77,7 +78,7 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
                              " to be provided")
         message = await getEventMessage(event, bot)
 
-    reactions: List[Emoji] = event.getReactions()
+    reactions: List[Union[Emoji, str]] = event.getReactions()
     reactionsCurrent = message.reactions
     reactionEmojisCurrent = {}
     reactionsToRemove = []
@@ -116,8 +117,8 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
             await message.add_reaction(emoji)
         except Forbidden as e:
             if e.code == 30010:
-                raise RoleError("Too many reactions, not adding role {}. "
-                                "This should not happen.".format(emoji))
+                raise RoleError("Too many reactions, not adding role "
+                                f"{emoji}. This should not happen.")
 
 # async def createMessages(events: Dict[int, Event], bot):
 #     # Update event message contents and add reactions
@@ -135,8 +136,14 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
 
 
 def messageEventId(message: Message) -> int:
-    footer = message.embeds[0].footer.text
-    return int(footer.split(' ')[-1])
+    if len(message.embeds) == 0:
+        raise ValueError("Message has no embeds")
+    footer = message.embeds[0].footer
+    if footer.text == Embed.Empty:
+        raise ValueError("Footer is empty")
+    # Casting because mypy doesn't detect correctly that the type of
+    # footer.text has been checked already
+    return int(cast(str, footer.text).split(' ')[-1])
 
 
 async def syncMessages(events: Dict[int, Event], bot: OperationBot):
@@ -145,14 +152,14 @@ async def syncMessages(events: Dict[int, Event], bot: OperationBot):
         try:
             message = await getEventMessage(event, bot)
         except MessageNotFound:
-            print("Missing a message for event {}, creating".format(event))
+            print(f"Missing a message for event {event}, creating")
             await createEventMessage(event, bot.eventchannel)
         else:
             if messageEventId(message) == event.id:
                 print(f"Found message {message.id} for event {event}")
             else:
-                print("Found incorrect message for event {}, deleting and "
-                      "creating".format(event))
+                print(f"Found incorrect message for event {event}, deleting "
+                      f"and creating")
                 # Technically multiple events might have the same saved
                 # messageID but it's simpler to just recreate messages here if
                 # the event ID doesn't match

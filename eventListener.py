@@ -1,11 +1,11 @@
 import importlib
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Union, cast
 
 from discord import Game, Message, RawReactionActionEvent
 from discord.ext.commands import Cog
-from discord.member import Member
 from discord.partial_emoji import PartialEmoji
+from discord.user import User
 
 import config as cfg
 import messageFunctions as msgFnc
@@ -35,10 +35,10 @@ class EventListener(Cog):
         await msgFnc.syncMessages(EventDatabase.events, self.bot)
         await commandchannel.send("Synced")
         EventDatabase.toJson()
-        msg = "{} events imported".format(len(EventDatabase.events))
+        msg = f"{len(EventDatabase.events)} events imported"
         print(msg)
         await commandchannel.send(msg)
-        await self.bot.change_presence(activity=Game(name=cfg.GAME, type=2))
+        await self.bot.change_presence(activity=Game(name=cfg.GAME))
         print('Logged in as', self.bot.user.name, self.bot.user.id)
 
     @Cog.listener()
@@ -60,8 +60,8 @@ class EventListener(Cog):
             # channel
             return
 
-        # Remove the reaction
-        user: Member = payload.member
+        # The member is always defined because we're in the event channel
+        user = cast(User, payload.member)
         await message.remove_reaction(payload.emoji, user)
 
         # Get event from database with message ID
@@ -79,12 +79,12 @@ class EventListener(Cog):
             await self._handle_signup(event, payload.emoji, user, message)
 
     async def _handle_signup(self, event: Event, partial_emoji: PartialEmoji,
-                             user: Member, message: Message):
+                             user: User, message: Message):
         # Get emoji string
         if partial_emoji.is_custom_emoji():
-            emoji = partial_emoji
+            emoji: Union[PartialEmoji, str] = partial_emoji
         else:
-            emoji = partial_emoji.name
+            emoji = cast(str, partial_emoji.name)
 
         # Find signup of user
         old_signup: Optional[Role] = event.findSignupRole(user.id)
@@ -131,7 +131,7 @@ class EventListener(Cog):
             else:
                 # User switched from a different role
                 message_action = "CHANGE"
-                old_role = "{} -> ".format(removed_role.display_name)
+                old_role = f"{removed_role.display_name} -> "
 
         # Update discord embed
         await msgFnc.updateMessageEmbed(message, event)
@@ -144,16 +144,16 @@ class EventListener(Cog):
             late_signoff_delta = self._calculate_signoff_delta(
                 event, removed_role, user)
             if late_signoff_delta is not None and not event.sideop:
-                delta_message = "{}: {} before the operation:\n" \
-                                .format(self.bot.signoff_notify_user.mention,
-                                        late_signoff_delta)
+                delta_message = (f"{self.bot.signoff_notify_user.mention}: "
+                                 f"{late_signoff_delta} before the "
+                                 "operation:\n")
 
-        message = f"{delta_message}{message_action}: {event}, role: " \
-                  f"{old_role}{role.display_name}, " \
-                  f"user: {user.display_name} " \
-                  f"({user.name}#{user.discriminator})"
+        text = f"{delta_message}{message_action}: {event}, role: " \
+               f"{old_role}{role.display_name}, " \
+               f"user: {user.display_name} " \
+               f"({user.name}#{user.discriminator})"
 
-        await self.bot.logchannel.send(message)
+        await self.bot.logchannel.send(text)
 
     @Cog.listener()
     async def on_message(self, message: Message):
@@ -161,8 +161,7 @@ class EventListener(Cog):
             return
         if message.guild is None:
             owner = self.bot.owner
-            await owner.send("DM: [{}]: {}".format(
-                message.author, message.content))
+            await owner.send(f"DM: [{message.author}]: {message.content}")
 
     def _calculate_signoff_delta(self, event: Event, role: Role, user):
         """return a string (days or hours/mins) if it is shortly before op
@@ -174,9 +173,9 @@ class EventListener(Cog):
                 hours = time_delta.seconds // (60 * 60)
                 mins = (time_delta.seconds - hours * 60 * 60) // 60
                 if days > 0:
-                    timeframe = "{} days".format(days)
+                    timeframe = f"{days} days"
                 else:
-                    timeframe = "{}h{}min".format(hours, mins)
+                    timeframe = f"{hours}h{mins}min"
                 if time_delta < cfg.SIGNOFF_NOTIFY_TIME and \
                         self.bot.signoff_notify_user != user:
                     return timeframe

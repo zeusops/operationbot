@@ -18,11 +18,11 @@ class EventDatabase:
     events: Dict[int, Event] = {}
     eventsArchive: Dict[int, Event] = {}
     nextID: int = 0
-    _emojis: Optional[Tuple[Emoji]] = None
+    _emojis: Optional[Tuple[Emoji, ...]] = None
 
     @classmethod
     @property
-    def emojis(cls) -> Tuple[Emoji]:
+    def emojis(cls) -> Tuple[Emoji, ...]:
         if cls._emojis is None:
             raise ValueError("No EventDatabase.emojis set")
         return cls._emojis
@@ -104,8 +104,9 @@ class EventDatabase:
 
         try:
             return collection[eventID]
-        except KeyError:
-            raise EventNotFound("No event found with ID {}".format(eventID))
+        except KeyError as e:
+            raise EventNotFound(f"No event found with ID {eventID}") \
+                from e
 
     @classmethod
     def getArchivedEventByMessage(cls, messageID: int) -> Event:
@@ -170,7 +171,7 @@ class EventDatabase:
             json.dump(data, jsonFile, indent=2)
 
     @classmethod
-    def loadDatabase(cls, emojis: Optional[Tuple[Emoji]] = None):
+    def loadDatabase(cls, emojis: Optional[Tuple[Emoji, ...]] = None):
         if cls._emojis is None:
             if emojis is None:
                 raise ValueError("No emojis provided")
@@ -196,17 +197,16 @@ class EventDatabase:
             try:
                 with open(filename) as jsonFile:
                     data: Dict = json.load(jsonFile)
-            except json.decoder.JSONDecodeError:
+            except json.decoder.JSONDecodeError as e:
                 print("Malformed JSON file! Backing up and",
                       "creating an empty database")
+                backup_date = datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
                 # Backup old file
-                backupName = "{}-{}.bak" \
-                    .format(filename,
-                            datetime.now().strftime('%Y-%m-%dT%H-%M-%S'))
+                backupName = f"{filename}-{backup_date}.bak"
                 os.rename(filename, backupName)
                 print("Backed up to", backupName)
                 # Let next handler create the file and continue importing
-                raise FileNotFoundError
+                raise FileNotFoundError from e
         except FileNotFoundError:
             print("JSON not found, creating")
             os.makedirs(os.path.dirname(filename), exist_ok=True)
@@ -222,8 +222,8 @@ class EventDatabase:
 
         databaseVersion = int(data.get('version', 0))
         if databaseVersion != DATABASE_VERSION:
-            msg = "Incorrect database version. Expected: {}, got: {}." \
-                  .format(DATABASE_VERSION, databaseVersion)
+            msg = ("Incorrect database version. Expected: "
+                   f"{DATABASE_VERSION}, got: {databaseVersion}.")
             print(msg)
             raise ValueError(msg)
 

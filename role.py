@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from discord import Emoji
 
@@ -15,9 +15,7 @@ class Role:
     def __str__(self):
         # Add name after emote if it should display
         if self.show_name:
-            return "{} {}: {}\n".format(str(self.emoji),
-                                        self.name,
-                                        self.userName)
+            return f"{str(self.emoji)} {self.name}: {self.userName}"
         else:
             if self.userName:
                 return f"{str(self.emoji)} {self.userName}\n"
@@ -27,8 +25,8 @@ class Role:
     def __repr__(self):
         return f"<Role name='{self.name}' userName='{self.userName}'>"
 
-    def toJson(self, brief_output=False):
-        data = {}
+    def toJson(self, brief_output=False) -> Dict[str, Any]:
+        data: Dict[str, Any] = {}
         if not brief_output or self.show_name:
             # Name is displayed when exporting full data (not brief_output) or
             # when role is an additional role (show_name is set)
@@ -53,5 +51,5 @@ class Role:
     @property
     def display_name(self) -> Union[str, Emoji]:
         if self.show_name:
-            return "{} {}".format(self.emoji, self.name)
+            return f"{self.emoji} {self.name}"
         return self.emoji
