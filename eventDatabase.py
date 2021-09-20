@@ -105,7 +105,7 @@ class EventDatabase:
         try:
             return collection[eventID]
         except KeyError as e:
-            raise EventNotFound("No event found with ID {}".format(eventID)) \
+            raise EventNotFound(f"No event found with ID {eventID}") \
                 from e
 
     @classmethod
@@ -200,10 +200,9 @@ class EventDatabase:
             except json.decoder.JSONDecodeError as e:
                 print("Malformed JSON file! Backing up and",
                       "creating an empty database")
+                backup_date = datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
                 # Backup old file
-                backupName = "{}-{}.bak" \
-                    .format(filename,
-                            datetime.now().strftime('%Y-%m-%dT%H-%M-%S'))
+                backupName = f"{filename}-{backup_date}.bak"
                 os.rename(filename, backupName)
                 print("Backed up to", backupName)
                 # Let next handler create the file and continue importing
@@ -223,8 +222,8 @@ class EventDatabase:
 
         databaseVersion = int(data.get('version', 0))
         if databaseVersion != DATABASE_VERSION:
-            msg = "Incorrect database version. Expected: {}, got: {}." \
-                  .format(DATABASE_VERSION, databaseVersion)
+            msg = ("Incorrect database version. Expected: "
+                   f"{DATABASE_VERSION}, got: {databaseVersion}.")
             print(msg)
             raise ValueError(msg)
 

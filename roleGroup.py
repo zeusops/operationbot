@@ -15,7 +15,7 @@ class RoleGroup:
         self.roles: List[Role] = []
 
     def __repr__(self):
-        return "<RoleGroup name='{}'>".format(self.name)
+        return f"<RoleGroup name='{self.name}'>"
 
     def __getitem__(self, key):
         for role in self.roles:
@@ -37,8 +37,8 @@ class RoleGroup:
             if role.name == roleName:
                 self.roles.remove(role)
                 return
-        raise RoleNotFound("Could not find a role to remove with name {}"
-                           .format(roleName))
+        raise RoleNotFound("Could not find a role to remove with name "
+                           f"{roleName}")
 
     def __str__(self) -> str:
         roleGroupString = ""
@@ -90,8 +90,8 @@ class RoleGroup:
                     role = next(x for x in self.roles if x.emoji == roleEmoji)
                 except StopIteration:
                     name = roleData.get("show_name") or roleData["name"]
-                    raise UnexpectedRole("Cannot import unexpected role '{}'"
-                                         .format(name))
+                    raise UnexpectedRole(f"Cannot import unexpected role "
+                                         f"'{name}'")
                 roles.append(roleEmoji)
 
             role.fromJson(roleData, manual_load=manual_load)

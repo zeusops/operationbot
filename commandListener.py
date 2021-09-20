@@ -32,8 +32,8 @@ class EventDateTime(Converter):
         try:
             date = datetime.strptime(arg, '%Y-%m-%d')
         except ValueError:
-            raise BadArgument("Invalid date format {}. Has to be YYYY-MM-DD"
-                              .format(arg))
+            raise BadArgument(f"Invalid date format {arg}. "
+                              "Has to be YYYY-MM-DD")
         return date.replace(hour=18, minute=30)
 
 
@@ -42,8 +42,8 @@ class EventDate(Converter):
         try:
             _date = date.fromisoformat(arg)
         except ValueError:
-            raise BadArgument("Invalid date format {}. Has to be YYYY-MM-DD"
-                              .format(arg))
+            raise BadArgument(f"Invalid date format {arg}. "
+                              "Has to be YYYY-MM-DD")
         return _date
 
 
@@ -54,8 +54,8 @@ class EventTime(Converter):
                 return datetime.strptime(arg, fmt)
             except ValueError:
                 pass
-        raise BadArgument("Invalid time format {}. Has to be HH:MM or HHMM"
-                          .format(arg))
+        raise BadArgument(f"Invalid time format {arg}. "
+                          "Has to be HH:MM or HHMM")
 
 
 class EventMessage(Converter):
@@ -63,8 +63,8 @@ class EventMessage(Converter):
         try:
             eventID = int(arg)
         except ValueError:
-            raise BadArgument("Invalid message ID {}, needs to be an "
-                              "integer".format(arg))
+            raise BadArgument(f"Invalid message ID {arg}, needs to be an "
+                              "integer")
         try:
             event = EventDatabase.getEventByID(eventID)
             message = await msgFnc.getEventMessage(
@@ -83,8 +83,8 @@ class EventEvent(Converter):
         try:
             eventID = int(arg)
         except ValueError:
-            raise BadArgument("Invalid message ID {}, needs to be an "
-                              "integer".format(arg))
+            raise BadArgument(f"Invalid message ID {arg}, needs to be an "
+                              "integer")
 
         try:
             if not archived:
@@ -137,13 +137,12 @@ class CommandListener(Cog):
             module = importlib.import_module(moduleName)
             importlib.reload(module)
         except ImportError as e:
-            await ctx.send("Failed to reload module {}: {}"
-                           .format(moduleName, str(e)))
+            await ctx.send(f"Failed to reload module {moduleName}: {str(e)}")
         except Exception as e:
-            await ctx.send("An error occured while reloading: ```py\n{}```"
-                           .format(str(e)))
+            await ctx.send("An error occured while reloading: "
+                           f"```py\n{str(e)}```")
         else:
-            await ctx.send("Reloaded {}".format(moduleName))
+            await ctx.send(f"Reloaded {moduleName}")
 
     @command()
     async def exec(self, ctx: Context, flag: str, *, cmd: str):
@@ -165,16 +164,15 @@ class CommandListener(Cog):
             old_stdout = sys.stdout
             redirected_output = sys.stdout = StringIO()
             if flag == 'p':
-                cmd = "print({})".format(cmd)
+                cmd = f"print({cmd})"
                 exec(cmd)
                 sys.stdout = old_stdout
-                msg = "```py\n{}```".format(redirected_output.getvalue())
+                msg = f"```py\n{redirected_output.getvalue()}```"
             elif flag == 'c':
-                cmd = "print({})".format(cmd)
+                cmd = f"print({cmd})"
                 exec(cmd)
                 sys.stdout = old_stdout
-                print("cmd: {}\noutput: {}".format(
-                      cmd, redirected_output.getvalue()))
+                print(f"cmd: {cmd}\noutput: {redirected_output.getvalue()}")
                 msg = "Printed in console"
             else:
                 exec(cmd)
@@ -182,8 +180,8 @@ class CommandListener(Cog):
                 msg = "Executed"
             # sys.stdout = old_stdout
         except Exception:
-            msg = "An error occured while executing: ```py\n{}```" \
-                  .format(traceback.format_exc())
+            msg = ("An error occured while executing: "
+                   f"```py\n{traceback.format_exc()}```")
         await ctx.send(msg)
 
     async def _create_event(self, ctx: Context, date: datetime,
@@ -192,9 +190,8 @@ class CommandListener(Cog):
                             silent=False) -> Event:
         # TODO: Check for duplicate event dates?
         if date < datetime.today() and not force:
-            raise BadArgument("Requested date {} has already passed. "
-                              "Use the `force` argument to override"
-                              .format(date))
+            raise BadArgument(f"Requested date {date} has already passed. "
+                              "Use the `force` argument to override")
 
         # Create event and sort events, export
         event: Event = EventDatabase.createEvent(date, sideop=sideop,
@@ -204,7 +201,7 @@ class CommandListener(Cog):
             await msgFnc.sortEventMessages(self.bot)
             EventDatabase.toJson()  # Update JSON file
         if not silent:
-            await ctx.send("Created event {}".format(event))
+            await ctx.send(f"Created event {event}")
         return event
 
     @command(aliases=["cat"])
@@ -273,7 +270,7 @@ class CommandListener(Cog):
         await self._set_quick(ctx, event, terrain, faction, zeus, quiet=True)
 
         if not quiet:
-            await ctx.send("Created event {}".format(event))
+            await ctx.send(f"Created event {event}")
         return event
 
     @command(aliases=['cq'])
@@ -367,23 +364,22 @@ class CommandListener(Cog):
             strpastdays = " ".join([day.isoformat() for day in past_days])
             strpast = (
                 "\nFollowing dates are in the past and will be skipped:\n"
-                "```{}```".format(strpastdays))
+                f"```{strpastdays}```")
         else:
             strpast = ""
 
         if len(days) > 0:
             strdays = " ".join([day.isoformat() for day in days])
             message = (
-                "Creating events for following days:\n```{}``` "
-                "{}"
-                "Reply with `ok` or `cancel`."
-                .format(strdays, strpast))
+                f"Creating events for following days:\n```{strdays}``` "
+                f"{strpast}"
+                "Reply with `ok` or `cancel`.")
             await ctx.send(message)
         else:
             message = (
-                "No events to be created.{}"
+                f"No events to be created.{strpast}"
                 "Use the `force` argument to override. "
-                "See `{}help multicreate`".format(strpast, CMD))
+                f"See `{CMD}help multicreate`")
             await ctx.send(message)
             return
 
@@ -417,15 +413,14 @@ class CommandListener(Cog):
                 else:
                     await ctx.send("Please reply with `ok` or `cancel`.")
         except Exception:
-            await ctx.send('```py\n{}\n```'
-                           .format(traceback.format_exc()))
+            await ctx.send(f'```py\n{traceback.format_exc()}\n```')
             self.bot.awaiting_reply = False
 
     @command(aliases=['csz'])
     async def changesize(self, ctx: Context, event: EventEvent,
                          new_size: str):
         if new_size not in cfg.PLATOON_SIZES:
-            ctx.send("Invalid new size {}".format(new_size))
+            ctx.send(f"Invalid new size {new_size}")
             return
 
         await self._change_size(ctx, event, new_size)
@@ -433,7 +428,7 @@ class CommandListener(Cog):
     async def _change_size(self, ctx: Context, event: Event, new_size: str):
         ret = event.changeSize(new_size)
         if ret is None:
-            await ctx.send("{}: nothing to be done".format(event))
+            await ctx.send(f"{event}: nothing to be done")
             return
         if ret.strip() != "":
             await ctx.send(ret)
@@ -444,7 +439,7 @@ class CommandListener(Cog):
     @command(aliases=['csza'])
     async def changesizeall(self, ctx: Context, new_size: str):
         if new_size not in cfg.PLATOON_SIZES:
-            ctx.send("Invalid new size {}".format(new_size))
+            ctx.send(f"Invalid new size {new_size}")
             return
 
         for event in EventDatabase.events.values():
@@ -457,7 +452,7 @@ class CommandListener(Cog):
     async def reorder(self, ctx: Context, event: EventEvent):
         ret = event.reorder()
         if ret is None:
-            await ctx.send("{}: nothing to be done".format(event))
+            await ctx.send(f"{event}: nothing to be done")
             return
         if ret.strip() != "":
             await ctx.send(ret)
@@ -471,13 +466,13 @@ class CommandListener(Cog):
             print("reordering", event)
             ret = event.reorder()
             if ret is None:
-                await ctx.send("{}: nothing to be done".format(event))
+                await ctx.send(f"{event}: nothing to be done")
                 continue
             if ret.strip() != "":
                 await ctx.send(ret)
 
             await self._update_event(event, export=False)
-            await ctx.send("Event {} reordered succesfully".format(event))
+            await ctx.send(f"Event {event} reordered succesfully")
         await ctx.send("All events reordered succesfully")
         EventDatabase.toJson()
 
@@ -487,7 +482,7 @@ class CommandListener(Cog):
         except IndexError:
             user = self.bot.owner
             raise RoleError("Too many additional roles. This should not "
-                            "happen. Nag at {}".format(user.mention))
+                            f"happen. Nag at {user.mention}")
         except RoleError as e:
             if batch:
                 # Adding the latest role failed, saving previously added roles
@@ -512,11 +507,11 @@ class CommandListener(Cog):
             for role in rolename.split('\n'):
                 role = role.strip()
                 await self._add_role(event, role, batch=True)
-                await ctx.send("Role {} added to event {}".format(role, event))
+                await ctx.send(f"Role {role} added to event {event}")
             await self._update_event(event)
         else:
             await self._add_role(event, rolename)
-            await ctx.send("Role {} added to event {}".format(rolename, event))
+            await ctx.send(f"Role {rolename} added to event {event}")
 
     # Remove additional role from event command
     @command(aliases=['rr'])
@@ -529,7 +524,7 @@ class CommandListener(Cog):
         """
         event.removeAdditionalRole(rolename)
         await self._update_event(event, reorder=False)
-        await ctx.send("Role {} removed from {}".format(rolename, event))
+        await ctx.send(f"Role {rolename} removed from {event}")
 
     @command(aliases=['rra'])
     async def removereaction(self, ctx: Context, event: EventEvent,
@@ -539,7 +534,7 @@ class CommandListener(Cog):
         """  # NOQA
         self._find_remove_reaction(reaction, event)
         await self._update_event(event, reorder=False)
-        await ctx.send("Reaction {} removed from {}".format(reaction, event))
+        await ctx.send(f"Reaction {reaction} removed from {event}")
 
     def _find_remove_reaction(self, reaction: str, event: Event):
         for group in event.roleGroups.values():
@@ -561,8 +556,7 @@ class CommandListener(Cog):
         groupName = groupName.strip('"')
 
         if not event.hasRoleGroup(groupName):
-            await ctx.send("No role group found with name {}"
-                           .format(groupName))
+            await ctx.send(f"No role group found with name {groupName}")
             return
 
         # Remove reactions, remove role, update event, add reactions, export
@@ -571,7 +565,7 @@ class CommandListener(Cog):
         event.removeRoleGroup(groupName)
         await msgFnc.updateMessageEmbed(eventMessage, event)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Group {} removed from {}".format(groupName, event))
+        await ctx.send(f"Group {groupName} removed from {event}")
 
     # Set title of event command
     @command(aliases=['stt'])
@@ -587,8 +581,8 @@ class CommandListener(Cog):
         # and a bot crash
         event.setTitle(title)
         await self._update_event(event)
-        await ctx.send("Title {} set for operation ID {} at {}"
-                       .format(event.title, event.id, event.date))
+        await ctx.send(f"Title {event.title} set for operation "
+                       f"ID {event.id} at {event.date}")
 
     # Set date of event command
     @command(aliases=['sdt'])
@@ -605,8 +599,8 @@ class CommandListener(Cog):
         # Update event and sort events, export
         await msgFnc.sortEventMessages(self.bot)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Date {} set for operation {} ID {}"
-                       .format(event.date, event.title, event.id))
+        await ctx.send(f"Date {event.date} set for operation "
+                       f"{event.title} ID {event.id}")
 
     # Set time of event command
     @command(aliases=['stm'])
@@ -622,8 +616,7 @@ class CommandListener(Cog):
         # Update event and sort events, export
         await msgFnc.sortEventMessages(self.bot)
         EventDatabase.toJson()  # Update JSON file
-        await ctx.send("Time set for operation {}"
-                       .format(event))
+        await ctx.send(f"Time set for operation {event}")
 
     # Set terrain of event command
     @command(aliases=['st'])
@@ -637,8 +630,7 @@ class CommandListener(Cog):
         # Change terrain, update event, export
         event.setTerrain(terrain)
         await self._update_event(event)
-        await ctx.send("Terrain {} set for operation {}"
-                       .format(event.terrain, event))
+        await ctx.send(f"Terrain {event.terrain} set for operation {event}")
 
     # Set faction of event command
     @command(aliases=['sf'])
@@ -652,8 +644,7 @@ class CommandListener(Cog):
         # Change faction, update event, export
         event.setFaction(faction)
         await self._update_event(event)
-        await ctx.send("Faction {} set for operation {}"
-                       .format(event.faction, event))
+        await ctx.send(f"Faction {event.faction} set for operation {event}")
 
     async def _set_description(self, ctx: Context, event: Event,
                                description: str = ""):
@@ -665,11 +656,10 @@ class CommandListener(Cog):
         event.description = description
         await self._update_event(event)
         if description:
-            await ctx.send("Description \"{}\" set for operation {}"
-                           .format(event.description, event))
+            await ctx.send(f"Description \"{event.description}\" "
+                           f"set for operation {event}")
         else:
-            await ctx.send("Description cleared from operation {}"
-                           .format(event))
+            await ctx.send(f"Description cleared from operation {event}")
 
     @command(aliases=['sd'])
     async def setdescription(self, ctx: Context, event: EventEvent, *,
@@ -768,7 +758,7 @@ class CommandListener(Cog):
         await msgFnc.sortEventMessages(self.bot)
         EventDatabase.toJson()  # Update JSON file
         if not quiet:
-            await ctx.send("Updated event {}".format(event))
+            await ctx.send(f"Updated event {event}")
 
     @command(aliases=['sq'])
     async def setquick(self, ctx: Context, event: EventEvent,
@@ -806,14 +796,14 @@ class CommandListener(Cog):
         # Sign user up, update event, export
         old_signup, replaced_user = event.signup(role, user, replace=True)
         await self._update_event(event)
-        message = "User {} signed up to event {} as {}" \
-                  .format(user.display_name, event, role.name)
+        message = (f"User {user.display_name} signed up to event "
+                   f"{event} as {role.name}")
         if old_signup:
             # User was signed on to a different role previously
-            message += ". Signed off from {}".format(old_signup.name)
+            message += f". Signed off from {old_signup.name}"
         if replaced_user.display_name:
             # Took priority over another user's signup
-            message += ". Replaced user {}".format(replaced_user.display_name)
+            message += f". Replaced user {replaced_user.display_name}"
         await ctx.send(message)
 
     # Remove signup on event of user command
@@ -851,15 +841,15 @@ class CommandListener(Cog):
         try:
             eventMessage = await msgFnc.getEventMessage(event, self.bot)
         except MessageNotFound:
-            await ctx.send("Internal error: event {} without a message found"
-                           .format(event))
+            await ctx.send(f"Internal error: event {event} without "
+                           "a message found")
         else:
             await eventMessage.delete()
 
         # Create new message
         await msgFnc.createEventMessage(event, self.bot.eventarchivechannel)
 
-        await ctx.send("Event {} archived".format(event))
+        await ctx.send(f"Event {event} archived")
 
     async def _delete(self, event: Event, archived=False):
         # TODO: Move to a more appropriate location
@@ -883,7 +873,7 @@ class CommandListener(Cog):
         Example: delete 1
         """
         await self._delete(event)
-        await ctx.send("Event {} removed".format(event))
+        await ctx.send(f"Event {event} removed")
 
     @command()
     async def deletearchived(self, ctx: Context, event: ArchivedEvent):
@@ -893,7 +883,7 @@ class CommandListener(Cog):
         Example: deletearchived 1
         """
         await self._delete(event, archived=True)
-        await ctx.send("Event {} removed from archive".format(event))
+        await ctx.send(f"Event {event} removed from archive")
 
     @command(name="list", aliases=["ls"])
     async def listEvents(self, ctx: Context):
@@ -903,7 +893,7 @@ class CommandListener(Cog):
             return
 
         for event in EventDatabase.events.values():
-            msg += "{}\n".format(event)
+            msg += f"{event}\n"
 
         await ctx.send(msg)
 
@@ -927,7 +917,7 @@ class CommandListener(Cog):
         """Import event database (manually)."""
         # await EventDatabase.fromJson(self.bot)
         await self.bot.import_database()
-        await ctx.send("{} events imported".format(len(EventDatabase.events)))
+        await ctx.send(f"{len(EventDatabase.events)} events imported")
 
     @command()
     async def dump(self, ctx: Context, event: EventEvent,
@@ -944,8 +934,7 @@ class CommandListener(Cog):
         else:
             data = event.toJson(brief_output=True)
 
-        await ctx.send("```yaml\n{}```"
-                       .format(yaml.dump(data, sort_keys=False)))
+        await ctx.send(f"```yaml\n{yaml.dump(data, sort_keys=False)}```")
 
     @command()
     async def load(self, ctx: Context, event: EventEvent, *, data: str):
@@ -1053,22 +1042,20 @@ class CommandListener(Cog):
     @Cog.listener()
     async def on_command_error(self, ctx: Context, error):
         if isinstance(error, MissingRequiredArgument):
-            await ctx.send("Missing argument. See: `{}help {}`"
-                           .format(CMD, ctx.command))
+            await ctx.send(f"Missing argument. See: `{CMD}help {ctx.command}`")
             return
         elif isinstance(error, BadArgument):
-            await ctx.send("Invalid argument: {}. See: `{}help {}`"
-                           .format(error, CMD, ctx.command))
+            await ctx.send(f"Invalid argument: {error}. "
+                           f"See: `{CMD}help {ctx.command}`")
             return
         elif isinstance(error, CommandInvokeError):
             if isinstance(error.original, UnexpectedRole):
-                await ctx.send("Malformed data: {}. See: `{}help {}`"
-                               .format(error.original, CMD, ctx.command))
+                await ctx.send(f"Malformed data: {error.original}. "
+                               f"See: `{CMD}help {ctx.command}`")
                 return
             elif isinstance(error.original, RoleError):
-                await ctx.send("An error occured: ```{}```\nMessage: `{}`"
-                               .format(error.original,
-                                       ctx.message.clean_content))
+                await ctx.send(f"An error occured: ```{error.original}```\n"
+                               f"Message: `{ctx.message.clean_content}`")
                 return
             else:
                 error = error.original
@@ -1080,12 +1067,11 @@ class CommandListener(Cog):
         messages = ctx.message.clean_content.split('\n')
         if len(messages) >= 1:
             # Show only first line of the message
-            message = "{} [...]".format(messages[0])
+            message = f"{messages[0]} [...]"
         else:
             message = messages[0]
-        msg = "Unexpected error occured: ```{}```\nMessage: " \
-              "`{}`\n\n```py\n{}```" \
-              .format(error, message, trace)
+        msg = (f"Unexpected error occured: ```{error}```\n"
+               f"Message: `{message}`\n\n```py\n{trace}```")
         if len(msg) >= 2000:
             await ctx.send("Received error message that's over 2000 "
                            "characters, check log.")

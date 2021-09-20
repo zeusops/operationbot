@@ -15,9 +15,7 @@ class Role:
     def __str__(self):
         # Add name after emote if it should display
         if self.show_name:
-            return "{} {}: {}\n".format(str(self.emoji),
-                                        self.name,
-                                        self.userName)
+            return f"{str(self.emoji)} {self.name}: {self.userName}"
         else:
             if self.userName:
                 return f"{str(self.emoji)} {self.userName}\n"
@@ -53,5 +51,5 @@ class Role:
     @property
     def display_name(self) -> Union[str, Emoji]:
         if self.show_name:
-            return "{} {}".format(self.emoji, self.name)
+            return f"{self.emoji} {self.name}"
         return self.emoji

@@ -20,8 +20,8 @@ async def getEventMessage(event: Event, bot: OperationBot, archived=False) \
     try:
         return await channel.fetch_message(event.messageID)
     except NotFound:
-        raise MessageNotFound("No event message found with message ID {}"
-                              .format(event.messageID))
+        raise MessageNotFound("No event message found with "
+                              f"message ID {event.messageID}")
 
 
 async def sortEventMessages(bot: OperationBot):
@@ -36,7 +36,7 @@ async def sortEventMessages(bot: OperationBot):
         try:
             message = await getEventMessage(event, bot)
         except MessageNotFound as e:
-            raise MessageNotFound("sortEventMessages: {}".format(e))
+            raise MessageNotFound(f"sortEventMessages: {e}")
         await updateMessageEmbed(message, event)
         await updateReactions(event, message=message)
 
@@ -117,8 +117,8 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
             await message.add_reaction(emoji)
         except Forbidden as e:
             if e.code == 30010:
-                raise RoleError("Too many reactions, not adding role {}. "
-                                "This should not happen.".format(emoji))
+                raise RoleError("Too many reactions, not adding role "
+                                f"{emoji}. This should not happen.")
 
 # async def createMessages(events: Dict[int, Event], bot):
 #     # Update event message contents and add reactions
@@ -152,14 +152,14 @@ async def syncMessages(events: Dict[int, Event], bot: OperationBot):
         try:
             message = await getEventMessage(event, bot)
         except MessageNotFound:
-            print("Missing a message for event {}, creating".format(event))
+            print(f"Missing a message for event {event}, creating")
             await createEventMessage(event, bot.eventchannel)
         else:
             if messageEventId(message) == event.id:
                 print(f"Found message {message.id} for event {event}")
             else:
-                print("Found incorrect message for event {}, deleting and "
-                      "creating".format(event))
+                print(f"Found incorrect message for event {event}, deleting "
+                      f"and creating")
                 # Technically multiple events might have the same saved
                 # messageID but it's simpler to just recreate messages here if
                 # the event ID doesn't match
