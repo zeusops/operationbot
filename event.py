@@ -67,8 +67,8 @@ class Event:
 
         self.normalEmojis = self._getNormalEmojis(guildEmojis)
         if not importing:
-            self.addDefaultRoleGroups()
-            self.addDefaultRoles()
+            self._add_default_role_groups()
+            self._add_default_roles()
 
     def changeSize(self, new_size):
         if new_size == self.platoon_size:
@@ -252,14 +252,14 @@ class Event:
         return eventEmbed
 
     # Add default role groups
-    def addDefaultRoleGroups(self):
+    def _add_default_role_groups(self):
         for group in cfg.DEFAULT_GROUPS[self.platoon_size]:
             self.roleGroups[group] = RoleGroup(group)
         self.roleGroups["Additional"] = RoleGroup("Additional",
                                                   isInline=False)
 
     # Add default roles
-    def addDefaultRoles(self):
+    def _add_default_roles(self):
         for name, groupName in cfg.DEFAULT_ROLES[self.platoon_size].items():
             # Only add role if the group exists
             if groupName in self.roleGroups.keys():

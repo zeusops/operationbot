@@ -118,6 +118,13 @@ class CommandListener(Cog):
                 return False
             return True
 
+        @bot.check
+        async def command_channels_only(ctx: Context):
+            """Prevents the bot from being controlled outside of the specified
+            command and debug channels."""
+            return (ctx.channel == self.bot.commandchannel
+                    or ctx.channel.id == cfg._test_channel)
+
     @command()
     async def reloadreload(self, ctx: Context):
         self.bot.unload_extension('reload')
