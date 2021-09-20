@@ -214,9 +214,7 @@ class Event:
     def createEmbed(self) -> Embed:
         date = self.date.strftime(f"%a %Y-%m-%d - %H:%M {cfg.TIME_ZONE}")
         title = f"{self.title} ({date})"
-        linkbuilder = (f"https://www.inyourowntime.zone/"
-                       f"{self.date.strftime('%Y-%m-%d_%H.%M')}_"
-                       f"{cfg.TIME_ZONE_LOCATION}")
+        local_time = f"<t:{int(self.date.timestamp())}>"
         server_port = (f"\nServer port: **{self.port}**"
                        if self.port != cfg.PORT_DEFAULT else "")
         event_description = (f"\n\n{self.description}"
@@ -228,7 +226,7 @@ class Event:
                 mods = f"\n\nMods: {self.mods}\n"
         else:
             mods = ""
-        description = (f"[Show local time]({linkbuilder})\n"
+        description = (f"Local time: {local_time}\n"
                        f"Terrain: {self.terrain} - Faction: {self.faction}"
                        f"{server_port}"
                        f"{event_description}"
