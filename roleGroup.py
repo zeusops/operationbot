@@ -44,7 +44,7 @@ class RoleGroup:
         roleGroupString = ""
 
         for role in self.roles:
-            roleGroupString += str(role)
+            roleGroupString += f'{str(role)}\n'
 
         return roleGroupString
 
