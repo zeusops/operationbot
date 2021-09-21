@@ -182,7 +182,7 @@ class ArgTime(time):
                           "Has to be HH:MM or HHMM")
 
 
-class ArgMessage(Message):
+class ArgMessage(List[Message]):
     @classmethod
     async def convert(cls, ctx: Context, arg: str) -> List[Message]:
         try:

@@ -48,7 +48,7 @@ async def createEventMessage(event: Event, channel: TextChannel,
                              update_id=True) -> Message:
     """Create a new event message."""
     # Create embeds and messages
-    embeds = event.createEmbed()
+    embeds = event.createEmbeds()
     if update_id:
         event.messageIDList.clear()
         for embed in embeds:
@@ -66,7 +66,7 @@ async def updateMessageEmbed(eventMessageList: List[Message],
                              updatedEvent: Event, channel: TextChannel) \
         -> None:
     """Update the embed and footer of a message."""
-    newEventEmbedList = updatedEvent.createEmbed()
+    newEventEmbedList = updatedEvent.createEmbeds()
     if len(newEventEmbedList) == len(eventMessageList):
         for i in range(len(newEventEmbedList)):
             await eventMessageList[i].edit(embed=newEventEmbedList[i])

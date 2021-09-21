@@ -546,7 +546,7 @@ class CommandListener(Cog):
 
         # Remove reactions, remove role, update event, add reactions, export
         event.removeRoleGroup(groupName)
-        await msgFnc.updateMessageEmbed([eventMessage], event,
+        await msgFnc.updateMessageEmbed(eventMessage, event,
                                         self.bot.eventchannel)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send(f"Group {groupName} removed from {event}")
