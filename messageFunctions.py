@@ -46,12 +46,11 @@ async def sortEventMessages(bot: OperationBot):
 
     event: Event
     for event in EventDatabase.events.values():
-        try:
-            messageList = await getEventMessages(event, bot)
-        except MessageNotFound as e:
-            raise MessageNotFound(f"sortEventMessages: {e}") from e
+        messageList = await getEventMessages(event, bot)
         await updateMessageEmbeds(messageList, event, bot.eventchannel)
-        await updateReactions(event, messageList=messageList)
+    for event in EventDatabase.events.values():
+        # Updating reactions takes a while, so we do it in a separate task
+        await updateReactions(event, bot=bot)
 
 
 async def createEventMessages(event: Event, channel: TextChannel,
