@@ -17,7 +17,7 @@ from discord.ext.commands.errors import CommandError, CommandInvokeError
 import config as cfg
 import messageFunctions as msgFnc
 from converters import (ArgArchivedEvent, ArgDate, ArgDateTime, ArgEvent,
-                        ArgMessage, ArgRole, ArgTime, UnquotedStr)
+                        ArgMessages, ArgRole, ArgTime, UnquotedStr)
 from errors import MessageNotFound, RoleError, UnexpectedRole
 from event import Event
 from eventDatabase import EventDatabase
@@ -153,7 +153,7 @@ class CommandListener(Cog):
         # Create event and sort events, export
         event: Event = EventDatabase.createEvent(_date, sideop=sideop,
                                                  platoon_size=platoon_size)
-        await msgFnc.createEventMessage(event, self.bot.eventchannel)
+        await msgFnc.createEventMessages(event, self.bot.eventchannel)
         if not batch:
             await msgFnc.sortEventMessages(self.bot)
             EventDatabase.toJson()  # Update JSON file
@@ -164,9 +164,9 @@ class CommandListener(Cog):
     @command(aliases=["cat"])
     async def show(self, ctx: Context, event: ArgEvent):
         message = await msgFnc.getEventMessage(event, self.bot)
-        await ctx.send(message[0].jump_url)
-        await msgFnc.createEventMessage(event, cast(TextChannel, ctx.channel),
-                                        update_id=False)
+        await ctx.send(message.jump_url)
+        await msgFnc.createEventMessages(event, cast(TextChannel, ctx.channel),
+                                         update_id=False)
 
     # Create event command
     @command(aliases=['c'])
@@ -531,14 +531,14 @@ class CommandListener(Cog):
         raise BadArgument("No reaction found")
 
     @command(aliases=['rg'])
-    async def removegroup(self, ctx: Context, eventMessage: ArgMessage, *,
+    async def removegroup(self, ctx: Context, eventMessages: ArgMessages, *,
                           groupName: UnquotedStr):
         """
         Remove a role group from the event.
 
         Example: removegroup 1 Bravo
         """
-        event = EventDatabase.getEventByMessage(eventMessage[0].id)
+        event = EventDatabase.getEventByMessage(eventMessages[0].id)
 
         if not event.hasRoleGroup(groupName):
             await ctx.send(f"No role group found with name {groupName}")
@@ -546,8 +546,8 @@ class CommandListener(Cog):
 
         # Remove reactions, remove role, update event, add reactions, export
         event.removeRoleGroup(groupName)
-        await msgFnc.updateMessageEmbed(eventMessage, event,
-                                        self.bot.eventchannel)
+        await msgFnc.updateMessageEmbeds(eventMessages, event,
+                                         self.bot.eventchannel)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send(f"Group {groupName} removed from {event}")
 
@@ -817,7 +817,7 @@ class CommandListener(Cog):
         # Archive event and export
         EventDatabase.archiveEvent(event)
         try:
-            eventMessageList = await msgFnc.getEventMessage(event, self.bot)
+            eventMessageList = await msgFnc.getEventMessages(event, self.bot)
         except MessageNotFound:
             await ctx.send(f"Internal error: event {event} without "
                            "a message found")
@@ -825,8 +825,8 @@ class CommandListener(Cog):
             for eventMessage in eventMessageList:
                 await eventMessage.delete()
 
-        # Create new message
-        await msgFnc.createEventMessage(event, self.bot.eventarchivechannel)
+        # Create messages
+        await msgFnc.createEventMessages(event, self.bot.eventarchivechannel)
 
         await ctx.send(f"Event {event} archived")
 
@@ -834,7 +834,7 @@ class CommandListener(Cog):
         # TODO: Move to a more appropriate location
         EventDatabase.removeEvent(event.id, archived=archived)
         try:
-            eventMessageList = await msgFnc.getEventMessage(
+            eventMessageList = await msgFnc.getEventMessages(
                 event, self.bot, archived=archived)
         except MessageNotFound:
             # Message already deleted, nothing to be done
@@ -963,7 +963,7 @@ class CommandListener(Cog):
             raise ValueError("Malformed data")
         if target:
             # Display the loaded event in the command channel
-            await msgFnc.createEventMessage(event, target, update_id=False)
+            await msgFnc.createEventMessages(event, target, update_id=False)
         await self._update_event(event)
 
     # @command()
@@ -983,19 +983,15 @@ class CommandListener(Cog):
             event = EventDatabase.getEventByMessage(event.messageIDList[0])
 
         try:
-            message = await msgFnc.getEventMessage(event, self.bot)
+            messages = await msgFnc.getEventMessages(event, self.bot)
         except MessageNotFound:
-            message = [await msgFnc.createEventMessage(event,
-                                                       self.bot.eventchannel)]
+            messages = await msgFnc.createEventMessages(event,
+                                                        self.bot.eventchannel)
 
-        await msgFnc.updateMessageEmbed(eventMessageList=message,
-                                        updatedEvent=event,
-                                        channel=self.bot.eventchannel)
+        await msgFnc.updateMessageEmbeds(messages, event,
+                                         self.bot.eventchannel)
+        await msgFnc.updateReactions(event, bot=self.bot, reorder=reorder)
 
-        message = await msgFnc.getEventMessage(event, self.bot)
-
-        await msgFnc.updateReactions(event=event, messageList=message,
-                                     reorder=reorder)
         if export:
             EventDatabase.toJson()
 

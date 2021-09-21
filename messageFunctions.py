@@ -9,22 +9,33 @@ from eventDatabase import EventDatabase
 from operationbot import OperationBot
 
 
-async def getEventMessage(event: Event, bot: OperationBot, archived=False) \
-        -> List[Message]:
-    """Get a message related to an event."""
+async def getEventMessage(event: Event, bot: OperationBot, archived=False,
+                          message_id=None) \
+        -> Message:
+    """Get the a single message related to an event.
+
+    if message_id is not set, returns the first (main) message"""
     if archived:
         channel = bot.eventarchivechannel
     else:
         channel = bot.eventchannel
-
+    if message_id is None:
+        message_id = event.messageIDList[0]
     try:
-        messageIDList = []
-        for messageID in event.messageIDList:
-            messageIDList.append(await channel.fetch_message(messageID))
-        return messageIDList
+        return await channel.fetch_message(message_id)
     except NotFound as e:
         raise MessageNotFound("No event message found with "
-                              f"message ID {event.messageIDList}") from e
+                              f"message ID {message_id}") from e
+
+
+async def getEventMessages(event: Event, bot: OperationBot, archived=False) \
+        -> List[Message]:
+    """Get all messages related to an event."""
+    messages = []
+    for messageID in event.messageIDList:
+        messages.append(await getEventMessage(
+            event, bot, archived=archived, message_id=messageID))
+    return messages
 
 
 async def sortEventMessages(bot: OperationBot):
@@ -36,49 +47,45 @@ async def sortEventMessages(bot: OperationBot):
     event: Event
     for event in EventDatabase.events.values():
         try:
-            messageList = await getEventMessage(event, bot)
+            messageList = await getEventMessages(event, bot)
         except MessageNotFound as e:
             raise MessageNotFound(f"sortEventMessages: {e}") from e
-        await updateMessageEmbed(messageList, event, bot.eventchannel)
+        await updateMessageEmbeds(messageList, event, bot.eventchannel)
         await updateReactions(event, messageList=messageList)
 
 
-# from EventDatabase
-async def createEventMessage(event: Event, channel: TextChannel,
-                             update_id=True) -> Message:
-    """Create a new event message."""
-    # Create embeds and messages
+async def createEventMessages(event: Event, channel: TextChannel,
+                              update_id=True) -> List[Message]:
+    """Create new event messages."""
     embeds = event.createEmbeds()
+    messages = []
+    message_ids = []
+    for embed in embeds:
+        message = await channel.send(embed=embed)
+        messages.append(message)
+        message_ids.append(message.id)
     if update_id:
-        event.messageIDList.clear()
-        for embed in embeds:
-            message = await channel.send(embed=embed)
-            event.messageIDList.append(message.id)
-    else:
-        for embed in embeds:
-            message = await channel.send(embed=embed)
+        event.messageIDList = list(message_ids)
 
-    return message
+    return messages
 
 
-# was: EventDatabase.updateEvent
-async def updateMessageEmbed(eventMessageList: List[Message],
-                             updatedEvent: Event, channel: TextChannel) \
+async def updateMessageEmbeds(eventMessageList: List[Message],
+                              event: Event, channel: TextChannel) \
         -> None:
     """Update the embed and footer of a message."""
-    newEventEmbedList = updatedEvent.createEmbeds()
-    if len(newEventEmbedList) == len(eventMessageList):
-        for i in range(len(newEventEmbedList)):
-            await eventMessageList[i].edit(embed=newEventEmbedList[i])
+    embeds = event.createEmbeds()
+    if len(embeds) == len(eventMessageList):
+        for message, embed in zip(eventMessageList, embeds):
+            await message.edit(embed=embed)
     else:
-        for eventMessage in eventMessageList:
-            await eventMessage.delete()
-        await createEventMessage(updatedEvent, channel)
+        for message in eventMessageList:
+            await message.delete()
+        await createEventMessages(event, channel)
 
 
-# from EventDatabase
 async def updateReactions(event: Event, messageList: List[Message] = None,
-                          bot=None, reorder=False):
+                          bot: OperationBot = None, reorder=False):
     """
     Update reactions of an event message.
 
@@ -87,11 +94,13 @@ async def updateReactions(event: Event, messageList: List[Message] = None,
     reinserted in the correct order.
     """
     # TODO make efficient again (if necessary, works quiet well rn)
+    # TODO: Only add missing reactions / remove old ones instead of removing
+    #       everything
     if not messageList:
         if bot is None:
             raise ValueError("Requires either the `messageList` or `bot` "
                              "argument to be provided")
-        messageList = await getEventMessage(event, bot)
+        messageList = await getEventMessages(event, bot)
 
     reactions: List[Union[Emoji, str]] = event.getReactions()
     reactionsCurrent = []
@@ -149,40 +158,22 @@ async def syncMessages(events: Dict[int, Event], bot: OperationBot):
     sorted_events = sorted(list(events.values()), key=lambda event: event.date)
     for event in sorted_events:
         try:
-            messageList = await getEventMessage(event, bot)
+            message = await getEventMessage(event, bot)
         except MessageNotFound:
             print(f"Missing a message for event {event}, creating")
-            await createEventMessage(event, bot.eventchannel)
+            await createEventMessages(event, bot.eventchannel)
         else:
-            if messageEventId(messageList[0]) == event.id:
-                print(f"Found message {messageList[0].id} for event {event}")
+            if messageEventId(message) == event.id:
+                print(f"Found message {message.id} for event {event}")
             else:
                 print(f"Found incorrect message for event {event}, deleting "
                       f"and creating")
                 # Technically multiple events might have the same saved
                 # messageID but it's simpler to just recreate messages here if
                 # the event ID doesn't match
+                messageList = await getEventMessages(event, bot)
                 for message in messageList:
                     await message.delete()
-                await createEventMessage(event, bot.eventchannel)
+                await createEventMessages(event, bot.eventchannel)
 
     await sortEventMessages(bot)
-
-
-# async def importMessages(events: Dict[int, Event], bot):
-#     found = 0
-#     async for message in bot.eventchannel.history():
-#         if len(message.embeds) > 0:
-#             print("embeds", message.embeds)
-#             footer = message.embeds[0].footer.text
-#             print("footer", footer)
-#             event_id = int(footer.split(' ')[-1])
-#             if event_id in events:
-#                 events[event_id].messageID = message.id
-#                 found += 1
-#             else:
-#                 print("Found a message {} with unknown event id {}"
-#                       .format(message.id, event_id))
-#             if found >= len(events):
-#                 print("Found all messages")
-#                 break

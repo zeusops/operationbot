@@ -43,7 +43,8 @@ class EventListener(Cog):
         self.bot.processing = False
 
     @Cog.listener()
-    async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
+    async def on_raw_reaction_add(self, payload: RawReactionActionEvent) \
+            -> None:
 
         if payload.member == self.bot.user or \
                 payload.channel_id != self.bot.eventchannel.id:
@@ -77,11 +78,10 @@ class EventListener(Cog):
                 f"({user.name}#{user.discriminator})\n"
                 f"{message.jump_url}")
             return
-        else:
-            await self._handle_signup(event, payload.emoji, user, message)
+        await self._handle_signup(event, payload.emoji, user)
 
     async def _handle_signup(self, event: Event, partial_emoji: PartialEmoji,
-                             user: User, message: Message):
+                             user: User) -> None:
         # Get emoji string
         if partial_emoji.is_custom_emoji():
             emoji: Union[PartialEmoji, str] = partial_emoji
@@ -135,9 +135,9 @@ class EventListener(Cog):
                 old_role = f"{removed_role.display_name} -> "
 
         # Update discord embed
-        eventMessages = await msgFnc.getEventMessage(event, self.bot)
-        await msgFnc.updateMessageEmbed(eventMessages, event,
-                                        self.bot.eventchannel)
+        eventMessages = await msgFnc.getEventMessages(event, self.bot)
+        await msgFnc.updateMessageEmbeds(eventMessages, event,
+                                         self.bot.eventchannel)
         EventDatabase.toJson()
 
         delta_message = ""
