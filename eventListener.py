@@ -109,12 +109,11 @@ class EventListener(Cog):
         late_signoff_delta = None
         old_role = ""
 
-        """
-        if user is not signed up and the role is free, sign up
-        if user is not signed up and the role is not free, do nothing
-        if user is signed up and they select the same role, sign off
-        if user is signed up and they select a different role, change to that role
-        """  # NOQA
+        # if user is not signed up and the role is free, sign up
+        # if user is not signed up and the role is not free, do nothing
+        # if user is signed up and they select the same role, sign off
+        # if user is signed up and they select a different role,
+        #    change to that role
         if old_signup and emoji == old_signup.emoji:
             # User clicked a reaction of the current signed up role
             removed_role = event.undoSignup(user)

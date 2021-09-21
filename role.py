@@ -16,11 +16,9 @@ class Role:
         # Add name after emote if it should display
         if self.show_name:
             return f"{str(self.emoji)} {self.name}: {self.userName}"
-        else:
-            if self.userName:
-                return f"{str(self.emoji)} {self.userName}"
-            else:
-                return f"{str(self.emoji)}\N{ZERO WIDTH SPACE}"
+        if self.userName:
+            return f"{str(self.emoji)} {self.userName}"
+        return f"{str(self.emoji)}\N{ZERO WIDTH SPACE}"
 
     def __repr__(self):
         return f"<Role name='{self.name}' userName='{self.userName}'>"

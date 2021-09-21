@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import discord
@@ -24,6 +24,9 @@ MAX_REACTIONS = 20
 
 
 class User:
+    # This class implements the same signature as the discord.abc.User class,
+    # we need to use the 'id' argument here.
+    # pylint: disable=redefined-builtin
     def __init__(self, id: int = None, display_name: str = None):
         self.id = id
         self.display_name = display_name
@@ -31,7 +34,7 @@ class User:
 
 class Event:
 
-    def __init__(self, date: datetime, guildEmojis: Tuple[Emoji, ...],
+    def __init__(self, date: datetime.datetime, guildEmojis: Tuple[Emoji, ...],
                  eventID=0, importing=False, sideop=False, platoon_size=None):
         self.title = TITLE if not sideop else SIDEOP_TITLE
         self.date = date
@@ -103,11 +106,12 @@ class Event:
                 del self.roleGroups[sourceGroup.name]
             return msg
 
-        def _getTargetGroup(new_groups):
+        def _getTargetGroup(new_groups: List[str]) -> str:
             for new_group in new_groups:
                 if new_group not in self.roleGroups:
                     new_groups.remove(new_group)
                     return new_group
+            raise RoleGroupNotFound(f"Could not find a group for {new_groups}")
 
         warnings = ""
         if self.platoon_size == "2PLT":
@@ -259,7 +263,7 @@ class Event:
     def _add_default_roles(self):
         for name, groupName in cfg.DEFAULT_ROLES[self.platoon_size].items():
             # Only add role if the group exists
-            if groupName in self.roleGroups.keys():
+            if groupName in self.roleGroups:
                 emoji = self.normalEmojis[name]
                 newRole = Role(name, emoji, False)
                 self.roleGroups[groupName].addRole(newRole)
@@ -316,7 +320,7 @@ class Event:
                                       day=newDate.day)
 
     # Time setter
-    def setTime(self, newTime):
+    def setTime(self, newTime: Union[datetime.time, datetime.datetime]):
         self.date = self.date.replace(hour=newTime.hour, minute=newTime.minute)
 
     # Terrain setter
@@ -392,9 +396,9 @@ class Event:
     def getRoleGroup(self, groupName: str) -> RoleGroup:
         try:
             return self.roleGroups[groupName]
-        except KeyError:
+        except KeyError as e:
             raise RoleGroupNotFound("No role group found with name "
-                                    f"{groupName}")
+                                    f"{groupName}") from e
 
     def hasRoleGroup(self, groupName: str) -> bool:
         """Check if a role group with given name exists in the event."""
@@ -478,7 +482,7 @@ class Event:
     def fromJson(self, eventID, data, emojis, manual_load=False):
         self.id = int(eventID)
         self.setTitle(data.get("title", TITLE))
-        time = datetime.strptime(data.get("time", "00:00"), "%H:%M")
+        time = datetime.datetime.strptime(data.get("time", "00:00"), "%H:%M")
         self.setTime(time)
         self.setTerrain(data.get("terrain", TERRAIN))
         self.faction = data.get("faction", FACTION)

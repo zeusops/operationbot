@@ -6,6 +6,7 @@ from discord.errors import Forbidden
 
 from errors import MessageNotFound, RoleError
 from event import Event
+from eventDatabase import EventDatabase
 from operationbot import OperationBot
 
 
@@ -19,16 +20,15 @@ async def getEventMessage(event: Event, bot: OperationBot, archived=False) \
 
     try:
         return await channel.fetch_message(event.messageID)
-    except NotFound:
+    except NotFound as e:
         raise MessageNotFound("No event message found with "
-                              f"message ID {event.messageID}")
+                              f"message ID {event.messageID}") from e
 
 
 async def sortEventMessages(bot: OperationBot):
     """Sort events in event database.
 
     Raises MessageNotFound if messages are missing."""
-    from eventDatabase import EventDatabase
     EventDatabase.sortEvents()
 
     event: Event
@@ -36,7 +36,7 @@ async def sortEventMessages(bot: OperationBot):
         try:
             message = await getEventMessage(event, bot)
         except MessageNotFound as e:
-            raise MessageNotFound(f"sortEventMessages: {e}")
+            raise MessageNotFound(f"sortEventMessages: {e}") from e
         await updateMessageEmbed(message, event)
         await updateReactions(event, message=message)
 
@@ -118,7 +118,7 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
         except Forbidden as e:
             if e.code == 30010:
                 raise RoleError("Too many reactions, not adding role "
-                                f"{emoji}. This should not happen.")
+                                f"{emoji}. This should not happen.") from e
 
 # async def createMessages(events: Dict[int, Event], bot):
 #     # Update event message contents and add reactions

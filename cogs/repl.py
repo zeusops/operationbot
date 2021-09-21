@@ -56,7 +56,7 @@ class REPL(commands.Cog):
         to_compile = f"async def func():\n{textwrap.indent(body, '  ')}"
 
         try:
-            exec(to_compile, env)
+            exec(to_compile, env)  # pylint: disable=exec-used
         except SyntaxError as e:
             return await ctx.send(self.get_syntax_error(e))
 
@@ -64,14 +64,14 @@ class REPL(commands.Cog):
         try:
             with redirect_stdout(stdout):
                 ret = await func()
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             value = stdout.getvalue()
             await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
         else:
             value = stdout.getvalue()
             try:
                 await ctx.message.add_reaction('\u2705')
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 await ctx.send(f'```py\n{traceback.format_exc()}\n```')
 
             if ret is None:
@@ -148,7 +148,7 @@ class REPL(commands.Cog):
                     result = executor(code, variables)
                     if inspect.isawaitable(result):
                         result = await result
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 value = stdout.getvalue()
                 fmt = f'```py\n{value}{traceback.format_exc()}\n```'
             else:
