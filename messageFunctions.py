@@ -154,26 +154,36 @@ def messageEventId(message: Message) -> int:
 
 
 async def syncMessages(events: Dict[int, Event], bot: OperationBot):
-    # TODO: Handle multiple message IDs
     sorted_events = sorted(list(events.values()), key=lambda event: event.date)
     for event in sorted_events:
-        try:
-            message = await getEventMessage(event, bot)
-        except MessageNotFound:
-            print(f"Missing a message for event {event}, creating")
-            await createEventMessages(event, bot.eventchannel)
-        else:
-            if messageEventId(message) == event.id:
-                print(f"Found message {message.id} for event {event}")
+        missing_ids = []
+        for message_id in event.messageIDList:
+            try:
+                message = await getEventMessage(event, bot,
+                                                message_id=message_id)
+            except MessageNotFound:
+                print(f"Missing a message for event {event}, creating")
+                await _send_message(event, bot.eventchannel)
+                missing_ids.append(message_id)
             else:
-                print(f"Found incorrect message for event {event}, deleting "
-                      f"and creating")
-                # Technically multiple events might have the same saved
-                # messageID but it's simpler to just recreate messages here if
-                # the event ID doesn't match
-                messageList = await getEventMessages(event, bot)
-                for message in messageList:
+                if messageEventId(message) == event.id:
+                    print(f"Found message {message.id} for event {event}")
+                else:
+                    print(f"Found incorrect message for event {event}, "
+                          f"deleting and creating")
+                    # Technically multiple events might have the same saved
+                    # messageID but it's simpler to just recreate messages here
+                    # if the event ID doesn't match
                     await message.delete()
-                await createEventMessages(event, bot.eventchannel)
+                    await _send_message(event, bot.eventchannel)
+                    missing_ids.append(message_id)
+        # Remove missing or deleted IDs
+        event.messageIDList = [x for x in event.messageIDList
+                               if x not in missing_ids]
 
     await sortEventMessages(bot)
+
+
+async def _send_message(event: Event, channel: TextChannel):
+    message = await channel.send(embed=event.createEmbed())
+    event.messageIDList.append(message.id)

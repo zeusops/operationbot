@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from discord import Emoji
 
@@ -127,13 +127,13 @@ class EventDatabase:
 
     @classmethod
     def sortEvents(cls):
-        sortedEvents = []
-        messageIDLists = []
+        sortedEvents: List[Event] = []
+        messageIDLists: List[int] = []
 
         # Store existing events
         for event in cls.events.values():
             sortedEvents.append(event)
-            messageIDLists.append(event.messageIDList)
+            messageIDLists += event.messageIDList
 
         # Sort events based on date and time
         sortedEvents.sort(key=lambda event: event.date, reverse=True)
@@ -143,7 +143,16 @@ class EventDatabase:
         cls.events = {}
         for event in sortedEvents:
             # event = sortedEvents[index]
-            event.messageIDList = messageIDLists.pop()
+
+            event.messageIDList = []
+            for _ in event.createEmbeds():
+                # Each event requires one message per embed
+                try:
+                    message_id = messageIDLists.pop()
+                except IndexError:
+                    # No more messages left, rest will be created later
+                    message_id = 0
+                event.messageIDList.append(message_id)
             cls.events[event.id] = event
 
     @classmethod

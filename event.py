@@ -245,6 +245,10 @@ class Event:
                        f"{mods}")
         return Embed(title=title, description=description, colour=self.color)
 
+    def createEmbed(self) -> Embed:
+        """Return the first embed for the event"""
+        return self.createEmbeds()[0]
+
     def createEmbeds(self) -> List[Embed]:
         """Return a list of embeds for the event"""
         eventEmbed = self._create_embed(self.title)
