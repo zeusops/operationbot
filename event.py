@@ -77,6 +77,7 @@ class Event:
         return len(self.roleGroups["Additional"])
 
     def changeSize(self, new_size):
+        # pylint: disable=too-many-statements
         if new_size == self.platoon_size:
             return None
 
@@ -288,7 +289,7 @@ class Event:
         emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additional_role_count]
 
         # Create role
-        newRole = Role(name, emoji, True)
+        newRole = Role(name, emoji, show_name=True)
 
         # Add role to additional roles
         self.roleGroups["Additional"].addRole(newRole)
@@ -496,20 +497,21 @@ class Event:
         data["roleGroups"] = roleGroupsData
         return data
 
-    def fromJson(self, eventID, data, emojis, manual_load=False):
+    def fromJson(self, eventID, data: dict, emojis, manual_load=False):
         self.id = int(eventID)
         self.setTitle(data.get("title", TITLE))
         time = datetime.datetime.strptime(data.get("time", "00:00"), "%H:%M")
         self.setTime(time)
         self.setTerrain(data.get("terrain", TERRAIN))
-        self.faction = data.get("faction", FACTION)
-        self.port = data.get("port", cfg.PORT_DEFAULT)
-        self.description = data.get("description", DESCRIPTION)
-        self.mods = data.get("mods", MODS)
+        self.faction = str(data.get("faction", FACTION))
+        self.port = int(data.get("port", cfg.PORT_DEFAULT))
+        self.description = str(data.get("description", DESCRIPTION))
+        self.mods = str(data.get("mods", MODS))
         if not manual_load:
-            self.color = data.get("color", COLOR)
-            self.messageID = data.get("messageID", 0)
-            self.sideop = data.get("sideop", False)
+            self.color = int(data.get("color", COLOR))
+            self.messageID = int(data.get("messageID", 0))
+            self.platoon_size = str(data.get("platoon_size", PLATOON_SIZE))
+            self.sideop = bool(data.get("sideop", False))
         # TODO: Handle missing roleGroups
         groups: List[str] = []
         for groupName, roleGroupData in data["roleGroups"].items():

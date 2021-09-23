@@ -442,7 +442,7 @@ class CommandListener(Cog):
             if batch:
                 # Adding the latest role failed, saving previously added roles
                 await self._update_event(event, reorder=False)
-            raise RoleError(str(e)) from e
+            raise e
         await self._update_event(event, reorder=False, export=(not batch))
 
     @command(aliases=['ar'])
@@ -1005,8 +1005,9 @@ class CommandListener(Cog):
 
     # TODO: Test commands
     @Cog.listener()
-    async def on_command_error(self, ctx: Context, error):
-        # pylint: disable=no-self-use
+    @staticmethod
+    async def on_command_error(ctx: Context, error: Exception):
+        # pylint: disable=no-self-use, no-else-return
         if isinstance(error, MissingRequiredArgument):
             await ctx.send(f"Missing argument. See: `{CMD}help {ctx.command}`")
             return
