@@ -17,7 +17,7 @@ from discord.ext.commands.errors import CommandError, CommandInvokeError
 import config as cfg
 import messageFunctions as msgFnc
 from converters import (ArgArchivedEvent, ArgDate, ArgDateTime, ArgEvent,
-                        ArgMessage, ArgRole, ArgTime)
+                        ArgMessage, ArgRole, ArgTime, UnquotedStr)
 from errors import MessageNotFound, RoleError, UnexpectedRole
 from event import Event
 from eventDatabase import EventDatabase
@@ -373,8 +373,7 @@ class CommandListener(Cog):
             self.bot.awaiting_reply = False
 
     @command(aliases=['csz'])
-    async def changesize(self, ctx: Context, event: ArgEvent,
-                         new_size: str):
+    async def changesize(self, ctx: Context, event: ArgEvent, new_size: str):
         if new_size not in cfg.PLATOON_SIZES:
             ctx.send(f"Invalid new size {new_size}")
             return
@@ -448,7 +447,7 @@ class CommandListener(Cog):
 
     @command(aliases=['ar'])
     async def addrole(self, ctx: Context, event: ArgEvent, *,
-                      rolename: str):
+                      rolename: UnquotedStr):
         """
         Add a new additional role or multiple roles to the event.
 
@@ -483,6 +482,21 @@ class CommandListener(Cog):
         await self._update_event(event, reorder=False)
         await ctx.send(f"Role {role_name} removed from {event}")
 
+    @command(aliases=['rnr', 'rename'])
+    async def renamerole(self, ctx: Context, event: ArgEvent,
+                         role: ArgRole, *, new_name: UnquotedStr):
+        """
+        Rename an additional role of the event.
+
+        Example: renamerole 1 1 "Y2 (Bradley) Driver"
+                 rename 1 two "Y2 (Bradley) Driver"
+        """
+        old_name = role.name
+        event.renameAdditionalRole(role, new_name)
+        await self._update_event(event, reorder=False)
+        await ctx.send(f"Role renamed. Old name: {old_name}, "
+                       f"new name: {role} @ {event}")
+
     @command(aliases=['rra'])
     async def removereaction(self, ctx: Context, event: ArgEvent,
                              reaction: str):
@@ -503,14 +517,13 @@ class CommandListener(Cog):
 
     @command(aliases=['rg'])
     async def removegroup(self, ctx: Context, eventMessage: ArgMessage, *,
-                          groupName: str):
+                          groupName: UnquotedStr):
         """
         Remove a role group from the event.
 
         Example: removegroup 1 Bravo
         """
         event = EventDatabase.getEventByMessage(eventMessage.id)
-        groupName = groupName.strip('"')
 
         if not event.hasRoleGroup(groupName):
             await ctx.send(f"No role group found with name {groupName}")
@@ -527,7 +540,7 @@ class CommandListener(Cog):
     # Set title of event command
     @command(aliases=['stt'])
     async def settitle(self, ctx: Context, event: ArgEvent, *,
-                       title: str):
+                       title: UnquotedStr):
         """
         Set event title.
 
@@ -579,7 +592,7 @@ class CommandListener(Cog):
     # Set terrain of event command
     @command(aliases=['st'])
     async def setterrain(self, ctx: Context, event: ArgEvent, *,
-                         terrain: str):
+                         terrain: UnquotedStr):
         """
         Set event terrain.
 
@@ -593,7 +606,7 @@ class CommandListener(Cog):
     # Set faction of event command
     @command(aliases=['sf'])
     async def setfaction(self, ctx: Context, event: ArgEvent, *,
-                         faction: str):
+                         faction: UnquotedStr):
         """
         Set event faction.
 
@@ -606,10 +619,6 @@ class CommandListener(Cog):
 
     async def _set_description(self, ctx: Context, event: Event,
                                description: str = ""):
-        if description and description[0] == '"' and description[-1] == '"':
-            # Strip quotes from description
-            description = description[1:-1]
-
         # Change description, update event
         event.description = description
         await self._update_event(event)
@@ -621,7 +630,7 @@ class CommandListener(Cog):
 
     @command(aliases=['sd'])
     async def setdescription(self, ctx: Context, event: ArgEvent, *,
-                             description: str = ""):
+                             description: UnquotedStr = ""):  # type: ignore
         """
         Set or clear event description. To clear the description, run `setdescription [ID]` without the description parameter
 
@@ -680,7 +689,7 @@ class CommandListener(Cog):
 
     @command(aliases=['sm', 'setmod'])
     async def setmods(self, ctx: Context, event: ArgEvent,
-                      *, mods: str = ""):
+                      *, mods: UnquotedStr = ""):  # type: ignore
         """
         Set or clear event server mods.
 
@@ -737,7 +746,7 @@ class CommandListener(Cog):
     # Sign user up to event command
     @command(aliases=['s'])
     async def signup(self, ctx: Context, event: ArgEvent, user: Member, *,
-                     roleName: str):
+                     role: ArgRole):
         """
         Sign user up to a role.
 
@@ -748,9 +757,6 @@ class CommandListener(Cog):
 
         Example: signup 1 "S. Gehock" Y1 (Bradley) Gunner
         """  # NOQA
-        # Find role
-        role = event.findRoleWithName(roleName)
-
         # Sign user up, update event, export
         old_signup, replaced_user = event.signup(role, user, replace=True)
         await self._update_event(event)

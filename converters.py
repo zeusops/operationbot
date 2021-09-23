@@ -71,6 +71,7 @@ class ArgRole(Role):
 
     @classmethod
     async def convert(cls, ctx: Context, argument: str) -> Role:
+        argument = UnquotedStr.unquote(argument)
         try:
             event: Event = ctx.args[2]
             assert isinstance(event, Event)
@@ -108,8 +109,17 @@ class ArgRole(Role):
                 raise BadArgument(f"{argument} is not a valid role") from e
 
 
-def get_name(s):
-    return s.encode('ascii', 'namereplace')
+class UnquotedStr(str):
+    @classmethod
+    async def convert(cls, _: Context, argument: str) -> str:
+        return cls.unquote(argument)
+
+    @classmethod
+    def unquote(cls, argument: str) -> str:
+        if (argument.startswith('"') and argument.endswith('"')
+                or argument.startswith("'") and argument.endswith("'")):
+            return argument[1:-1]
+        return argument
 
 
 class ArgEvent(Event):
