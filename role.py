@@ -38,7 +38,7 @@ class Role:
         return data
 
     def fromJson(self, data: dict, manual_load=False):
-        name = data.get("name")
+        name: Optional[str] = data.get("name")
         if name:
             # The brief output of main roles does not have the "name" field,
             # will only change name if it is actually set in the source data

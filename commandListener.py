@@ -472,15 +472,16 @@ class CommandListener(Cog):
     # Remove additional role from event command
     @command(aliases=['rr'])
     async def removerole(self, ctx: Context, event: ArgEvent, *,
-                         rolename: str):
+                         role: ArgRole):
         """
         Remove an additional role from the event.
 
         Example: removerole 1 Y1 (Bradley) Driver
         """
-        event.removeAdditionalRole(rolename)
+        role_name = role.name
+        event.removeAdditionalRole(role)
         await self._update_event(event, reorder=False)
-        await ctx.send(f"Role {rolename} removed from {event}")
+        await ctx.send(f"Role {role_name} removed from {event}")
 
     @command(aliases=['rra'])
     async def removereaction(self, ctx: Context, event: ArgEvent,

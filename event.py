@@ -293,9 +293,16 @@ class Event:
 
         return emoji
 
-    def removeAdditionalRole(self, role: str):
+    def _check_additional(self, role: Role):
+        """Raises a RoleError if the supplied role is not an additional role"""
+        if role not in self.roleGroups["Additional"].roles:
+            raise RoleError(f"Role {role.name} is not an additional role")
+
+    def removeAdditionalRole(self, role: Union[str, Role]):
         """Remove an additional role from the event."""
         # Remove role from additional roles
+        if isinstance(role, Role):
+            self._check_additional(role)
         self.roleGroups["Additional"].removeRole(role)
         self.additionalRoleCount -= 1
 
