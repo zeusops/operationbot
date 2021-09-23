@@ -1023,7 +1023,7 @@ class CommandListener(Cog):
     @Cog.listener()
     @staticmethod
     async def on_command_error(ctx: Context, error: Exception):
-        # pylint: disable=no-self-use, no-else-return
+        # pylint: disable=no-else-return
         if isinstance(error, MissingRequiredArgument):
             await ctx.send(f"Missing argument. See: `{CMD}help {ctx.command}`")
             return

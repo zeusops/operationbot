@@ -9,16 +9,21 @@ from eventDatabase import EventDatabase
 from operationbot import OperationBot
 
 
-async def getEventMessage(event: Event, bot: OperationBot, archived=False,
-                          message_id=None) \
+async def getEventMessage(event: Event, bot: OperationBot = None,
+                          archived=False, message_id=None,
+                          channel: TextChannel = None) \
         -> Message:
     """Get the a single message related to an event.
 
     if message_id is not set, returns the first (main) message"""
-    if archived:
-        channel = bot.eventarchivechannel
-    else:
-        channel = bot.eventchannel
+    if channel is None:
+        if bot is None:
+            raise ValueError("Requires either the `channel` or `bot` "
+                             "argument to be provided")
+        if archived:
+            channel = bot.eventarchivechannel
+        else:
+            channel = bot.eventchannel
     if message_id is None:
         message_id = event.messageIDList[0]
     try:
@@ -28,13 +33,20 @@ async def getEventMessage(event: Event, bot: OperationBot, archived=False,
                               f"message ID {message_id}") from e
 
 
-async def getEventMessages(event: Event, bot: OperationBot, archived=False) \
+async def getEventMessages(event: Event, bot: OperationBot = None,
+                           archived=False, channel: TextChannel = None) \
         -> List[Message]:
-    """Get all messages related to an event."""
+    """Get all messages related to an event.
+
+    Raises MessageNotFound if the message is missing or if the event embeds
+    require more messages than can currently be found."""
     messages = []
     for messageID in event.messageIDList:
         messages.append(await getEventMessage(
-            event, bot, archived=archived, message_id=messageID))
+            event, bot=bot, archived=archived, message_id=messageID,
+            channel=channel))
+    if len(messages) < len(event.createEmbeds()):
+        raise MessageNotFound("Not all event messages found")
     return messages
 
 
@@ -55,14 +67,47 @@ async def sortEventMessages(bot: OperationBot):
 
 async def createEventMessages(event: Event, channel: TextChannel,
                               update_id=True) -> List[Message]:
-    """Create new event messages."""
-    embeds = event.createEmbeds()
+    """Create new or missing event messages."""
+    try:
+        all_messages = await getEventMessages(event, channel=channel)
+    except MessageNotFound:
+        pass
+    else:
+        # All messages were found without issues, nothing to do
+        return all_messages
+
     messages = []
-    message_ids = []
-    for embed in embeds:
-        message = await channel.send(embed=embed)
-        messages.append(message)
-        message_ids.append(message.id)
+    not_found: List[int] = []
+    for message_id in event.messageIDList:
+        try:
+            message = await getEventMessage(event, channel=channel)
+            messages.append(message)
+        except MessageNotFound:
+            not_found.append(message_id)
+
+    # Get all message IDs that corresponded to an existing message
+    message_ids = [x for x in event.messageIDList if x not in not_found]
+
+    embeds = event.createEmbeds()
+    difference = len(message_ids) - len(embeds)
+    if difference > 0:
+        # We have extra messages that need to be deleted. We could try to reuse
+        # the messages for other events instead of deleting, but keeping track
+        # of that would be too complicated.
+        for message_id in message_ids[:difference]:
+            message_ids.remove(message_id)
+            message = await channel.fetch_message(message_id)
+            await message.delete()
+    elif difference < 0:
+        # We have too few messages, create new ones
+        for i in range(abs(difference)):
+            # The embeds will be correct if there were no existing messages
+            # to begin with (when running the `show` command). Otherwise the
+            # will be updated afterwards anyway.
+            message = await channel.send(embed=embeds[i])
+            messages.append(message)
+            message_ids.append(message.id)
+
     if update_id:
         event.messageIDList = list(message_ids)
 
@@ -78,9 +123,8 @@ async def updateMessageEmbeds(eventMessageList: List[Message],
         for message, embed in zip(eventMessageList, embeds):
             await message.edit(embed=embed)
     else:
-        for message in eventMessageList:
-            await message.delete()
-        await createEventMessages(event, channel)
+        messages = await createEventMessages(event, channel)
+        await updateMessageEmbeds(messages, event, channel)
 
 
 async def updateReactions(event: Event, messageList: List[Message] = None,
