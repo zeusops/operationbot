@@ -17,9 +17,9 @@ class RoleGroup:
     def __repr__(self):
         return f"<RoleGroup name='{self.name}'>"
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Role:
         for role in self.roles:
-            if role.name == key:
+            if role.name.lower() == key.lower():
                 return role
         raise KeyError(key)
 
@@ -32,13 +32,17 @@ class RoleGroup:
         self.roles.append(role)
 
     # Remove role from the group
-    def removeRole(self, roleName: str):
-        for role in self.roles:
-            if role.name == roleName:
-                self.roles.remove(role)
-                return
-        raise RoleNotFound("Could not find a role to remove with name "
-                           f"{roleName}")
+    def removeRole(self, role: Union[str, Role]):
+        try:
+            if isinstance(role, str):
+                name = role
+                role = self[role]
+            else:
+                name = role.name
+            self.roles.remove(role)
+        except (KeyError, ValueError) as e:
+            raise RoleNotFound("Could not find an additional role to remove "
+                               f"with the name {name}") from e
 
     def __str__(self) -> str:
         roleGroupString = ""
@@ -101,7 +105,7 @@ class RoleGroup:
 
     # TODO: this should be handled in EventDatabase instead based on the DB
     #       version
-    def get_corrected_name(self, roleData):
+    def get_corrected_name(self, roleData: Dict[str, bool]) -> bool:
         if "displayName" in roleData:
             show_name = roleData["displayName"]
         else:

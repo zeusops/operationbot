@@ -5,7 +5,8 @@ from discord import Emoji
 
 class Role:
 
-    def __init__(self, name: str, emoji: Union[str, Emoji], show_name: bool):
+    def __init__(self, name: str, emoji: Union[str, Emoji],
+                 show_name: bool = False):
         self.name = name
         self.emoji = emoji
         self.show_name = show_name
@@ -37,7 +38,7 @@ class Role:
         return data
 
     def fromJson(self, data: dict, manual_load=False):
-        name = data.get("name")
+        name: Optional[str] = data.get("name")
         if name:
             # The brief output of main roles does not have the "name" field,
             # will only change name if it is actually set in the source data
