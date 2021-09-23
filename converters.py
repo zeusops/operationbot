@@ -80,9 +80,9 @@ class ArgRole(Role):
                                "the first argument of the calling command") \
                 from e
         additional = event.getRoleGroup("Additional")
-
+        first_arg = argument.split(' ')[0]
         try:
-            index = _get_index(argument)
+            index = _get_index(first_arg)
         except ValueError:
             # Argument is not a number or a numeral, so it must be either an
             # emoji, an emoji name, or a role name
@@ -91,16 +91,21 @@ class ArgRole(Role):
             try:
                 return additional.roles[index]
             except IndexError as e:
-                raise BadArgument(f"{argument} is not a valid role") from e
+                raise BadArgument(f"{first_arg} is not a valid role") from e
 
-        match = re.search(cls.EMOJI_PATTERN, argument)
+        match = re.search(cls.EMOJI_PATTERN, first_arg)
         if match:
             # Argument is an emoji
-            argument = match.group(1)
+            first_arg = match.group(1)
         try:
-            return event.findRoleWithName(argument)
-        except RoleNotFound as e:
-            raise BadArgument(f"{argument} is not a valid role") from e
+            return event.findRoleWithName(first_arg)
+        except RoleNotFound:
+            # Could not find a role with the first argument, trying with the
+            # whole line
+            try:
+                return event.findRoleWithName(argument)
+            except RoleNotFound as e:
+                raise BadArgument(f"{argument} is not a valid role") from e
 
 
 def get_name(s):
