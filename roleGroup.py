@@ -23,6 +23,10 @@ class RoleGroup:
                 return role
         raise KeyError(key)
 
+    def __len__(self) -> int:
+        # Allows checking the number of roles with a plain len(roleGroup)
+        return len(self.roles)
+
     def __setitem__(self, key, value):
         self.removeRole(key)
         self.addRole(value)

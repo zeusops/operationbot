@@ -46,7 +46,6 @@ class Event:
         self.mods = MODS
         self.color = COLOR if not sideop else SIDEOP_COLOR
         self.roleGroups: Dict[str, RoleGroup] = {}
-        self.additionalRoleCount = 0
         self.messageID = 0
         self.id = eventID
         self.sideop = sideop
@@ -72,6 +71,10 @@ class Event:
         if not importing:
             self._add_default_role_groups()
             self._add_default_roles()
+
+    @property
+    def additional_role_count(self) -> int:
+        return len(self.roleGroups["Additional"])
 
     def changeSize(self, new_size):
         if new_size == self.platoon_size:
@@ -282,14 +285,13 @@ class Event:
         # Find next emoji for additional role
         if self.countReactions() >= MAX_REACTIONS:
             raise RoleError(f"Too many roles, not adding role {name}")
-        emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additionalRoleCount]
+        emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additional_role_count]
 
         # Create role
         newRole = Role(name, emoji, True)
 
         # Add role to additional roles
         self.roleGroups["Additional"].addRole(newRole)
-        self.additionalRoleCount += 1
 
         return emoji
 
@@ -309,7 +311,6 @@ class Event:
         if isinstance(role, Role):
             self._check_additional(role)
         self.roleGroups["Additional"].removeRole(role)
-        self.additionalRoleCount -= 1
 
     def removeRoleGroup(self, groupName: str) -> bool:
         """
@@ -490,7 +491,6 @@ class Event:
         if not brief_output:
             data["color"] = self.color
             data["messageID"] = self.messageID
-            data["additionalRoleCount"] = self.additionalRoleCount
             data["platoon_size"] = self.platoon_size
             data["sideop"] = self.sideop
         data["roleGroups"] = roleGroupsData
@@ -509,8 +509,6 @@ class Event:
         if not manual_load:
             self.color = data.get("color", COLOR)
             self.messageID = data.get("messageID", 0)
-            self.additionalRoleCount = data.get("additionalRoleCount", 0)
-            self.platoon_size = data.get("platoon_size", PLATOON_SIZE)
             self.sideop = data.get("sideop", False)
         # TODO: Handle missing roleGroups
         groups: List[str] = []
