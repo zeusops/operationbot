@@ -5,6 +5,7 @@ import discord
 from discord import Embed, Emoji
 
 import config as cfg
+from additional_role_group import AdditionalRoleGroup
 from errors import RoleError, RoleGroupNotFound, RoleNotFound, RoleTaken
 from role import Role
 from roleGroup import RoleGroup
@@ -256,8 +257,7 @@ class Event:
     def _add_default_role_groups(self):
         for group in cfg.DEFAULT_GROUPS[self.platoon_size]:
             self.roleGroups[group] = RoleGroup(group)
-        self.roleGroups["Additional"] = RoleGroup("Additional",
-                                                  isInline=False)
+        self.roleGroups["Additional"] = AdditionalRoleGroup()
 
     # Add default roles
     def _add_default_roles(self):
@@ -518,7 +518,10 @@ class Event:
             if not manual_load:
                 # Only create new role groups if we're not loading data
                 # manually from the command channel
-                roleGroup = RoleGroup(groupName)
+                if groupName != "Additional":
+                    roleGroup = RoleGroup(groupName)
+                else:
+                    roleGroup = AdditionalRoleGroup()
                 self.roleGroups[groupName] = roleGroup
             else:
                 roleGroup = self.roleGroups[groupName]
