@@ -34,12 +34,16 @@ async def getEventMessage(event: Event, bot: OperationBot = None,
 
 
 async def getEventMessages(event: Event, bot: OperationBot = None,
-                           archived=False, channel: TextChannel = None) \
+                           archived=False, channel: TextChannel = None,
+                           exact_number=True) \
         -> List[Message]:
     """Get all messages related to an event.
 
     Raises MessageNotFound if the message is missing or if the event embeds
-    require more messages than can currently be found."""
+    require more messages than can currently be found.
+
+    If exact_number is set, also raises an error if too many messages can be
+    found."""
     messages = []
     for messageID in event.messageIDList:
         messages.append(await getEventMessage(
@@ -47,6 +51,8 @@ async def getEventMessages(event: Event, bot: OperationBot = None,
             channel=channel))
     if len(messages) < len(event.createEmbeds()):
         raise MessageNotFound("Not all event messages found")
+    if exact_number and len(messages) > len(event.createEmbeds()):
+        raise MessageNotFound("Too many event messages found")
     return messages
 
 
@@ -67,7 +73,7 @@ async def sortEventMessages(bot: OperationBot):
 
 async def createEventMessages(event: Event, channel: TextChannel,
                               update_id=True) -> List[Message]:
-    """Create new or missing event messages."""
+    """Create new or missing event messages, delete extra messages."""
     try:
         all_messages = await getEventMessages(event, channel=channel)
     except MessageNotFound:
@@ -76,7 +82,7 @@ async def createEventMessages(event: Event, channel: TextChannel,
         # All messages were found without issues, nothing to do
         return all_messages
 
-    messages = []
+    messages: List[Message] = []
     not_found: List[int] = []
     for message_id in event.messageIDList:
         try:
@@ -94,9 +100,9 @@ async def createEventMessages(event: Event, channel: TextChannel,
         # We have extra messages that need to be deleted. We could try to reuse
         # the messages for other events instead of deleting, but keeping track
         # of that would be too complicated.
-        for message_id in message_ids[:difference]:
-            message_ids.remove(message_id)
+        for message_id in message_ids[difference:]:
             message = await channel.fetch_message(message_id)
+            messages.remove(message)
             await message.delete()
     elif difference < 0:
         # We have too few messages, create new ones
@@ -106,9 +112,9 @@ async def createEventMessages(event: Event, channel: TextChannel,
             # will be updated afterwards anyway.
             message = await channel.send(embed=embeds[i])
             messages.append(message)
-            message_ids.append(message.id)
 
     if update_id:
+        message_ids = [message.id for message in messages]
         event.messageIDList = list(message_ids)
 
     return messages

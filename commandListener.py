@@ -982,7 +982,7 @@ class CommandListener(Cog):
     #     await ctx.send("Event messages created")
 
     async def _update_event(self, event: Event, import_db=False,
-                            reorder=True, export=True):
+                            reorder=True, export=True, exact_number=True):
         # TODO: Move to a more appropriate location
         if import_db:
             await self.bot.import_database()
@@ -990,7 +990,8 @@ class CommandListener(Cog):
             event = EventDatabase.getEventByMessage(event.messageIDList[0])
 
         try:
-            messages = await msgFnc.getEventMessages(event, self.bot)
+            messages = await msgFnc.getEventMessages(event, self.bot,
+                                                     exact_number=exact_number)
         except MessageNotFound:
             messages = await msgFnc.createEventMessages(event,
                                                         self.bot.eventchannel)
