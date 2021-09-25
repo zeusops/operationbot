@@ -325,7 +325,7 @@ class Event:
             # Only add role if the group exists
             if groupName in self.roleGroups:
                 emoji = self.normalEmojis[name]
-                newRole = Role(name, emoji, False)
+                newRole = Role(name, emoji, groupName, show_name=False)
                 self.roleGroups[groupName].addRole(newRole)
 
     # Add an additional role to the event
@@ -345,7 +345,7 @@ class Event:
         emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additional_role_count]
 
         # Create role
-        newRole = Role(name, emoji, show_name=True)
+        newRole = Role(name, emoji, "Additional", show_name=True)
 
         # Add role to additional roles
         self.roleGroups["Additional"].addRole(newRole)
@@ -362,12 +362,12 @@ class Event:
         self._check_additional(role)
         role.name = new_name
 
-    def removeAdditionalRole(self, role: Union[str, Role]):
+    def remove_role(self, role: Role, check_additional=True):
         """Remove an additional role from the event."""
         # Remove role from additional roles
-        if isinstance(role, Role):
+        if check_additional:
             self._check_additional(role)
-        self.roleGroups["Additional"].removeRole(role)
+        self.roleGroups[role.group_name].removeRole(role)
 
     def removeRoleGroup(self, groupName: str) -> bool:
         """

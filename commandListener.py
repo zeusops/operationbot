@@ -482,8 +482,15 @@ class CommandListener(Cog):
             await self._add_role(event, rolename)
             await ctx.send(f"Role {rolename} added to event {event}")
 
+    async def _remove_role(self, ctx: Context, event: ArgEvent, role: ArgRole,
+                           check_additional=True):
+        role_name = role.name
+        event.remove_role(role, check_additional)
+        await self._update_event(event, reorder=False)
+        await ctx.send(f"Role {role_name} removed from {event}")
+
     # Remove additional role from event command
-    @command(aliases=['rr'])
+    @command(aliases=['rr', 'removeadditionalrole', 'rar'])
     async def removerole(self, ctx: Context, event: ArgEvent, *,
                          role: ArgRole):
         """
@@ -491,10 +498,17 @@ class CommandListener(Cog):
 
         Example: removerole 1 Y1 (Bradley) Driver
         """
-        role_name = role.name
-        event.removeAdditionalRole(role)
-        await self._update_event(event, reorder=False)
-        await ctx.send(f"Role {role_name} removed from {event}")
+        await self._remove_role(ctx, event, role, check_additional=True)
+
+    @command(aliases=['rmr'])
+    async def removemainrole(self, ctx: Context, event: ArgEvent,
+                             role: ArgRole):
+        """
+        Remove a main role from the event.
+
+        Example: removerole 1 B2
+        """
+        await self._remove_role(ctx, event, role, check_additional=False)
 
     @command(aliases=['rnr', 'rename'])
     async def renamerole(self, ctx: Context, event: ArgEvent,
@@ -511,24 +525,17 @@ class CommandListener(Cog):
         await ctx.send(f"Role renamed. Old name: {old_name}, "
                        f"new name: {role} @ {event}")
 
-    # TODO this doesnt work
     @command(aliases=['rra'])
     async def removereaction(self, ctx: Context, event: ArgEvent,
-                             reaction: str):
+                             role: ArgRole):
         """
-        Removes a role and the corresponding reaction from the event and updates the message.
-        """  # NOQA
-        self._find_remove_reaction(reaction, event)
-        await self._update_event(event, reorder=False)
-        await ctx.send(f"Reaction {reaction} removed from {event}")
+        DEPRECATED. Removes a role and the corresponding reaction from the event and updates the message.
 
-    def _find_remove_reaction(self, reaction: str, event: Event):
-        for group in event.roleGroups.values():
-            for role in group.roles:
-                if role.name == reaction:
-                    group.roles.remove(role)
-                    return
-        raise BadArgument("No reaction found")
+        Deprecated: use removemainrole and removerole instead.
+        """  # NOQA
+        await ctx.send("This command is deprecated. Use `removerole` (`rr`) "
+                       "and `removemainrole` (`rmr`) instead.")
+        await self._remove_role(ctx, event, role, check_additional=False)
 
     @command(aliases=['rg'])
     async def removegroup(self, ctx: Context, eventMessages: ArgMessages, *,
