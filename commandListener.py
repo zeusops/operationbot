@@ -459,11 +459,20 @@ class CommandListener(Cog):
                    Y1 (Bradley) Gunner
         """
         if '\n' in rolename:
-            for role in rolename.split('\n'):
-                role = role.strip()
-                await self._add_role(event, role, batch=True)
-                await ctx.send(f"Role {role} added to event {event}")
+            msg = ""
+            try:
+                for role in rolename.split('\n'):
+                    role = role.strip()
+                    await self._add_role(event, role, batch=True)
+                    msg += f"Role {role} added to event {event}\n"
+            except RoleError as e:
+                raise e
+            else:
+                msg += "All roles added, updating events\n"
+            finally:
+                await ctx.send(msg)
             await self._update_event(event)
+            await ctx.send("Events updated")
         else:
             await self._add_role(event, rolename)
             await ctx.send(f"Role {rolename} added to event {event}")
