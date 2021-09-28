@@ -10,15 +10,16 @@ import yaml
 from discord import Member
 from discord.channel import TextChannel
 from discord.emoji import Emoji
-from discord.ext.commands import (BadArgument, Cog, Context,
-                                  MissingRequiredArgument, command)
-from discord.ext.commands.errors import CommandError, CommandInvokeError
+from discord.ext.commands import BadArgument, Cog, Context, command
+from discord.ext.commands.errors import (CommandError, CommandInvokeError,
+                                         MissingRequiredArgument)
 
 import config as cfg
 import messageFunctions as msgFnc
 from converters import (ArgArchivedEvent, ArgDate, ArgDateTime, ArgEvent,
-                        ArgMessage, ArgRole, ArgTime, UnquotedStr)
-from errors import MessageNotFound, RoleError, UnexpectedRole
+                        ArgMessages, ArgRole, ArgTime, UnquotedStr)
+from errors import (ExtraMessagesFound, MessageNotFound, RoleError,
+                    UnexpectedRole)
 from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
@@ -153,7 +154,7 @@ class CommandListener(Cog):
         # Create event and sort events, export
         event: Event = EventDatabase.createEvent(_date, sideop=sideop,
                                                  platoon_size=platoon_size)
-        await msgFnc.createEventMessage(event, self.bot.eventchannel)
+        await msgFnc.get_or_create_messages(event, self.bot.eventchannel)
         if not batch:
             await msgFnc.sortEventMessages(self.bot)
             EventDatabase.toJson()  # Update JSON file
@@ -165,8 +166,8 @@ class CommandListener(Cog):
     async def show(self, ctx: Context, event: ArgEvent):
         message = await msgFnc.getEventMessage(event, self.bot)
         await ctx.send(message.jump_url)
-        await msgFnc.createEventMessage(event, cast(TextChannel, ctx.channel),
-                                        update_id=False)
+        await msgFnc.get_or_create_messages(event, cast(TextChannel,
+                                            ctx.channel), update_id=False)
 
     # Create event command
     @command(aliases=['c'])
@@ -447,7 +448,8 @@ class CommandListener(Cog):
                 # Adding the latest role failed, saving previously added roles
                 await self._update_event(event, reorder=False)
             raise e
-        await self._update_event(event, reorder=False, export=(not batch))
+        if not batch:
+            await self._update_event(event, reorder=False)
 
     @command(aliases=['ar'])
     async def addrole(self, ctx: Context, event: ArgEvent, *,
@@ -481,8 +483,15 @@ class CommandListener(Cog):
             await self._add_role(event, rolename)
             await ctx.send(f"Role {rolename} added to event {event}")
 
+    async def _remove_role(self, ctx: Context, event: ArgEvent, role: ArgRole,
+                           check_additional=True):
+        role_name = role.name
+        event.remove_role(role, check_additional)
+        await self._update_event(event, reorder=False)
+        await ctx.send(f"Role {role_name} removed from {event}")
+
     # Remove additional role from event command
-    @command(aliases=['rr'])
+    @command(aliases=['rr', 'removeadditionalrole', 'rar'])
     async def removerole(self, ctx: Context, event: ArgEvent, *,
                          role: ArgRole):
         """
@@ -490,10 +499,17 @@ class CommandListener(Cog):
 
         Example: removerole 1 Y1 (Bradley) Driver
         """
-        role_name = role.name
-        event.removeAdditionalRole(role)
-        await self._update_event(event, reorder=False)
-        await ctx.send(f"Role {role_name} removed from {event}")
+        await self._remove_role(ctx, event, role, check_additional=True)
+
+    @command(aliases=['rmr'])
+    async def removemainrole(self, ctx: Context, event: ArgEvent,
+                             role: ArgRole):
+        """
+        Remove a main role from the event.
+
+        Example: removerole 1 B2
+        """
+        await self._remove_role(ctx, event, role, check_additional=False)
 
     @command(aliases=['rnr', 'rename'])
     async def renamerole(self, ctx: Context, event: ArgEvent,
@@ -512,41 +528,34 @@ class CommandListener(Cog):
 
     @command(aliases=['rra'])
     async def removereaction(self, ctx: Context, event: ArgEvent,
-                             reaction: str):
+                             role: ArgRole):
         """
-        Removes a role and the corresponding reaction from the event and updates the message.
-        """  # NOQA
-        self._find_remove_reaction(reaction, event)
-        await self._update_event(event, reorder=False)
-        await ctx.send(f"Reaction {reaction} removed from {event}")
+        DEPRECATED. Removes a role and the corresponding reaction from the event and updates the message.
 
-    def _find_remove_reaction(self, reaction: str, event: Event):
-        for group in event.roleGroups.values():
-            for role in group.roles:
-                if role.name == reaction:
-                    group.roles.remove(role)
-                    return
-        raise BadArgument("No reaction found")
+        Deprecated: use removemainrole and removerole instead.
+        """  # NOQA
+        await ctx.send("This command is deprecated. Use `removerole` (`rr`) "
+                       "and `removemainrole` (`rmr`) instead.")
+        await self._remove_role(ctx, event, role, check_additional=False)
 
     @command(aliases=['rg'])
-    async def removegroup(self, ctx: Context, eventMessage: ArgMessage, *,
+    async def removegroup(self, ctx: Context, eventMessages: ArgMessages, *,
                           groupName: UnquotedStr):
         """
         Remove a role group from the event.
 
         Example: removegroup 1 Bravo
         """
-        event = EventDatabase.getEventByMessage(eventMessage.id)
+        event = EventDatabase.getEventByMessage(eventMessages[0].id)
 
         if not event.hasRoleGroup(groupName):
             await ctx.send(f"No role group found with name {groupName}")
             return
 
         # Remove reactions, remove role, update event, add reactions, export
-        for reaction in event.getReactionsOfGroup(groupName):
-            await eventMessage.remove_reaction(reaction, self.bot.user)
         event.removeRoleGroup(groupName)
-        await msgFnc.updateMessageEmbed(eventMessage, event)
+        await msgFnc.updateMessageEmbeds(eventMessages, event,
+                                         self.bot.eventchannel)
         EventDatabase.toJson()  # Update JSON file
         await ctx.send(f"Group {groupName} removed from {event}")
 
@@ -609,7 +618,7 @@ class CommandListener(Cog):
         """
         Set event terrain.
 
-        Example: settime 1 Takistan
+        Example: setterrain 1 Takistan
         """
         # Change terrain, update event, export
         event.setTerrain(terrain)
@@ -816,15 +825,17 @@ class CommandListener(Cog):
         # Archive event and export
         EventDatabase.archiveEvent(event)
         try:
-            eventMessage = await msgFnc.getEventMessage(event, self.bot)
+            eventMessageList = await msgFnc.getEventMessages(event, self.bot)
         except MessageNotFound:
             await ctx.send(f"Internal error: event {event} without "
                            "a message found")
         else:
-            await eventMessage.delete()
+            for eventMessage in eventMessageList:
+                await eventMessage.delete()
 
-        # Create new message
-        await msgFnc.createEventMessage(event, self.bot.eventarchivechannel)
+        # Create messages
+        await msgFnc.get_or_create_messages(
+            event, self.bot.eventarchivechannel)
 
         await ctx.send(f"Event {event} archived")
 
@@ -832,13 +843,14 @@ class CommandListener(Cog):
         # TODO: Move to a more appropriate location
         EventDatabase.removeEvent(event.id, archived=archived)
         try:
-            eventMessage = await msgFnc.getEventMessage(
+            eventMessageList = await msgFnc.getEventMessages(
                 event, self.bot, archived=archived)
         except MessageNotFound:
             # Message already deleted, nothing to be done
             pass
         else:
-            await eventMessage.delete()
+            for eventMessage in eventMessageList:
+                await eventMessage.delete()
         EventDatabase.toJson(archive=archived)
 
     # Delete event command
@@ -960,7 +972,7 @@ class CommandListener(Cog):
             raise ValueError("Malformed data")
         if target:
             # Display the loaded event in the command channel
-            await msgFnc.createEventMessage(event, target, update_id=False)
+            await msgFnc.get_or_create_messages(event, target, update_id=False)
         await self._update_event(event)
 
     # @command()
@@ -972,23 +984,27 @@ class CommandListener(Cog):
     #     await ctx.send("Event messages created")
 
     async def _update_event(self, event: Event, import_db=False,
-                            reorder=True, export=True):
+                            reorder=True, export=True, exact_number=True):
         # TODO: Move to a more appropriate location
         if import_db:
             await self.bot.import_database()
             # Event instance might have changed because of DB import, get again
-            event = EventDatabase.getEventByMessage(event.messageID)
+            event = EventDatabase.getEventByMessage(event.messageIDList[0])
 
         try:
-            message = await msgFnc.getEventMessage(event, self.bot)
-        except MessageNotFound:
-            message = await msgFnc.createEventMessage(event,
-                                                      self.bot.eventchannel)
+            messages = await msgFnc.getEventMessages(event, self.bot,
+                                                     exact_number=exact_number)
+        except (MessageNotFound, ExtraMessagesFound) as e:
+            messages = await msgFnc.get_or_create_messages(
+                event, self.bot.eventchannel)
+            if isinstance(e, MessageNotFound):
+                # New messages were created, we need to reorder the messages
+                await msgFnc.sortEventMessages(self.bot)
+        else:
+            await msgFnc.updateMessageEmbeds(messages, event,
+                                             self.bot.eventchannel)
+            await msgFnc.updateReactions(event, bot=self.bot, reorder=reorder)
 
-        await msgFnc.updateMessageEmbed(eventMessage=message,
-                                        updatedEvent=event)
-        await msgFnc.updateReactions(event=event, message=message,
-                                     reorder=reorder)
         if export:
             EventDatabase.toJson()
 
@@ -1020,7 +1036,7 @@ class CommandListener(Cog):
     @Cog.listener()
     @staticmethod
     async def on_command_error(ctx: Context, error: Exception):
-        # pylint: disable=no-self-use, no-else-return
+        # pylint: disable=no-else-return
         if isinstance(error, MissingRequiredArgument):
             await ctx.send(f"Missing argument. See: `{CMD}help {ctx.command}`")
             return

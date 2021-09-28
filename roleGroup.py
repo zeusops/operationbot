@@ -4,7 +4,7 @@ from discord import Emoji
 
 import config as cfg
 from errors import RoleNotFound, UnexpectedRole
-from role import Role
+from role import ReactionEmoji, Role
 
 
 class RoleGroup:
@@ -36,7 +36,7 @@ class RoleGroup:
         self.roles.append(role)
 
     # Remove role from the group
-    def removeRole(self, role: Union[str, Role]):
+    def removeRole(self, role: Union[str, Role]) -> None:
         try:
             if isinstance(role, str):
                 name = role
@@ -45,8 +45,18 @@ class RoleGroup:
                 name = role.name
             self.roles.remove(role)
         except (KeyError, ValueError) as e:
-            raise RoleNotFound("Could not find an additional role to remove "
-                               f"with the name {name}") from e
+            raise RoleNotFound(f"Could not find a role named {name} to remove "
+                               f"from group {self.name}") from e
+
+    def get_reactions(self) -> List[ReactionEmoji]:
+        reactions = []
+        for role in self.roles:
+            emoji = role.emoji
+            # Skip the ZEUS reaction. Zeuses can only be signed up using
+            # the signup command
+            if not (isinstance(emoji, Emoji) and emoji.name == cfg.EMOJI_ZEUS):
+                reactions.append(role.emoji)
+        return reactions
 
     def __str__(self) -> str:
         roleGroupString = ""
@@ -90,7 +100,7 @@ class RoleGroup:
             if not manual_load:
                 # Only create new roles if we're not loading data manually from
                 # the command channel
-                role = Role(roleData["name"], roleEmoji,
+                role = Role(roleData["name"], roleEmoji, self.name,
                             self.get_corrected_name(roleData))
                 self.roles.append(role)
             else:

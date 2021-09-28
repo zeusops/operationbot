@@ -3,15 +3,19 @@ from typing import Any, Dict, Optional, Union
 from discord import Emoji
 
 
+ReactionEmoji = Union[Emoji, str]
+
+
 class Role:
 
-    def __init__(self, name: str, emoji: Union[str, Emoji],
+    def __init__(self, name: str, emoji: ReactionEmoji, group_name: str,
                  show_name: bool = False):
         self.name = name
         self.emoji = emoji
         self.show_name = show_name
         self.userID: Optional[int] = None
         self.userName = ""
+        self.group_name = group_name
 
     def __str__(self):
         # Add name after emote if it should display
@@ -48,7 +52,7 @@ class Role:
             self.userName = data["userName"]
 
     @property
-    def display_name(self) -> Union[str, Emoji]:
+    def display_name(self) -> Union[str, ReactionEmoji]:
         if self.show_name:
             return f"{self.emoji} {self.name}"
         return self.emoji

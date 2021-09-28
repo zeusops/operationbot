@@ -7,7 +7,7 @@ from discord import Embed, Emoji
 import config as cfg
 from additional_role_group import AdditionalRoleGroup
 from errors import RoleError, RoleGroupNotFound, RoleNotFound, RoleTaken
-from role import Role
+from role import ReactionEmoji, Role
 from roleGroup import RoleGroup
 from secret import PLATOON_SIZE
 
@@ -20,8 +20,12 @@ MODS = ""
 COLOR = 0xFF4500
 SIDEOP_COLOR = 0x0045FF
 WW2_SIDEOP_COLOR = 0x808080
+# TODO: Change to some reasonable number or remove completely
+# 36 additional Emotes # first embed - better: len(cfg.ADDITIONAL_ROLE_EMOJIS)
+# + something
+MAX_REACTIONS = 56
 # Discord API limitation
-MAX_REACTIONS = 20
+REACTIONS_PER_MESSAGE = 20
 
 
 class User:
@@ -46,7 +50,7 @@ class Event:
         self.mods = MODS
         self.color = COLOR if not sideop else SIDEOP_COLOR
         self.roleGroups: Dict[str, RoleGroup] = {}
-        self.messageID = 0
+        self.messageIDList = [0]
         self.id = eventID
         self.sideop = sideop
         if platoon_size is None:
@@ -219,10 +223,9 @@ class Event:
         self.roleGroups = newGroups
         return warnings
 
-    # Return an embed for the event
-    def createEmbed(self) -> Embed:
+    def _create_embed(self, title: str) -> Embed:
         date = self.date.strftime(f"%a %Y-%m-%d - %H:%M {cfg.TIME_ZONE}")
-        title = f"{self.title} ({date})"
+        title = f"{title} ({date})"
         local_time = f"<t:{int(self.date.timestamp())}>"
         server_port = (f"\nServer port: **{self.port}**"
                        if self.port != cfg.PORT_DEFAULT else "")
@@ -240,22 +243,85 @@ class Event:
                        f"{server_port}"
                        f"{event_description}"
                        f"{mods}")
-        eventEmbed = Embed(title=title, description=description,
-                           colour=self.color)
+        embed = Embed(title=title, description=description, colour=self.color)
+        embed.set_footer(text="Event ID: " + str(self.id))
+        return embed
+
+    def create_dummy_embed(self) -> Embed:
+        """Return the first embed for the event"""
+        return self._create_embed(self.title)
+
+    def createEmbeds(self) -> Tuple[List[Embed], List[List[ReactionEmoji]]]:
+        """Return a list of embeds and their corresponding reactions for the
+        event"""
+        eventEmbed = self._create_embed(self.title)
+        reactions = []
 
         # Add field to embed for every rolegroup
         for group in self.roleGroups.values():
-            if len(group.roles) > 0:
+            if len(group) > 0 and group.name != "Additional":
+                # The Additional group is handled separately
                 eventEmbed.add_field(name=group.name, value=str(group),
                                      inline=group.isInline)
+                reactions += group.get_reactions()
             elif group.name == "Dummy":
                 eventEmbed.add_field(name="\N{ZERO WIDTH SPACE}",
                                      value="\N{ZERO WIDTH SPACE}",
                                      inline=group.isInline)
 
-        eventEmbed.set_footer(text="Event ID: " + str(self.id))
+        if len(self.roleGroups["Additional"]) == 0:
+            # There are no additional roles, the embed is ready
+            return ([eventEmbed], [reactions])
 
-        return eventEmbed
+        # Handle additional roles
+        if len(self.getReactions()) <= REACTIONS_PER_MESSAGE:
+            # All roles fit in a single message
+            additional = self.roleGroups["Additional"]
+            eventEmbed.add_field(name=additional.name, value=str(additional),
+                                 inline=additional.isInline)
+            return ([eventEmbed], [reactions + additional.get_reactions()])
+
+        embeds, additional_reactions = self.createAdditionalEmbeds()
+        return ([eventEmbed] + embeds, [reactions] + additional_reactions)
+
+    def createAdditionalEmbeds(self) -> Tuple[List[Embed],
+                                              List[List[ReactionEmoji]]]:
+        """Creates additional embeds.
+
+        The number of embeds depend on the Additional roles group"""
+        embeds: List[Embed] = []
+        all_reactions: List[List[ReactionEmoji]] = []
+        group = self.roleGroups["Additional"]
+
+        # Substract 1 because REACTIONS_PER_MESSAGE roles still fit in a single
+        # message, otherwise we'd get an empty extra embed on the threshold
+        embed_count = ((len(group) - 1) // REACTIONS_PER_MESSAGE) + 1
+
+        for embed_number in range(embed_count):
+            role_list = ""
+            reactions = []
+            first = embed_number * REACTIONS_PER_MESSAGE
+            last = (embed_number + 1) * REACTIONS_PER_MESSAGE
+            for role in group.roles[first:last]:
+                role_list += f'{str(role)}\n'
+                reactions.append(role.emoji)
+            if role_list == "":
+                # Didn't add any roles -> skipping this embed. Discord doesn't
+                # like embeds with empty fields. This should only happen if
+                # this function was called when Additional group is empty
+                continue
+            eventEmbed = self._create_embed("Additional Roles")
+            if embed_count > 1:
+                embed_counter = f" ({embed_number + 1}/{embed_count})"
+            else:
+                embed_counter = ""
+            eventEmbed.add_field(name=f"{group.name}{embed_counter}",
+                                 value=role_list, inline=False)
+            eventEmbed.set_footer(text="Event ID: " + str(self.id))
+            embeds.append(eventEmbed)
+            all_reactions.append(reactions)
+
+        return (embeds, all_reactions)
 
     # Add default role groups
     def _add_default_role_groups(self):
@@ -269,27 +335,28 @@ class Event:
             # Only add role if the group exists
             if groupName in self.roleGroups:
                 emoji = self.normalEmojis[name]
-                newRole = Role(name, emoji, False)
+                newRole = Role(name, emoji, groupName, show_name=False)
                 self.roleGroups[groupName].addRole(newRole)
 
     # Add an additional role to the event
     def addAdditionalRole(self, name: str) -> str:
 
         # check if this role already exists
-        for roleGroup in self.roleGroups.values():
-            role: Role
-            for role in roleGroup.roles:
-                if role.name == name:
-                    raise RoleError(f"Role with name {name} already exists, "
-                                    "not adding new role")
+        try:
+            self.findRoleWithName(name)
+        except RoleNotFound:
+            pass
+        else:
+            raise RoleError(f"Role with name {name} already exists, "
+                            "not adding new role")
 
         # Find next emoji for additional role
-        if self.countReactions() >= MAX_REACTIONS:
+        if self.reaction_count >= MAX_REACTIONS:
             raise RoleError(f"Too many roles, not adding role {name}")
         emoji = cfg.ADDITIONAL_ROLE_EMOJIS[self.additional_role_count]
 
         # Create role
-        newRole = Role(name, emoji, show_name=True)
+        newRole = Role(name, emoji, "Additional", show_name=True)
 
         # Add role to additional roles
         self.roleGroups["Additional"].addRole(newRole)
@@ -306,12 +373,12 @@ class Event:
         self._check_additional(role)
         role.name = new_name
 
-    def removeAdditionalRole(self, role: Union[str, Role]):
+    def remove_role(self, role: Role, check_additional=True):
         """Remove an additional role from the event."""
         # Remove role from additional roles
-        if isinstance(role, Role):
+        if check_additional:
             self._check_additional(role)
-        self.roleGroups["Additional"].removeRole(role)
+        self.roleGroups[role.group_name].removeRole(role)
 
     def removeRoleGroup(self, groupName: str) -> bool:
         """
@@ -355,19 +422,12 @@ class Event:
 
         return normalEmojis
 
-    def getReactions(self) -> List[Union[str, Emoji]]:
+    def getReactions(self) -> List[ReactionEmoji]:
         """Return reactions of all roles and extra reactions"""
         reactions = []
 
-        for roleGroup in self.roleGroups.values():
-            role: Role
-            for role in roleGroup.roles:
-                emoji = role.emoji
-                # Skip the ZEUS reaction. Zeuses can only be signed up using
-                # the signup command
-                if not (isinstance(emoji, Emoji)
-                        and emoji.name == cfg.EMOJI_ZEUS):
-                    reactions.append(role.emoji)
+        for role_group in self.roleGroups.values():
+            reactions += role_group.get_reactions()
 
         if self.sideop:
             if cfg.ATTENDANCE_EMOJI:
@@ -375,11 +435,12 @@ class Event:
 
         return reactions
 
-    def countReactions(self) -> int:
+    @property
+    def reaction_count(self) -> int:
         """Count how many reactions a message should have."""
         return len(self.getReactions())
 
-    def getReactionsOfGroup(self, groupName: str) -> List[Union[str, Emoji]]:
+    def getReactionsOfGroup(self, groupName: str) -> List[ReactionEmoji]:
         """Find reactions of a given role group."""
         reactions = []
 
@@ -422,6 +483,9 @@ class Event:
 
     def get_additional_role(self, role_name: str) -> Role:
         return self.roleGroups["Additional"][role_name]
+
+    def getReactionsPerMessage(self) -> int:
+        return REACTIONS_PER_MESSAGE
 
     def signup(self, roleToSet: Role, user: discord.abc.User, replace=False) \
             -> Tuple[Optional[Role], User]:
@@ -491,7 +555,7 @@ class Event:
         data["mods"] = self.mods
         if not brief_output:
             data["color"] = self.color
-            data["messageID"] = self.messageID
+            data["messageIDList"] = self.messageIDList
             data["platoon_size"] = self.platoon_size
             data["sideop"] = self.sideop
         data["roleGroups"] = roleGroupsData
@@ -509,7 +573,7 @@ class Event:
         self.mods = str(data.get("mods", MODS))
         if not manual_load:
             self.color = int(data.get("color", COLOR))
-            self.messageID = int(data.get("messageID", 0))
+            self.messageIDList = list(data.get("messageIDList", [0]))
             self.platoon_size = str(data.get("platoon_size", PLATOON_SIZE))
             self.sideop = bool(data.get("sideop", False))
         # TODO: Handle missing roleGroups
