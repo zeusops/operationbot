@@ -10,6 +10,10 @@ class MessageNotFound(Exception):
     pass
 
 
+class ExtraMessagesFound(Exception):
+    pass
+
+
 class UnexpectedRole(Exception):
     pass
 

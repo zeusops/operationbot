@@ -1,12 +1,17 @@
 from typing import Dict, List, Union, cast
 
-from discord import Emoji, Message, NotFound, TextChannel
+from discord import Message, NotFound, TextChannel
 from discord.embeds import Embed
+from discord.emoji import Emoji
+from discord.errors import Forbidden
+from discord.partial_emoji import PartialEmoji
+from discord.reaction import Reaction
 
-from errors import MessageNotFound
+from errors import ExtraMessagesFound, MessageNotFound, RoleError
 from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
+from role import ReactionEmoji
 
 
 async def getEventMessage(event: Event, bot: OperationBot = None,
@@ -49,10 +54,11 @@ async def getEventMessages(event: Event, bot: OperationBot = None,
         messages.append(await getEventMessage(
             event, bot=bot, archived=archived, message_id=messageID,
             channel=channel))
-    if len(messages) < len(event.createEmbeds()):
+    embeds, _ = event.createEmbeds()
+    if len(messages) < len(embeds):
         raise MessageNotFound("Not all event messages found")
-    if exact_number and len(messages) > len(event.createEmbeds()):
-        raise MessageNotFound("Too many event messages found")
+    if exact_number and len(messages) > len(embeds):
+        raise ExtraMessagesFound("Too many event messages found")
     return messages
 
 
@@ -62,21 +68,20 @@ async def sortEventMessages(bot: OperationBot):
     Raises MessageNotFound if messages are missing."""
     EventDatabase.sortEvents()
 
-    event: Event
     for event in EventDatabase.events.values():
-        messageList = await getEventMessages(event, bot)
+        messageList = await get_or_create_messages(event, bot.eventchannel)
         await updateMessageEmbeds(messageList, event, bot.eventchannel)
     for event in EventDatabase.events.values():
         # Updating reactions takes a while, so we do it in a separate task
         await updateReactions(event, bot=bot)
 
 
-async def createEventMessages(event: Event, channel: TextChannel,
-                              update_id=True) -> List[Message]:
+async def get_or_create_messages(event: Event, channel: TextChannel,
+                                 update_id=True) -> List[Message]:
     """Create new or missing event messages, delete extra messages."""
     try:
         all_messages = await getEventMessages(event, channel=channel)
-    except MessageNotFound:
+    except (MessageNotFound, ExtraMessagesFound):
         pass
     else:
         # All messages were found without issues, nothing to do
@@ -86,7 +91,8 @@ async def createEventMessages(event: Event, channel: TextChannel,
     not_found: List[int] = []
     for message_id in event.messageIDList:
         try:
-            message = await getEventMessage(event, channel=channel)
+            message = await getEventMessage(event, message_id=message_id,
+                                            channel=channel)
             messages.append(message)
         except MessageNotFound:
             not_found.append(message_id)
@@ -94,15 +100,17 @@ async def createEventMessages(event: Event, channel: TextChannel,
     # Get all message IDs that corresponded to an existing message
     message_ids = [x for x in event.messageIDList if x not in not_found]
 
-    embeds = event.createEmbeds()
-    difference = len(message_ids) - len(embeds)
+    embeds, _ = event.createEmbeds()
+    existing_messages = len(message_ids)
+    difference = existing_messages - len(embeds)
     if difference > 0:
         # We have extra messages that need to be deleted. We could try to reuse
         # the messages for other events instead of deleting, but keeping track
         # of that would be too complicated.
         for message_id in message_ids[difference:]:
             message = await channel.fetch_message(message_id)
-            messages.remove(message)
+            if message in messages:
+                messages.remove(message)
             await message.delete()
     elif difference < 0:
         # We have too few messages, create new ones
@@ -110,7 +118,7 @@ async def createEventMessages(event: Event, channel: TextChannel,
             # The embeds will be correct if there were no existing messages
             # to begin with (when running the `show` command). Otherwise the
             # will be updated afterwards anyway.
-            message = await channel.send(embed=embeds[i])
+            message = await channel.send(embed=embeds[existing_messages + i])
             messages.append(message)
 
     if update_id:
@@ -124,12 +132,12 @@ async def updateMessageEmbeds(eventMessageList: List[Message],
                               event: Event, channel: TextChannel) \
         -> None:
     """Update the embed and footer of a message."""
-    embeds = event.createEmbeds()
+    embeds, _ = event.createEmbeds()
     if len(embeds) == len(eventMessageList):
         for message, embed in zip(eventMessageList, embeds):
             await message.edit(embed=embed)
     else:
-        messages = await createEventMessages(event, channel)
+        messages = await get_or_create_messages(event, channel)
         await updateMessageEmbeds(messages, event, channel)
 
 
@@ -151,47 +159,47 @@ async def updateReactions(event: Event, messageList: List[Message] = None,
                              "argument to be provided")
         messageList = await getEventMessages(event, bot)
 
-    reactions: List[Union[Emoji, str]] = event.getReactions()
-    reactionsCurrent = []
-    reactionEmojisCurrent = {}
-    for message in messageList:
-        reactionsCurrent.extend(message.reactions)
+    # TODO: reactions is a list of lists: outer list per embed, inner list
+    # reactions of that embed. Should loop over messages and lists of reactions
+    _, all_reactions = event.createEmbeds()
+    for message, reactions in zip(messageList, all_reactions):
+        current_reactions: Dict[Union[Emoji, PartialEmoji, str], Reaction] = {}
+        new_reactions: List[ReactionEmoji] = []
+        # Find current reaction emojis
+        for reaction in message.reactions:
+            current_reactions[reaction.emoji] = reaction
 
-    # Find current reaction emojis
-    for reaction in reactionsCurrent:
-        reactionEmojisCurrent[reaction.emoji] = reaction
+        if list(current_reactions) == reactions:
+            # Emojis are already correct, moving to next message
+            continue
 
-    if list(reactionEmojisCurrent) == reactions:
-        # Emojis are already correct, no need for further edits
-        return
+        if reorder:
+            # Re-adding all reactions in order to put them in the correct order
+            await message.clear_reactions()
+            new_reactions = reactions
+        else:
+            # Find emojis to remove
+            for emoji, reaction in current_reactions.items():
+                if emoji not in reactions:
+                    await message.clear_reaction(reaction)
 
-    for message in messageList:
-        await message.clear_reactions()
+            # Find emojis to add
+            for new_reaction in reactions:
+                if new_reaction not in current_reactions.keys():
+                    new_reactions.append(new_reaction)
 
-    if len(reactions) <= event.getReactionsPerMessage():
-        # Add Emojis for the first embed with additional Roles
-        for emoji in reactions:
-            await messageList[0].add_reaction(emoji)
-    else:
-        # Add Emojis for the first embed without additional Roles
-        for i in range((len(reactions) - event.additional_role_count)):
-            emoji = reactions.pop(0)
-            await messageList[0].add_reaction(emoji)
-
-        # Add Emojis to following embeds
-        counter = 0
-        messageNumber = 1
-        for i in range(len(reactions)):
-            emoji = reactions.pop(0)
-            await messageList[messageNumber].add_reaction(emoji)
-
-            counter += 1
-            if counter == event.getReactionsPerMessage():
-                messageNumber += 1
-                counter = 0
+        # Add missing emojis
+        for new_reaction in new_reactions:
+            try:
+                await message.add_reaction(new_reaction)
+            except Forbidden as e:
+                if e.code == 30010:
+                    raise RoleError(
+                        f"Too many reactions, not adding role {new_reaction}. "
+                        "This should not happen.") from e
 
 
-def messageEventId(message: Message) -> int:
+def _messageEventId(message: Message) -> int:
     if len(message.embeds) == 0:
         raise ValueError("Message has no embeds")
     footer = message.embeds[0].footer
@@ -206,16 +214,19 @@ async def syncMessages(events: Dict[int, Event], bot: OperationBot):
     sorted_events = sorted(list(events.values()), key=lambda event: event.date)
     for event in sorted_events:
         missing_ids = []
+        new_ids = []
         for message_id in event.messageIDList:
             try:
                 message = await getEventMessage(event, bot,
                                                 message_id=message_id)
             except MessageNotFound:
                 print(f"Missing a message for event {event}, creating")
-                await _send_message(event, bot.eventchannel)
+                message = await bot.eventchannel.send(
+                    embed=event.create_dummy_embed())
+                new_ids.append(message.id)
                 missing_ids.append(message_id)
             else:
-                if messageEventId(message) == event.id:
+                if _messageEventId(message) == event.id:
                     print(f"Found message {message.id} for event {event}")
                 else:
                     print(f"Found incorrect message for event {event}, "
@@ -228,11 +239,11 @@ async def syncMessages(events: Dict[int, Event], bot: OperationBot):
                     missing_ids.append(message_id)
         # Remove missing or deleted IDs
         event.messageIDList = [x for x in event.messageIDList
-                               if x not in missing_ids]
+                               if x not in missing_ids] + new_ids
 
     await sortEventMessages(bot)
 
 
 async def _send_message(event: Event, channel: TextChannel):
-    message = await channel.send(embed=event.createEmbed())
+    message = await channel.send(embed=event.create_dummy_embed())
     event.messageIDList.append(message.id)

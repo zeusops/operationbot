@@ -145,13 +145,14 @@ class EventDatabase:
             # event = sortedEvents[index]
 
             event.messageIDList = []
-            for _ in event.createEmbeds():
+            embeds, _ = event.createEmbeds()
+            for _ in embeds:
                 # Each event requires one message per embed
                 try:
                     message_id = messageIDLists.pop()
                 except IndexError:
                     # No more messages left, rest will be created later
-                    message_id = 0
+                    continue
                 event.messageIDList.append(message_id)
             cls.events[event.id] = event
 

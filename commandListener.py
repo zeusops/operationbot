@@ -10,15 +10,16 @@ import yaml
 from discord import Member
 from discord.channel import TextChannel
 from discord.emoji import Emoji
-from discord.ext.commands import (BadArgument, Cog, Context,
-                                  MissingRequiredArgument, command)
-from discord.ext.commands.errors import CommandError, CommandInvokeError
+from discord.ext.commands import BadArgument, Cog, Context, command
+from discord.ext.commands.errors import (CommandError, CommandInvokeError,
+                                         MissingRequiredArgument)
 
 import config as cfg
 import messageFunctions as msgFnc
 from converters import (ArgArchivedEvent, ArgDate, ArgDateTime, ArgEvent,
                         ArgMessages, ArgRole, ArgTime, UnquotedStr)
-from errors import MessageNotFound, RoleError, UnexpectedRole
+from errors import (ExtraMessagesFound, MessageNotFound, RoleError,
+                    UnexpectedRole)
 from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
@@ -153,7 +154,7 @@ class CommandListener(Cog):
         # Create event and sort events, export
         event: Event = EventDatabase.createEvent(_date, sideop=sideop,
                                                  platoon_size=platoon_size)
-        await msgFnc.createEventMessages(event, self.bot.eventchannel)
+        await msgFnc.get_or_create_messages(event, self.bot.eventchannel)
         if not batch:
             await msgFnc.sortEventMessages(self.bot)
             EventDatabase.toJson()  # Update JSON file
@@ -165,8 +166,8 @@ class CommandListener(Cog):
     async def show(self, ctx: Context, event: ArgEvent):
         message = await msgFnc.getEventMessage(event, self.bot)
         await ctx.send(message.jump_url)
-        await msgFnc.createEventMessages(event, cast(TextChannel, ctx.channel),
-                                         update_id=False)
+        await msgFnc.get_or_create_messages(event, cast(TextChannel,
+                                            ctx.channel), update_id=False)
 
     # Create event command
     @command(aliases=['c'])
@@ -448,7 +449,7 @@ class CommandListener(Cog):
                 await self._update_event(event, reorder=False)
             raise e
         if not batch:
-            await self._update_event(event, reorder=False, export=(not batch))
+            await self._update_event(event, reorder=False)
 
     @command(aliases=['ar'])
     async def addrole(self, ctx: Context, event: ArgEvent, *,
@@ -833,7 +834,8 @@ class CommandListener(Cog):
                 await eventMessage.delete()
 
         # Create messages
-        await msgFnc.createEventMessages(event, self.bot.eventarchivechannel)
+        await msgFnc.get_or_create_messages(
+            event, self.bot.eventarchivechannel)
 
         await ctx.send(f"Event {event} archived")
 
@@ -970,7 +972,7 @@ class CommandListener(Cog):
             raise ValueError("Malformed data")
         if target:
             # Display the loaded event in the command channel
-            await msgFnc.createEventMessages(event, target, update_id=False)
+            await msgFnc.get_or_create_messages(event, target, update_id=False)
         await self._update_event(event)
 
     # @command()
@@ -992,13 +994,16 @@ class CommandListener(Cog):
         try:
             messages = await msgFnc.getEventMessages(event, self.bot,
                                                      exact_number=exact_number)
-        except MessageNotFound:
-            messages = await msgFnc.createEventMessages(event,
-                                                        self.bot.eventchannel)
-
-        await msgFnc.updateMessageEmbeds(messages, event,
-                                         self.bot.eventchannel)
-        await msgFnc.updateReactions(event, bot=self.bot, reorder=reorder)
+        except (MessageNotFound, ExtraMessagesFound) as e:
+            messages = await msgFnc.get_or_create_messages(
+                event, self.bot.eventchannel)
+            if isinstance(e, MessageNotFound):
+                # New messages were created, we need to reorder the messages
+                await msgFnc.sortEventMessages(self.bot)
+        else:
+            await msgFnc.updateMessageEmbeds(messages, event,
+                                             self.bot.eventchannel)
+            await msgFnc.updateReactions(event, bot=self.bot, reorder=reorder)
 
         if export:
             EventDatabase.toJson()
