@@ -43,6 +43,10 @@ class CommandListener(Cog):
             if self.bot.awaiting_reply:
                 await ctx.send("Please answer the previous prompt first.")
                 return False
+            if self.bot.processing:
+                await ctx.send("Please wait for the previous operation to "
+                               "finish first.")
+                return False
             return True
 
         @bot.check

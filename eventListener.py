@@ -40,6 +40,7 @@ class EventListener(Cog):
         await commandchannel.send(msg)
         await self.bot.change_presence(activity=Game(name=cfg.GAME))
         print('Logged in as', self.bot.user.name, self.bot.user.id)
+        self.bot.processing = False
 
     @Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):

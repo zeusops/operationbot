@@ -65,6 +65,7 @@ class OperationBot(Bot):
         self.owner: User
         self.signoff_notify_user: User
         self.awaiting_reply = False
+        self.processing = True
 
         if help_command is None:
             self.help_command = AliasHelpCommand()
