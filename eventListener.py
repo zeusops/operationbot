@@ -74,7 +74,8 @@ class EventListener(Cog):
                 "NOTE: reaction to a non-existent event. "
                 f"msg: {message.id} role: {payload.emoji} "
                 f"user: {user.display_name} "
-                f"({user.name}#{user.discriminator})")
+                f"({user.name}#{user.discriminator})\n"
+                f"{message.jump_url}")
             return
         else:
             await self._handle_signup(event, payload.emoji, user, message)
