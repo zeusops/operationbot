@@ -478,6 +478,7 @@ class CommandListener(Cog):
                    Y1 (Bradley) Gunner
         """
         if '\n' in rolename:
+            await ctx.send("Adding roles")
             msg = ""
             try:
                 for role in rolename.split('\n'):
