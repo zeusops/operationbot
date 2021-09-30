@@ -2,9 +2,11 @@ import re
 from datetime import date, datetime, time
 from typing import cast
 
-from discord import Message
+from discord import Member, Message
 from discord.ext.commands.context import Context
-from discord.ext.commands.errors import BadArgument, CommandError
+from discord.ext.commands.converter import MemberConverter
+from discord.ext.commands.errors import (BadArgument, CommandError,
+                                         MemberNotFound)
 
 import config as cfg
 import messageFunctions as msgFnc
@@ -198,3 +200,22 @@ class ArgMessage(Message):
             raise BadArgument(str(e)) from e
 
         return message
+
+
+class ArgMember(Member):
+    @classmethod
+    async def convert(cls, ctx: Context, argument: str) -> Member:
+        try:
+            # First try the regular converter
+            converter = MemberConverter()
+            return await converter.convert(ctx, argument)
+        except MemberNotFound:
+            pass
+        name_regex = re.compile(f'^([A-Z]\\. )?{argument}( \\(.+/.+\\))?$'
+                                .lower())
+        guild = ctx.guild
+        if guild is not None:
+            for member in guild.members:
+                if name_regex.match(member.display_name.lower()):
+                    return member
+        raise MemberNotFound(f"{argument} is not a valid member")
