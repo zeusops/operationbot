@@ -10,14 +10,14 @@ import yaml
 from discord import Member
 from discord.channel import TextChannel
 from discord.emoji import Emoji
-from discord.ext.commands import (BadArgument, Cog, Context,
-                                  MissingRequiredArgument, command)
-from discord.ext.commands.errors import CommandError, CommandInvokeError
+from discord.ext.commands import BadArgument, Cog, Context, command
+from discord.ext.commands.errors import (CommandError, CommandInvokeError,
+                                         MissingRequiredArgument)
 
 import config as cfg
 import messageFunctions as msgFnc
 from converters import (ArgArchivedEvent, ArgDate, ArgDateTime, ArgEvent,
-                        ArgMessage, ArgRole, ArgTime, UnquotedStr)
+                        ArgMember, ArgMessage, ArgRole, ArgTime, UnquotedStr)
 from errors import MessageNotFound, RoleError, UnexpectedRole
 from event import Event
 from eventDatabase import EventDatabase
@@ -57,7 +57,7 @@ class CommandListener(Cog):
             return (ctx.channel == self.bot.commandchannel
                     or ctx.channel.id == cfg._test_channel)
 
-    @command(aliases=['t'])
+    @command()
     async def testrole(self, ctx: Context, event: ArgEvent,
                        role: ArgRole):
         """
@@ -66,6 +66,15 @@ class CommandListener(Cog):
         This command finds and displays roles from the given event. For testing purposes only.
         """  # NOQA
         await ctx.send(f"event {event.id}: {role}")
+
+    @command(aliases=['t'])
+    async def testmember(self, ctx: Context, member: ArgMember):
+        """
+        Test role parser.
+
+        This command finds and displays roles from the given event. For testing purposes only.
+        """  # NOQA
+        await ctx.send(f"member {member}")
 
     @command()
     async def roleparserinfo(self, ctx: Context):
@@ -230,14 +239,15 @@ class CommandListener(Cog):
 
         await self._set_quick(ctx, event, terrain, faction, zeus, quiet=True)
 
+        msg_zeus = f" with Zeus {zeus.display_name}" if zeus else ""
         if not quiet:
-            await ctx.send(f"Created event {event}")
+            await ctx.send(f"Created event {event}{msg_zeus}")
         return event
 
     @command(aliases=['cq'])
     async def createquick(
             self, ctx: Context, _datetime: ArgDateTime, terrain: str,
-            faction: str, zeus: Member = None, _time: ArgTime = None):
+            faction: str, zeus: ArgMember = None, _time: ArgTime = None):
         """
         Create and pre-fill a main op event.
 
@@ -254,7 +264,7 @@ class CommandListener(Cog):
     @command(aliases=['csq'])
     async def createsidequick(
             self, ctx: Context, _datetime: ArgDateTime, terrain: str,
-            faction: str, zeus: Member = None, _time: ArgTime = None):
+            faction: str, zeus: ArgMember = None, _time: ArgTime = None):
         """
         Create and pre-fill a side op event.
 
@@ -271,7 +281,7 @@ class CommandListener(Cog):
     @command(aliases=['csq2'])
     async def createside2quick(
             self, ctx: Context, _datetime: ArgDateTime, terrain: str,
-            faction: str, zeus: Member = None, _time: ArgTime = None):
+            faction: str, zeus: ArgMember = None, _time: ArgTime = None):
         """
         Create and pre-fill a WW2 side op event. Automatically sets description.
 
@@ -737,12 +747,13 @@ class CommandListener(Cog):
 
         await msgFnc.sortEventMessages(self.bot)
         EventDatabase.toJson()  # Update JSON file
+        msg_zeus = f" with Zeus {zeus.display_name}" if zeus else ""
         if not quiet:
-            await ctx.send(f"Updated event {event}")
+            await ctx.send(f"Updated event {event}{msg_zeus}")
 
     @command(aliases=['sq'])
     async def setquick(self, ctx: Context, event: ArgEvent,
-                       terrain: str, faction: str, zeus: Member = None,
+                       terrain: str, faction: str, zeus: ArgMember = None,
                        _time: ArgTime = None):
         """
         Quickly set event details.
@@ -758,7 +769,7 @@ class CommandListener(Cog):
 
     # Sign user up to event command
     @command(aliases=['s'])
-    async def signup(self, ctx: Context, event: ArgEvent, user: Member, *,
+    async def signup(self, ctx: Context, event: ArgEvent, user: ArgMember, *,
                      role: ArgRole):
         """
         Sign user up to a role.
@@ -786,7 +797,7 @@ class CommandListener(Cog):
     # Remove signup on event of user command
     @command(aliases=['rs'])
     async def removesignup(self, ctx: Context, event: ArgEvent,
-                           user: Member):
+                           user: ArgMember):
         """
         Undo user signup (manually).
 
