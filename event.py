@@ -224,6 +224,7 @@ class Event:
         date = self.date.strftime(f"%a %Y-%m-%d - %H:%M {cfg.TIME_ZONE}")
         title = f"{self.title} ({date})"
         local_time = f"<t:{int(self.date.timestamp())}>"
+        relative_time = f"<t:{int(self.date.timestamp())}:R>"
         server_port = (f"\nServer port: **{self.port}**"
                        if self.port != cfg.PORT_DEFAULT else "")
         event_description = (f"\n\n{self.description}"
@@ -235,7 +236,7 @@ class Event:
                 mods = f"\n\nMods: {self.mods}\n"
         else:
             mods = ""
-        description = (f"Local time: {local_time}\n"
+        description = (f"Local time: {local_time} ({relative_time})\n"
                        f"Terrain: {self.terrain} - Faction: {self.faction}"
                        f"{server_port}"
                        f"{event_description}"
