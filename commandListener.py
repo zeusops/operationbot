@@ -234,11 +234,11 @@ class CommandListener(Cog):
             faction: str, zeus: Member = None, _time: ArgTime = None,
             sideop=False, platoon_size: str = None, quiet=False):
         if _time is not None:
-            event_date = _datetime.replace(hour=_time.hour,
-                                           minute=_time.minute)
+            _datetime = _datetime.replace(hour=_time.hour,  # type: ignore
+                                          minute=_time.minute)
 
         event = await self._create_event(
-            ctx, event_date, sideop=sideop, platoon_size=platoon_size,
+            ctx, _datetime, sideop=sideop, platoon_size=platoon_size,
             force=(_time is not None), batch=True, silent=True)
 
         await self._set_quick(ctx, event, terrain, faction, zeus, quiet=True)
