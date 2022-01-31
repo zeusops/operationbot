@@ -32,6 +32,13 @@ class User:
         self.id = id
         self.display_name = display_name
 
+    def __eq__(self, other: Union['User', discord.abc.User]):
+        # This makes it so that User objects can be compared to
+        # discord.abc.User by doing `user == discord.abc.User`. The comparison
+        # will not work in the other direction because discord.abc.User checks
+        # for the object type.
+        return self.id == other.id
+
 
 class Event:
 
@@ -49,6 +56,8 @@ class Event:
         self.messageID = 0
         self.id = eventID
         self.sideop = sideop
+        self.attendees: list[User] = []
+
         if platoon_size is None:
             if sideop:
                 self.platoon_size = "sideop"
@@ -254,7 +263,11 @@ class Event:
                                      value="\N{ZERO WIDTH SPACE}",
                                      inline=group.isInline)
 
-        eventEmbed.set_footer(text="Event ID: " + str(self.id))
+        if self.sideop or cfg.ALWAYS_DISPLAY_ATTENDANCE:
+            attendees = f"Attendees: {len(self.attendees)}\n\n"
+        else:
+            attendees = ""
+        eventEmbed.set_footer(text=f"{attendees}Event ID: {str(self.id)}")
 
         return eventEmbed
 
@@ -470,6 +483,21 @@ class Event:
         # TODO: raise RoleNotFound instead of returning None?
         return None
 
+    def has_attendee(self, user: discord.abc.User) -> bool:
+        """Check if the given user has been marked as attending."""
+        return user in self.attendees
+
+    def add_attendee(self, user: discord.abc.User) -> None:
+        """Add user to the attendance list"""
+        if not self.has_attendee(user):
+            self.attendees.append(
+                User(id=user.id, display_name=user.display_name))
+
+    def remove_attendee(self, user: discord.abc.User) -> None:
+        """Remove user from the attendance list"""
+        if self.has_attendee(user):
+            self.attendees.remove(user)
+
     def __str__(self):
         return f"{self.title} (ID {self.id}) at {self.date}"
 
@@ -480,6 +508,10 @@ class Event:
         roleGroupsData = {}
         for groupName, roleGroup in self.roleGroups.items():
             roleGroupsData[groupName] = roleGroup.toJson(brief_output)
+
+        attendees_data = {}
+        for user in self.attendees:
+            attendees_data[user.id] = user.display_name
 
         data: Dict[str, Any] = {}
         data["title"] = self.title
@@ -495,6 +527,7 @@ class Event:
             data["messageID"] = self.messageID
             data["platoon_size"] = self.platoon_size
             data["sideop"] = self.sideop
+            data["attendees"] = attendees_data
         data["roleGroups"] = roleGroupsData
         return data
 
@@ -513,6 +546,10 @@ class Event:
             self.messageID = int(data.get("messageID", 0))
             self.platoon_size = str(data.get("platoon_size", PLATOON_SIZE))
             self.sideop = bool(data.get("sideop", False))
+            attendees_data = data.get("attendees", {})
+            for userID, name in attendees_data.items():
+                self.attendees.append(User(int(userID), name))
+
         # TODO: Handle missing roleGroups
         groups: List[str] = []
         for groupName, roleGroupData in data["roleGroups"].items():

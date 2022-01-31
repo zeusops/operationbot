@@ -72,11 +72,20 @@ ADDITIONAL_ROLE_NAMES = [
     "j",
 ]
 
-# ATTENDANCE_EMOJI = "\N{HEAVY PLUS SIGN}"
-ATTENDANCE_EMOJI = None
+# By default, the number of attendees will only be displayed for sideops
+ALWAYS_DISPLAY_ATTENDANCE = False
 
-EXTRA_EMOJIS: List[str] = [
+ATTENDANCE_EMOJI = "\N{HEAVY PLUS SIGN}"
+
+# These are emojis that can be added to the event but are ignored when a user
+# reacts to them
+IGNORED_EMOJIS: List[str] = [
     # ATTENDANCE_EMOJI
+]
+
+# The are emojis that are handled separately from regular sign-up emojis
+SPECIAL_EMOJIS: List[str] = [
+    ATTENDANCE_EMOJI,
 ]
 
 PLATOON_SIZES = ['1PLT', '2PLT', 'sideop', 'WW2side']

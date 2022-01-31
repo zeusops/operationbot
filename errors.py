@@ -24,3 +24,7 @@ class RoleError(Exception):
 
 class RoleTaken(Exception):
     pass
+
+
+class UnknownEmoji(Exception):
+    pass

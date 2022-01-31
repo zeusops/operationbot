@@ -9,7 +9,7 @@ from discord.user import User
 
 import config as cfg
 import messageFunctions as msgFnc
-from errors import EventNotFound, RoleNotFound, RoleTaken
+from errors import EventNotFound, RoleNotFound, RoleTaken, UnknownEmoji
 from event import Event
 from eventDatabase import EventDatabase
 from operationbot import OperationBot
@@ -50,7 +50,7 @@ class EventListener(Cog):
             # Bot's own reaction, or reaction outside of the event channel
             return
 
-        if payload.emoji.name in cfg.EXTRA_EMOJIS:
+        if payload.emoji.name in cfg.IGNORED_EMOJIS:
             return
 
         message: Message = await self.bot.eventchannel.fetch_message(
@@ -78,16 +78,20 @@ class EventListener(Cog):
                 f"{message.jump_url}")
             return
         else:
-            await self._handle_signup(event, payload.emoji, user, message)
+            if payload.emoji.is_custom_emoji():
+                emoji: Union[PartialEmoji, str] = payload.emoji
+            else:
+                emoji = cast(str, payload.emoji.name)
 
-    async def _handle_signup(self, event: Event, partial_emoji: PartialEmoji,
-                             user: User, message: Message):
-        # Get emoji string
-        if partial_emoji.is_custom_emoji():
-            emoji: Union[PartialEmoji, str] = partial_emoji
-        else:
-            emoji = cast(str, partial_emoji.name)
+            if payload.emoji.name in cfg.SPECIAL_EMOJIS:
+                await self._handle_special_emoji(event, emoji, user,
+                                                 message)
+            else:
+                await self._handle_signup(event, emoji, user, message)
 
+    async def _handle_signup(self, event: Event,
+                             emoji: Union[PartialEmoji, str], user: User,
+                             message: Message):
         # Find signup of user
         old_signup: Optional[Role] = event.findSignupRole(user.id)
 
@@ -155,6 +159,21 @@ class EventListener(Cog):
                f"({user.name}#{user.discriminator})"
 
         await self.bot.logchannel.send(text)
+
+    async def _handle_special_emoji(self, event: Event,
+                                    emoji: Union[PartialEmoji, str],
+                                    user: User, message: Message):
+
+        if emoji == cfg.ATTENDANCE_EMOJI:
+            if event.has_attendee(user):
+                event.remove_attendee(user)
+            else:
+                event.add_attendee(user)
+            await msgFnc.updateMessageEmbed(message, event)
+            EventDatabase.toJson()
+        else:
+            raise UnknownEmoji(f"Reaction to unknown special emoji {emoji} "
+                               f"in event {event} by user {user}")
 
     @Cog.listener()
     async def on_message(self, message: Message):
