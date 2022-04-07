@@ -173,7 +173,7 @@ class CommandListener(Cog):
 
     async def _show(self, ctx: Context, event: Event):
         message = await msgFnc.getEventMessage(event, self.bot)
-        await ctx.send(message.jump_url)
+        await ctx.send(f"<{message.jump_url}>")
         await msgFnc.createEventMessage(event, cast(TextChannel, ctx.channel),
                                         update_id=False)
 
