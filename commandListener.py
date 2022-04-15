@@ -58,6 +58,11 @@ class CommandListener(Cog):
                     or ctx.channel.id == cfg._test_channel)
 
     @command()
+    async def ping(self, ctx: Context):
+        """Pong!"""
+        await ctx.send("Pong!")
+
+    @command()
     async def testrole(self, ctx: Context, event: ArgEvent,
                        role: ArgRole):
         """

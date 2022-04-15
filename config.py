@@ -12,7 +12,8 @@ if secret.DEBUG:
     COMMAND_CHANNEL = _test_channel
     LOG_CHANNEL = _test_channel
     GAME = 'with bugs'
-    EMOJI_GUILD = 219564389462704130
+    # If set to 0, the bot uses Command Channel's guild
+    EMOJI_GUILD = 0
 else:
     EVENT_CHANNEL = 502824760036818964
     EVENT_ARCHIVE_CHANNEL = 528914471700267029
@@ -128,60 +129,9 @@ DEFAULT_GROUPS = {
 
 # NOTE: role name equals emote name
 DEFAULT_ROLES = {
-    "1PLT": {
-        "ZEUS": "Company",
-        "1PLT": "1st Platoon",
-        "FAC": "1st Platoon",
-        "RTO": "1st Platoon",
-
-        "ASL": "Alpha",
-        "A1": "Alpha",
-        "A2": "Alpha",
-        "BSL": "Bravo",
-        "B1": "Bravo",
-        "B2": "Bravo",
-        "CSL": "Charlie",
-        "C1": "Charlie",
-        "C2": "Charlie",
-    },
-    "2PLT": {
-        "ZEUS": "Battalion",
-        "CO": "Company",
-        "FAC": "Company",
-        "RTO": "Company",
-
-        "1PLT": "1st Platoon",
-        "ASL": "Alpha",
-        "A1": "Alpha",
-        "BSL": "Bravo",
-        "B1": "Bravo",
-        "CSL": "Charlie",
-        "C1": "Charlie",
-        "DSL": "Delta",
-        "D1": "Delta",
-
-        "2PLT": "2nd Platoon",
-        "ESL": "Echo",
-        "E1": "Echo",
-        "FSL": "Foxtrot",
-        "F1": "Foxtrot",
-        "GSL": "Golf",
-        "G1": "Golf",
-        "HSL": "Hotel",
-        "H1": "Hotel",
-    },
-    "sideop": {
-        "ZEUS": "Company",
-        "ASL": "Alpha",
-        "A1": "Alpha",
-        "A2": "Alpha",
-    },
-    "WW2side": {
-        "ZEUS": "Company",
-        "1PLT": "1st Platoon",
-        "ASL": "1st Platoon",
-        "BSL": "1st Platoon",
-    },
+    # The mock library doesn't provide emojis for now, ignoring all roles/reactions
+    "1PLT": {},
+    "2PLT": {},
 }
 
 EMOJI_ZEUS = "ZEUS"

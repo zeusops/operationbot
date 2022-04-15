@@ -23,8 +23,16 @@ class EventListener(Cog):
 
     @Cog.listener()
     async def on_ready(self):
-        print("Waiting until ready")
-        await self.bot.wait_until_ready()
+        # This 'ready' event isn't triggered by the test framework but is when
+        # running in discordpy = "prod". From bug report [1], seems a
+        # limitation/oversight of the test harness.
+        # [1]: https://github.com/CraftSpider/dpytest/issues/69#issue-1117467116
+
+        # FIXME: Temporarily disable this to allow the bot to progress to proper values
+        # print("Waiting until ready")
+        # await self.bot.wait_until_ready()
+
+        # Next instruction crashes the test from incorrect channelid (test env config)
         self.bot.fetch_data()
         commandchannel = self.bot.commandchannel
         await commandchannel.send("Connected")
