@@ -1,7 +1,11 @@
+---
 name: Super-Linter
 
 # Run this workflow every time a new commit pushed to your repository
-on: push
+on:
+  push:
+  pull_request:
+    branches: [master, main]
 
 jobs:
   # Set the job key. The key is displayed as the job name
@@ -15,11 +19,11 @@ jobs:
     steps:
       # Checks out a copy of your repository on the ubuntu-latest machine
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Runs the Super-Linter action
       - name: Run Super-Linter
-        uses: github/super-linter@v4
+        uses: github/super-linter/slim@v4
         env:
           DEFAULT_BRANCH: master
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
