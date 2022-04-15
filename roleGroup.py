@@ -45,8 +45,12 @@ class RoleGroup:
                 name = role.name
             self.roles.remove(role)
         except (KeyError, ValueError) as e:
-            raise RoleNotFound("Could not find an additional role to remove "
-                               f"with the name {name}") from e
+            # Super-Linter's pylint is complaining about variable usage before
+            # assignment on 'name', couldn't figure out the reason so ignoring
+            # for now
+            raise RoleNotFound(
+                "Could not find an additional role to remove "
+                f"with the name {name}") from e  # pylint: disable=E0601
 
     def __str__(self) -> str:
         roleGroupString = ""
