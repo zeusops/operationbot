@@ -44,9 +44,9 @@ class Event:
 
     def __init__(self, date: datetime.datetime, guildEmojis: Tuple[Emoji, ...],
                  eventID=0, importing=False, sideop=False, platoon_size=None):
-        self.title = TITLE if not sideop else SIDEOP_TITLE
+        self._title: Optional[str] = None
         self.date = date
-        self.terrain = TERRAIN
+        self._terrain = TERRAIN
         self.faction = FACTION
         self.description = DESCRIPTION
         self.port = cfg.PORT_DEFAULT
@@ -56,7 +56,7 @@ class Event:
         self.messageID = 0
         self.id = eventID
         self.sideop = sideop
-        self.attendees: list[User] = []
+        self.attendees: list[Union[User, discord.abc.User]] = []
 
         if platoon_size is None:
             if sideop:
@@ -84,6 +84,20 @@ class Event:
     @property
     def additional_role_count(self) -> int:
         return len(self.roleGroups["Additional"])
+
+    @property
+    def title(self) -> str:
+        if self._title:
+            # It an explicit title is set, return that
+            return self._title
+        # Otherwise, use dynamic title
+        if self.sideop:
+            return SIDEOP_TITLE
+        return TITLE
+
+    @title.setter
+    def title(self, title):
+        self._title = title
 
     def changeSize(self, new_size):
         # pylint: disable=too-many-statements
@@ -338,26 +352,21 @@ class Event:
         self.roleGroups.pop(groupName, None)
         return True
 
-    # Title setter
-    def setTitle(self, newTitle):
-        self.title = newTitle
+    @property
+    def time(self):
+        return datetime.time(hour=self.date.hour, minute=self.date.minute)
 
-    # Date setter
-    def setDate(self, newDate):
-        self.date = self.date.replace(year=newDate.year, month=newDate.month,
-                                      day=newDate.day)
+    @time.setter
+    def time(self, time: Union[datetime.time, datetime.datetime]):
+        self.date = self.date.replace(hour=time.hour, minute=time.minute)
 
-    # Time setter
-    def setTime(self, newTime: Union[datetime.time, datetime.datetime]):
-        self.date = self.date.replace(hour=newTime.hour, minute=newTime.minute)
+    @property
+    def terrain(self) -> str:
+        return self._terrain
 
-    # Terrain setter
-    def setTerrain(self, newTerrain):
-        self.terrain = newTerrain
-
-    # Faction setter
-    def setFaction(self, newFaction):
-        self.faction = newFaction
+    @terrain.setter
+    def terrain(self, terrain):
+        self._terrain = terrain
 
     # Get emojis for normal roles
     def _getNormalEmojis(self, guildEmojis) -> Dict[str, Emoji]:
@@ -514,7 +523,7 @@ class Event:
             attendees_data[user.id] = user.display_name
 
         data: Dict[str, Any] = {}
-        data["title"] = self.title
+        data["title"] = self._title
         data["date"] = self.date.strftime("%Y-%m-%d")
         data["description"] = self.description
         data["time"] = self.date.strftime("%H:%M")
@@ -533,10 +542,10 @@ class Event:
 
     def fromJson(self, eventID, data: dict, emojis, manual_load=False):
         self.id = int(eventID)
-        self.setTitle(data.get("title", TITLE))
-        time = datetime.datetime.strptime(data.get("time", "00:00"), "%H:%M")
-        self.setTime(time)
-        self.setTerrain(data.get("terrain", TERRAIN))
+        self.title = data.get("title", None)
+        self.time = datetime.datetime.strptime(data.get("time", "00:00"),
+                                               "%H:%M")
+        self.terrain = data.get("terrain", TERRAIN)
         self.faction = str(data.get("faction", FACTION))
         self.port = int(data.get("port", cfg.PORT_DEFAULT))
         self.description = str(data.get("description", DESCRIPTION))
