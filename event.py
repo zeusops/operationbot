@@ -6,6 +6,7 @@ from discord import Embed, Emoji
 
 import config as cfg
 from additional_role_group import AdditionalRoleGroup
+from config import EMBED_COLOR
 from errors import RoleError, RoleGroupNotFound, RoleNotFound, RoleTaken
 from role import Role
 from roleGroup import RoleGroup
@@ -17,9 +18,6 @@ TERRAIN = "unknown"
 FACTION = "unknown"
 DESCRIPTION = ""
 MODS = ""
-COLOR = 0xFF4500
-SIDEOP_COLOR = 0x0045FF
-WW2_SIDEOP_COLOR = 0x808080
 # Discord API limitation
 MAX_REACTIONS = 20
 
@@ -32,7 +30,7 @@ class User:
         self.id = id
         self.display_name = display_name
 
-    def __eq__(self, other: Union['User', discord.abc.User]):
+    def __eq__(self, other: Union['User', discord.abc.User]):  # type: ignore
         # This makes it so that User objects can be compared to
         # discord.abc.User by doing `user == discord.abc.User`. The comparison
         # will not work in the other direction because discord.abc.User checks
@@ -51,7 +49,6 @@ class Event:
         self.description = DESCRIPTION
         self.port = cfg.PORT_DEFAULT
         self.mods = MODS
-        self.color = COLOR if not sideop else SIDEOP_COLOR
         self.roleGroups: Dict[str, RoleGroup] = {}
         self.messageID = 0
         self.id = eventID
@@ -70,11 +67,6 @@ class Event:
 
         if self.platoon_size.startswith("WW2"):
             self.title = "WW2 " + self.title
-            if sideop:
-                self.color = WW2_SIDEOP_COLOR
-            else:
-                # no WW2 main operations are happening right now
-                pass
 
         self.normalEmojis = self._getNormalEmojis(guildEmojis)
         if not importing:
@@ -84,6 +76,12 @@ class Event:
     @property
     def additional_role_count(self) -> int:
         return len(self.roleGroups["Additional"])
+
+    @property
+    def color(self) -> int:
+        if self.sideop:
+            return EMBED_COLOR['SIDEOP']
+        return EMBED_COLOR['DEFAULT']
 
     @property
     def title(self) -> str:
@@ -369,7 +367,8 @@ class Event:
         self._terrain = terrain
 
     # Get emojis for normal roles
-    def _getNormalEmojis(self, guildEmojis) -> Dict[str, Emoji]:
+    def _getNormalEmojis(self, guildEmojis: Tuple[Emoji, ...]) \
+            -> Dict[str, Emoji]:
         normalEmojis = {}
 
         for emoji in guildEmojis:
@@ -532,7 +531,6 @@ class Event:
         data["port"] = self.port
         data["mods"] = self.mods
         if not brief_output:
-            data["color"] = self.color
             data["messageID"] = self.messageID
             data["platoon_size"] = self.platoon_size
             data["sideop"] = self.sideop
@@ -551,7 +549,6 @@ class Event:
         self.description = str(data.get("description", DESCRIPTION))
         self.mods = str(data.get("mods", MODS))
         if not manual_load:
-            self.color = int(data.get("color", COLOR))
             self.messageID = int(data.get("messageID", 0))
             self.platoon_size = str(data.get("platoon_size", PLATOON_SIZE))
             self.sideop = bool(data.get("sideop", False))
