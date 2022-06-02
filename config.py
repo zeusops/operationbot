@@ -93,7 +93,7 @@ PLATOON_SIZES = ['1PLT', '2PLT', 'sideop', 'WW2side']
 # Dummy: an empty spacer. An embed can only have either one or three
 # items on a line.
 # Additional roles are automatically added at the end of the group list
-DEFAULT_GROUPS = {
+DEFAULT_GROUPS: Dict[str, List[str]] = {
     "1PLT": [
         "Company",
         "1st Platoon",
@@ -124,6 +124,7 @@ DEFAULT_GROUPS = {
         "Company",
         "1st Platoon",
     ],
+    "empty": [],
 }
 
 # NOTE: role name equals emote name
@@ -182,6 +183,7 @@ DEFAULT_ROLES: Dict[str, Dict] = {
         "ASL": "1st Platoon",
         "BSL": "1st Platoon",
     },
+    "empty": {},
 }
 
 EMOJI_ZEUS = "ZEUS"

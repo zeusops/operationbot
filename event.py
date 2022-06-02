@@ -61,7 +61,7 @@ class Event:
                 self.platoon_size = "sideop"
             else:
                 self.platoon_size = PLATOON_SIZE
-        elif platoon_size in cfg.PLATOON_SIZES:
+        elif platoon_size in cfg.DEFAULT_ROLES:
             self.platoon_size = platoon_size
         else:
             raise ValueError(f"Unsupported platoon size: {platoon_size}")
