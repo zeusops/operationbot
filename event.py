@@ -54,6 +54,7 @@ class Event:
         self.id = eventID
         self.sideop = sideop
         self.attendees: list[Union[User, discord.abc.User]] = []
+        self.dlc: Optional[str] = None
 
         if platoon_size is None:
             if sideop:
@@ -79,6 +80,10 @@ class Event:
 
     @property
     def color(self) -> int:
+        if self.dlc and self.sideop:
+            return EMBED_COLOR['DLC_SIDEOP']
+        if self.dlc:
+            return EMBED_COLOR['DLC']
         if self.sideop:
             return EMBED_COLOR['SIDEOP']
         return EMBED_COLOR['DEFAULT']
@@ -89,6 +94,10 @@ class Event:
             # It an explicit title is set, return that
             return self._title
         # Otherwise, use dynamic title
+        if self.dlc and self.sideop:
+            return f"{self.dlc} {SIDEOP_TITLE}"
+        if self.dlc:
+            return f"{self.dlc} {TITLE}"
         if self.sideop:
             return SIDEOP_TITLE
         return TITLE
@@ -248,6 +257,9 @@ class Event:
         relative_time = f"<t:{int(self.date.timestamp())}:R>"
         server_port = (f"\nServer port: **{self.port}**"
                        if self.port != cfg.PORT_DEFAULT else "")
+        dlc_note = (f"\n\nThe **{self.dlc} DLC** is required to "
+                    "join this event"
+                    if self.dlc else "")
         event_description = (f"\n\n{self.description}"
                              if self.description else "")
         if self.mods:
@@ -260,6 +272,7 @@ class Event:
         description = (f"Local time: {local_time} ({relative_time})\n"
                        f"Terrain: {self.terrain} - Faction: {self.faction}"
                        f"{server_port}"
+                       f"{dlc_note}"
                        f"{event_description}"
                        f"{mods}")
         eventEmbed = Embed(title=title, description=description,
@@ -364,6 +377,10 @@ class Event:
 
     @terrain.setter
     def terrain(self, terrain):
+        if terrain in cfg.DLC_TERRAINS:
+            self.dlc = cfg.DLC_TERRAINS[terrain]
+        else:
+            self.dlc = None
         self._terrain = terrain
 
     # Get emojis for normal roles

@@ -127,7 +127,7 @@ DEFAULT_GROUPS = {
 }
 
 # NOTE: role name equals emote name
-DEFAULT_ROLES = {
+DEFAULT_ROLES: Dict[str, Dict] = {
     "1PLT": {
         "ZEUS": "Company",
         "1PLT": "1st Platoon",
@@ -216,4 +216,9 @@ EMBED_COLOR = {
     "WW2": 0x808080,
     "DLC": 0x00FF00,
     "DLC_SIDEOP": 0x00FFFF,
+}
+
+DLC_TERRAINS = {
+    "Tanoa": "APEX",
+    "Livonia": "Contact"
 }
