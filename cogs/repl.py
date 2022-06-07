@@ -5,12 +5,13 @@ import io
 import textwrap
 import traceback
 from contextlib import redirect_stdout
-from typing import Set
+from typing import Callable, Set, cast
 
 import discord
 from discord.ext import commands
 from discord.ext.commands import (BadArgument, Bot, Context,
                                   MissingRequiredArgument)
+
 from eventDatabase import EventDatabase  # noqa
 from secret import COMMAND_CHAR as CMD
 
@@ -60,7 +61,7 @@ class REPL(commands.Cog):
         except SyntaxError as e:
             return await ctx.send(self.get_syntax_error(e))
 
-        func = env['func']
+        func = cast(Callable, env['func'])
         try:
             with redirect_stdout(stdout):
                 ret = await func()
