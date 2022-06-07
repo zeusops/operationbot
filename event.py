@@ -232,8 +232,8 @@ class Event:
     def createEmbed(self) -> Embed:
         date = self.date.strftime(f"%a %Y-%m-%d - %H:%M {cfg.TIME_ZONE}")
         title = f"{self.title} ({date})"
-        local_time = f"<t:{int(self.date.timestamp())}>"
-        relative_time = f"<t:{int(self.date.timestamp())}:R>"
+        local_time = f"<t:{int(self.date.replace(tzinfo=datetime.timezone(offset=datetime.timedelta(hours=1))).timestamp())}>"
+        relative_time = f"<t:{int(self.date.replace(tzinfo=datetime.timezone(offset=datetime.timedelta(hours=1))).timestamp())}:R>"
         server_port = (f"\nServer port: **{self.port}**"
                        if self.port != cfg.PORT_DEFAULT else "")
         event_description = (f"\n\n{self.description}"
