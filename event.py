@@ -6,6 +6,7 @@ from discord import Embed, Emoji
 
 import config as cfg
 from additional_role_group import AdditionalRoleGroup
+from config import EMBED_COLOR
 from errors import RoleError, RoleGroupNotFound, RoleNotFound, RoleTaken
 from role import Role
 from roleGroup import RoleGroup
@@ -17,9 +18,6 @@ TERRAIN = "unknown"
 FACTION = "unknown"
 DESCRIPTION = ""
 MODS = ""
-COLOR = 0xFF4500
-SIDEOP_COLOR = 0x0045FF
-WW2_SIDEOP_COLOR = 0x808080
 # Discord API limitation
 MAX_REACTIONS = 20
 
@@ -32,7 +30,7 @@ class User:
         self.id = id
         self.display_name = display_name
 
-    def __eq__(self, other: Union['User', discord.abc.User]):
+    def __eq__(self, other: Union['User', discord.abc.User]):  # type: ignore
         # This makes it so that User objects can be compared to
         # discord.abc.User by doing `user == discord.abc.User`. The comparison
         # will not work in the other direction because discord.abc.User checks
@@ -44,37 +42,32 @@ class Event:
 
     def __init__(self, date: datetime.datetime, guildEmojis: Tuple[Emoji, ...],
                  eventID=0, importing=False, sideop=False, platoon_size=None):
-        self.title = TITLE if not sideop else SIDEOP_TITLE
+        self._title: Optional[str] = None
         self.date = date
-        self.terrain = TERRAIN
+        self._terrain = TERRAIN
         self.faction = FACTION
         self.description = DESCRIPTION
         self.port = cfg.PORT_DEFAULT
         self.mods = MODS
-        self.color = COLOR if not sideop else SIDEOP_COLOR
         self.roleGroups: Dict[str, RoleGroup] = {}
         self.messageID = 0
         self.id = eventID
         self.sideop = sideop
-        self.attendees: list[User] = []
+        self.attendees: list[Union[User, discord.abc.User]] = []
+        self.dlc: Optional[str] = None
 
         if platoon_size is None:
             if sideop:
                 self.platoon_size = "sideop"
             else:
                 self.platoon_size = PLATOON_SIZE
-        elif platoon_size in cfg.PLATOON_SIZES:
+        elif platoon_size in cfg.DEFAULT_ROLES:
             self.platoon_size = platoon_size
         else:
             raise ValueError(f"Unsupported platoon size: {platoon_size}")
 
         if self.platoon_size.startswith("WW2"):
             self.title = "WW2 " + self.title
-            if sideop:
-                self.color = WW2_SIDEOP_COLOR
-            else:
-                # no WW2 main operations are happening right now
-                pass
 
         self.normalEmojis = self._getNormalEmojis(guildEmojis)
         if not importing:
@@ -84,6 +77,34 @@ class Event:
     @property
     def additional_role_count(self) -> int:
         return len(self.roleGroups["Additional"])
+
+    @property
+    def color(self) -> int:
+        if self.dlc and self.sideop:
+            return EMBED_COLOR['DLC_SIDEOP']
+        if self.dlc:
+            return EMBED_COLOR['DLC']
+        if self.sideop:
+            return EMBED_COLOR['SIDEOP']
+        return EMBED_COLOR['DEFAULT']
+
+    @property
+    def title(self) -> str:
+        if self._title:
+            # It an explicit title is set, return that
+            return self._title
+        # Otherwise, use dynamic title
+        if self.dlc and self.sideop:
+            return f"{self.dlc} {SIDEOP_TITLE}"
+        if self.dlc:
+            return f"{self.dlc} {TITLE}"
+        if self.sideop:
+            return SIDEOP_TITLE
+        return TITLE
+
+    @title.setter
+    def title(self, title):
+        self._title = title
 
     def changeSize(self, new_size):
         # pylint: disable=too-many-statements
@@ -236,6 +257,9 @@ class Event:
         relative_time = f"<t:{int(self.date.timestamp())}:R>"
         server_port = (f"\nServer port: **{self.port}**"
                        if self.port != cfg.PORT_DEFAULT else "")
+        dlc_note = (f"\n\nThe **{self.dlc} DLC** is required to "
+                    "join this event"
+                    if self.dlc else "")
         event_description = (f"\n\n{self.description}"
                              if self.description else "")
         if self.mods:
@@ -248,6 +272,7 @@ class Event:
         description = (f"Local time: {local_time} ({relative_time})\n"
                        f"Terrain: {self.terrain} - Faction: {self.faction}"
                        f"{server_port}"
+                       f"{dlc_note}"
                        f"{event_description}"
                        f"{mods}")
         eventEmbed = Embed(title=title, description=description,
@@ -338,29 +363,29 @@ class Event:
         self.roleGroups.pop(groupName, None)
         return True
 
-    # Title setter
-    def setTitle(self, newTitle):
-        self.title = newTitle
+    @property
+    def time(self):
+        return datetime.time(hour=self.date.hour, minute=self.date.minute)
 
-    # Date setter
-    def setDate(self, newDate):
-        self.date = self.date.replace(year=newDate.year, month=newDate.month,
-                                      day=newDate.day)
+    @time.setter
+    def time(self, time: Union[datetime.time, datetime.datetime]):
+        self.date = self.date.replace(hour=time.hour, minute=time.minute)
 
-    # Time setter
-    def setTime(self, newTime: Union[datetime.time, datetime.datetime]):
-        self.date = self.date.replace(hour=newTime.hour, minute=newTime.minute)
+    @property
+    def terrain(self) -> str:
+        return self._terrain
 
-    # Terrain setter
-    def setTerrain(self, newTerrain):
-        self.terrain = newTerrain
-
-    # Faction setter
-    def setFaction(self, newFaction):
-        self.faction = newFaction
+    @terrain.setter
+    def terrain(self, terrain):
+        if terrain in cfg.DLC_TERRAINS:
+            self.dlc = cfg.DLC_TERRAINS[terrain]
+        else:
+            self.dlc = None
+        self._terrain = terrain
 
     # Get emojis for normal roles
-    def _getNormalEmojis(self, guildEmojis) -> Dict[str, Emoji]:
+    def _getNormalEmojis(self, guildEmojis: Tuple[Emoji, ...]) \
+            -> Dict[str, Emoji]:
         normalEmojis = {}
 
         for emoji in guildEmojis:
@@ -514,7 +539,7 @@ class Event:
             attendees_data[user.id] = user.display_name
 
         data: Dict[str, Any] = {}
-        data["title"] = self.title
+        data["title"] = self._title
         data["date"] = self.date.strftime("%Y-%m-%d")
         data["description"] = self.description
         data["time"] = self.date.strftime("%H:%M")
@@ -523,7 +548,6 @@ class Event:
         data["port"] = self.port
         data["mods"] = self.mods
         if not brief_output:
-            data["color"] = self.color
             data["messageID"] = self.messageID
             data["platoon_size"] = self.platoon_size
             data["sideop"] = self.sideop
@@ -533,16 +557,15 @@ class Event:
 
     def fromJson(self, eventID, data: dict, emojis, manual_load=False):
         self.id = int(eventID)
-        self.setTitle(data.get("title", TITLE))
-        time = datetime.datetime.strptime(data.get("time", "00:00"), "%H:%M")
-        self.setTime(time)
-        self.setTerrain(data.get("terrain", TERRAIN))
+        self.title = data.get("title", None)
+        self.time = datetime.datetime.strptime(data.get("time", "00:00"),
+                                               "%H:%M")
+        self.terrain = data.get("terrain", TERRAIN)
         self.faction = str(data.get("faction", FACTION))
         self.port = int(data.get("port", cfg.PORT_DEFAULT))
         self.description = str(data.get("description", DESCRIPTION))
         self.mods = str(data.get("mods", MODS))
         if not manual_load:
-            self.color = int(data.get("color", COLOR))
             self.messageID = int(data.get("messageID", 0))
             self.platoon_size = str(data.get("platoon_size", PLATOON_SIZE))
             self.sideop = bool(data.get("sideop", False))

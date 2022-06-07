@@ -27,6 +27,8 @@ class EventListener(Cog):
         await self.bot.wait_until_ready()
         self.bot.fetch_data()
         commandchannel = self.bot.commandchannel
+        print(f"Command channel: {commandchannel} on server"
+              f"{commandchannel.guild}")
         await commandchannel.send("Connected")
         print("Ready, importing")
         await commandchannel.send("Importing events")
@@ -186,7 +188,7 @@ class EventListener(Cog):
     def _calculate_signoff_delta(self, event: Event, role: Role, user):
         """return a string (days or hours/mins) if it is shortly before op
         else None"""
-        if role.name in cfg.SIGNOFF_NOTIFY_ROLES[event.platoon_size]:
+        if role.name in cfg.SIGNOFF_NOTIFY_ROLES.get(event.platoon_size, []):
             time_delta = event.date - datetime.today()
             if time_delta > timedelta(days=0):
                 days = time_delta.days

@@ -93,7 +93,7 @@ PLATOON_SIZES = ['1PLT', '2PLT', 'sideop', 'WW2side']
 # Dummy: an empty spacer. An embed can only have either one or three
 # items on a line.
 # Additional roles are automatically added at the end of the group list
-DEFAULT_GROUPS = {
+DEFAULT_GROUPS: Dict[str, List[str]] = {
     "1PLT": [
         "Company",
         "1st Platoon",
@@ -124,10 +124,11 @@ DEFAULT_GROUPS = {
         "Company",
         "1st Platoon",
     ],
+    "empty": [],
 }
 
 # NOTE: role name equals emote name
-DEFAULT_ROLES = {
+DEFAULT_ROLES: Dict[str, Dict] = {
     "1PLT": {
         "ZEUS": "Company",
         "1PLT": "1st Platoon",
@@ -182,6 +183,7 @@ DEFAULT_ROLES = {
         "ASL": "1st Platoon",
         "BSL": "1st Platoon",
     },
+    "empty": {},
 }
 
 EMOJI_ZEUS = "ZEUS"
@@ -209,3 +211,16 @@ TIME_ZONE_LOCATION = "Europe.Amsterdam"
 
 PORT_DEFAULT = 2302
 PORT_MODDED = 2402
+
+EMBED_COLOR = {
+    "DEFAULT": 0xFF4500,
+    "SIDEOP": 0x0045FF,
+    "WW2": 0x808080,
+    "DLC": 0x00FF00,
+    "DLC_SIDEOP": 0x00FFFF,
+}
+
+DLC_TERRAINS = {
+    "Tanoa": "APEX",
+    "Livonia": "Contact"
+}

@@ -583,7 +583,7 @@ class CommandListener(Cog):
         # Change title, update event, export
         # NOTE: Does not check for too long input. Will result in an API error
         # and a bot crash
-        event.setTitle(title)
+        event.title = title
         await self._update_event(event)
         await ctx.send(f"Title {event.title} set for operation "
                        f"ID {event.id} at {event.date}")
@@ -599,7 +599,7 @@ class CommandListener(Cog):
         Example: setdate 1 2019-01-01
         """
         # Change date
-        event.setDate(_datetime)
+        event.date = _datetime
 
         # Update event and sort events, export
         await msgFnc.sortEventMessages(self.bot)
@@ -618,7 +618,7 @@ class CommandListener(Cog):
         Example: settime 1 18:30
         """
         # Change time
-        event.setTime(event_time)
+        event.time = event_time
 
         # Update event and sort events, export
         await msgFnc.sortEventMessages(self.bot)
@@ -636,7 +636,7 @@ class CommandListener(Cog):
         Example: settime 1 Takistan
         """
         # Change terrain, update event, export
-        event.setTerrain(terrain)
+        event.terrain = terrain
         await self._update_event(event)
         await ctx.send(f"Terrain {event.terrain} set for operation {event}")
         await self._show(ctx, event)
@@ -651,7 +651,7 @@ class CommandListener(Cog):
         Example: setfaction 1 Insurgents
         """
         # Change faction, update event, export
-        event.setFaction(faction)
+        event.faction = faction
         await self._update_event(event)
         await ctx.send(f"Faction {event.faction} set for operation {event}")
         await self._show(ctx, event)
@@ -756,13 +756,13 @@ class CommandListener(Cog):
     async def _set_quick(self, ctx: Context, event: Event, terrain: str,
                          faction: str, zeus: Member = None,
                          _time: ArgTime = None, quiet=False):
-        event.setTerrain(terrain)
-        event.setFaction(faction)
+        event.terrain = terrain
+        event.faction = faction
         if zeus is not None:
             event.signup(event.findRoleWithName(cfg.EMOJI_ZEUS), zeus,
                          replace=True)
         if _time is not None:
-            event.setTime(_time)
+            event.time = _time
 
         await msgFnc.sortEventMessages(self.bot)
         EventDatabase.toJson()  # Update JSON file
