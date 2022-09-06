@@ -23,6 +23,7 @@ initial_extensions = ['commandListener', 'eventListener', 'cogs.repl']
 
 intents = discord.Intents.default()
 intents.members = True  # pylint: disable=assigning-non-slot
+intents.messages = True  # pylint: disable=assigning-non-slot
 bot = OperationBot(command_prefix=COMMAND_CHAR, intents=intents)
 # bot.remove_command("help")
 
