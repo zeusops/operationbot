@@ -1,7 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-#set -x
-#set -e
+set -euo pipefail
 
 BOT_LOCATION=$HOME/operationbot
 BACKUP_LOCATION=$BOT_LOCATION/backup

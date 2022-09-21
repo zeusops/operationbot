@@ -1,4 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+
+set -euo pipefail
+
 BACKUP_LOCATION=$HOME/tmp/unique
 CURRENT_LOCATION=$HOME/tmp/sort
 
