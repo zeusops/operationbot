@@ -27,7 +27,8 @@ class EventListener(Cog):
         await self.bot.wait_until_ready()
         self.bot.fetch_data()
         commandchannel = self.bot.commandchannel
-        print(f"Command channel: {commandchannel} on server"
+        print(f"Logged in as {self.bot.user.name} {self.bot.user.id}")
+        print(f"Command channel: {commandchannel} on server "
               f"{commandchannel.guild}")
         await commandchannel.send("Connected")
         print("Ready, importing")
