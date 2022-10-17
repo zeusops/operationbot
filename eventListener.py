@@ -190,7 +190,7 @@ class EventListener(Cog):
         """return a string (days or hours/mins) if it is shortly before op
         else None"""
         if role.name in cfg.SIGNOFF_NOTIFY_ROLES.get(event.platoon_size, []):
-            time_delta = event.date - datetime.today()
+            time_delta = event.date - datetime.now(tz=cfg.TIME_ZONE)
             if time_delta > timedelta(days=0):
                 days = time_delta.days
                 hours = time_delta.seconds // (60 * 60)

@@ -1,5 +1,5 @@
 import re
-from datetime import date, datetime, time
+import datetime as dt
 from typing import cast
 
 from discord import Member, Message
@@ -154,30 +154,32 @@ class ArgArchivedEvent(ArgEvent):
         return await cls._convert(arg, archived=True)
 
 
-class ArgDateTime(datetime):
+class ArgDateTime(dt.datetime):
     @classmethod
-    async def convert(cls, ctx: Context, arg: str) -> datetime:
+    async def convert(cls, ctx: Context, arg: str) -> dt.datetime:
         _date = await ArgDate.convert(ctx, arg)
-        return datetime.combine(_date, time(hour=18, minute=30))
+        # NOTE: The time is given in UTC
+        return dt.datetime.combine(
+            _date, dt.time(hour=17, minute=30, tzinfo=cfg.TIME_ZONE))
 
 
-class ArgDate(date):
+class ArgDate(dt.date):
     @classmethod
-    async def convert(cls, _: Context, arg: str) -> date:
+    async def convert(cls, _: Context, arg: str) -> dt.date:
         try:
-            return date.fromisoformat(arg)
+            return dt.date.fromisoformat(arg)
         except ValueError as e:
             raise BadArgument(f"Invalid date format {arg}. "
                               "Has to be YYYY-MM-DD") from e
 
 
-class ArgTime(time):
+class ArgTime(dt.time):
     @classmethod
-    async def convert(cls, _: Context, arg: str) -> time:
+    async def convert(cls, _: Context, arg: str) -> dt.time:
         for fmt in ('%H:%M', '%H%M'):
             try:
-                _date = datetime.strptime(arg, fmt)
-                return time(_date.hour, _date.minute)
+                _date = dt.datetime.strptime(arg, fmt)
+                return dt.time(_date.hour, _date.minute)
             except ValueError:
                 pass
         raise BadArgument(f"Invalid time format {arg}. "

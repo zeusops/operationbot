@@ -153,7 +153,7 @@ class CommandListener(Cog):
                             platoon_size=None, force=False,
                             silent=False) -> Event:
         # TODO: Check for duplicate event dates?
-        if _date < datetime.today() and not force:
+        if _date < datetime.now(tz=cfg.TIME_ZONE) and not force:
             raise BadArgument(f"Requested date {_date} has already passed. "
                               "Use the `force` argument to override")
 
@@ -329,7 +329,7 @@ class CommandListener(Cog):
         for i in range(delta.days + 1):
             day = start + timedelta(days=i)
             if day.isoweekday() in weekend:
-                if day < date.today() and not force:
+                if day < datetime.now(tz=cfg.TIME_ZONE) and not force:
                     past_days.append(day)
                 else:
                     days.append(day)
