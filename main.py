@@ -8,7 +8,7 @@ import secret as s
 from operationbot import OperationBot
 from secret import COMMAND_CHAR, TOKEN
 
-CONFIG_VERSION = 10
+CONFIG_VERSION = 11
 SECRET_VERSION = 1
 if cfg.VERSION != CONFIG_VERSION:
     raise ValueError(

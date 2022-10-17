@@ -1,6 +1,7 @@
-from datetime import datetime, time
+from datetime import datetime, time, timezone
 
 from event import Event
+import config as cfg
 
 
 def test_default():
@@ -21,9 +22,10 @@ def test_default():
 
     assert event.title == 'Operation'
     assert event.description == ''
+    timestamp = int(date.replace(tzinfo=cfg.TIME_ZONE).astimezone(timezone.utc).timestamp())
     assert event.createEmbed().description == (
-        f"Local time: <t:{int(date.timestamp())}> "
-        f"(<t:{int(date.timestamp())}:R>)"
+        f"Local time: <t:{timestamp}> "
+        f"(<t:{timestamp}:R>)"
         f"\nTerrain: Stratis - Faction: USMC")
 
 
@@ -36,9 +38,10 @@ def test_dlc():
     assert event.faction == 'unknown'
     assert event.title == 'APEX Operation'
     assert event.description == ''
+    timestamp = int(date.replace(tzinfo=cfg.TIME_ZONE).astimezone(timezone.utc).timestamp())
     assert event.createEmbed().description == (
-        f"Local time: <t:{int(date.timestamp())}> "
-        f"(<t:{int(date.timestamp())}:R>)"
+        f"Local time: <t:{timestamp}> "
+        f"(<t:{timestamp}:R>)"
         f"\nTerrain: {event.terrain} - Faction: {event.faction}\n\n"
         f"The **{event.dlc} DLC** is required to join this event")
     event.terrain = 'Stratis'

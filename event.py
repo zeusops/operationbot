@@ -251,10 +251,12 @@ class Event:
 
     # Return an embed for the event
     def createEmbed(self) -> Embed:
-        date = self.date.strftime(f"%a %Y-%m-%d - %H:%M {cfg.TIME_ZONE}")
+        date = self.date.strftime(f"%a %Y-%m-%d - %H:%M {cfg.TIME_ZONE_NAME}")
         title = f"{self.title} ({date})"
-        local_time = f"<t:{int(self.date.timestamp())}>"
-        relative_time = f"<t:{int(self.date.timestamp())}:R>"
+        timestamp = int(self.date.replace(tzinfo=cfg.TIME_ZONE).astimezone(
+                datetime.timezone.utc).timestamp())
+        local_time = f"<t:{timestamp}>"
+        relative_time = f"<t:{timestamp}:R>"
         server_port = (f"\nServer port: **{self.port}**"
                        if self.port != cfg.PORT_DEFAULT else "")
         dlc_note = (f"\n\nThe **{self.dlc} DLC** is required to "
