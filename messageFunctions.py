@@ -104,7 +104,7 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
 
         # Find emojis to add
         for emoji in reactions:
-            if emoji not in reactionEmojisCurrent.keys():
+            if emoji not in reactionEmojisCurrent:
                 reactionEmojisToAdd.append(emoji)
 
         # Remove existing unintended reactions

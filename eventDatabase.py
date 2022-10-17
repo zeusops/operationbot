@@ -20,7 +20,9 @@ class EventDatabase:
     nextID: int = 0
     _emojis: Optional[Tuple[Emoji, ...]] = None
 
-    @classmethod
+    # FIXME: class properties will be deprecated in Python 3.11,
+    # find an alternative
+    @classmethod  # type: ignore
     @property
     def emojis(cls) -> Tuple[Emoji, ...]:
         if cls._emojis is None:

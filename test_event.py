@@ -1,7 +1,12 @@
 from datetime import datetime, time, timezone
 
-from event import Event
 import config as cfg
+from event import Event
+
+
+def _timestamp(date: datetime) -> int:
+    return int(date.replace(tzinfo=cfg.TIME_ZONE)
+               .astimezone(timezone.utc).timestamp())
 
 
 def test_default():
@@ -22,7 +27,7 @@ def test_default():
 
     assert event.title == 'Operation'
     assert event.description == ''
-    timestamp = int(date.replace(tzinfo=cfg.TIME_ZONE).astimezone(timezone.utc).timestamp())
+    timestamp = _timestamp(date)
     assert event.createEmbed().description == (
         f"Local time: <t:{timestamp}> "
         f"(<t:{timestamp}:R>)"
@@ -38,7 +43,7 @@ def test_dlc():
     assert event.faction == 'unknown'
     assert event.title == 'APEX Operation'
     assert event.description == ''
-    timestamp = int(date.replace(tzinfo=cfg.TIME_ZONE).astimezone(timezone.utc).timestamp())
+    timestamp = _timestamp(date)
     assert event.createEmbed().description == (
         f"Local time: <t:{timestamp}> "
         f"(<t:{timestamp}:R>)"

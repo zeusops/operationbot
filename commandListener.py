@@ -97,7 +97,6 @@ class CommandListener(Cog):
 
     @command()
     async def impreload(self, ctx: Context, moduleName: str):
-        # pylint: disable=no-self-use
         try:
             module = importlib.import_module(moduleName)
             importlib.reload(module)
@@ -111,7 +110,6 @@ class CommandListener(Cog):
 
     @command()
     async def exec(self, ctx: Context, flag: str, *, cmd: str):
-        # pylint: disable=no-self-use
         """
         Execute arbitrary code.
 
@@ -394,7 +392,7 @@ class CommandListener(Cog):
     @command(aliases=['csz'])
     async def changesize(self, ctx: Context, event: ArgEvent, new_size: str):
         if new_size not in cfg.PLATOON_SIZES:
-            ctx.send(f"Invalid new size {new_size}")
+            await ctx.send(f"Invalid new size {new_size}")
             return
 
         await self._change_size(ctx, event, new_size)
@@ -413,7 +411,7 @@ class CommandListener(Cog):
     @command(aliases=['csza'])
     async def changesizeall(self, ctx: Context, new_size: str):
         if new_size not in cfg.PLATOON_SIZES:
-            ctx.send(f"Invalid new size {new_size}")
+            await ctx.send(f"Invalid new size {new_size}")
             return
 
         for event in EventDatabase.events.values():
@@ -1053,7 +1051,7 @@ class CommandListener(Cog):
     @Cog.listener()
     @staticmethod
     async def on_command_error(ctx: Context, error: Exception):
-        # pylint: disable=no-self-use, no-else-return
+        # pylint: disable=no-else-return
         if isinstance(error, MissingRequiredArgument):
             await ctx.send(f"Missing argument. See: `{CMD}help {ctx.command}`")
             return
