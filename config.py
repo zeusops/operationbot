@@ -1,9 +1,10 @@
-from datetime import timedelta, timezone
+from datetime import timedelta
 from typing import Dict, List
+from zoneinfo import ZoneInfo
 
 import secret
 
-VERSION = 11
+VERSION = 12
 # PURGE_ON_CONNECT = False
 _test_channel = 530411066585382912
 if secret.DEBUG:
@@ -205,11 +206,7 @@ SIGNOFF_NOTIFY_ROLES: Dict[str, List] = {
     "WW2side": [],
 }
 
-TIME_ZONE_NAME = "CEST"
-# Timezone location: has to be in following Format: Continent.Capital
-TIME_ZONE_LOCATION = "Europe.Amsterdam"
-# NOTE: CET is +1, CEST is +2
-TIME_ZONE = timezone(timedelta(hours=2))
+TIME_ZONE = ZoneInfo("Europe/Amsterdam")
 
 PORT_DEFAULT = 2302
 PORT_MODDED = 2402

@@ -251,10 +251,10 @@ class Event:
 
     # Return an embed for the event
     def createEmbed(self) -> Embed:
-        date = self.date.strftime(f"%a %Y-%m-%d - %H:%M {cfg.TIME_ZONE_NAME}")
+        date_tz = self.date.replace(tzinfo=cfg.TIME_ZONE)
+        date = date_tz.strftime(f"%a %Y-%m-%d - %H:%M {date_tz.tzname()}")
         title = f"{self.title} ({date})"
-        timestamp = int(self.date.replace(tzinfo=cfg.TIME_ZONE).astimezone(
-                datetime.timezone.utc).timestamp())
+        timestamp = int(date_tz.astimezone(datetime.timezone.utc).timestamp())
         local_time = f"<t:{timestamp}>"
         relative_time = f"<t:{timestamp}:R>"
         server_port = (f"\nServer port: **{self.port}**"
