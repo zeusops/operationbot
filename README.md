@@ -1,4 +1,4 @@
-# Operation Bot
+# Operationbot for the Zeusops discord
 
 Operations bot for the Zeus Operations discord
 
