@@ -14,19 +14,18 @@ from discord.ext.commands import BadArgument, Cog, Context, command
 from discord.ext.commands.errors import (CommandError, CommandInvokeError,
                                          MissingRequiredArgument)
 
-import config as cfg
-import messageFunctions as msgFnc
-from converters import (ArgArchivedEvent, ArgDate, ArgDateTime, ArgEvent,
-                        ArgMember, ArgMessage, ArgRole, ArgTime, UnquotedStr)
-from errors import MessageNotFound, RoleError, UnexpectedRole
-from event import Event
-from eventDatabase import EventDatabase
-from operationbot import OperationBot
-from role import Role
-from roleGroup import RoleGroup
-from secret import ADMINS
-from secret import COMMAND_CHAR as CMD
-from secret import WW2_MODS
+from operationbot import config as cfg
+from operationbot import messageFunctions as msgFnc
+from operationbot.converters import (ArgArchivedEvent, ArgDate, ArgDateTime, ArgEvent, ArgMember, ArgMessage, ArgRole, ArgTime, UnquotedStr)
+from operationbot.errors import MessageNotFound, RoleError, UnexpectedRole
+from operationbot.event import Event
+from operationbot.eventDatabase import EventDatabase
+from operationbot.bot import OperationBot
+from operationbot.role import Role
+from operationbot.roleGroup import RoleGroup
+from operationbot.secret import ADMINS
+from operationbot.secret import COMMAND_CHAR as CMD
+from operationbot.secret import WW2_MODS
 
 
 class CommandListener(Cog):

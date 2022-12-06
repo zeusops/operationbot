@@ -1,8 +1,8 @@
 from typing import Union
 
-import config as cfg
-from role import Role
-from roleGroup import RoleGroup
+from operationbot import config as cfg
+from operationbot.role import Role
+from operationbot.roleGroup import RoleGroup
 
 
 class AdditionalRoleGroup(RoleGroup):

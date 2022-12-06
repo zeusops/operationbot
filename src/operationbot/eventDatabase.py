@@ -5,9 +5,9 @@ from typing import Any, Dict, Optional, Tuple
 
 from discord import Emoji
 
-import config as cfg
-from errors import EventNotFound
-from event import Event
+from operationbot import config as cfg
+from operationbot.errors import EventNotFound
+from operationbot.event import Event
 
 DATABASE_VERSION = 4
 

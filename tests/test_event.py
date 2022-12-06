@@ -1,7 +1,7 @@
 from datetime import datetime, time, timezone
 
-import config as cfg
-from event import Event
+from operationbot import config as cfg
+from operationbot.event import Event
 
 
 def _timestamp(date: datetime) -> int:

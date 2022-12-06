@@ -33,8 +33,8 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.viewcode",
-    "autoapi.extension",
     "myst_parser",
+    # "autoapi.extension",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -59,11 +59,12 @@ html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 
 
-autoapi_type = "python"
-autoapi_dirs = ["../../src"]
-
+# autoapi_type = "python"
+# autoapi_dirs = ["../../src"]
+#
+#
 # Do not hijack toctree to add entry
-autoapi_add_toctree_entry = False
+# autoapi_add_toctree_entry = False
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
