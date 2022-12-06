@@ -7,6 +7,7 @@ The project uses semantic versioning (see [semver](https://semver.org)).
 ## [Unreleased]
 
 
-## v0.1.0 - 2022-12-06
+## v0.39.1 - 2022-10-17
+
 ### Added
-- New python module `operationbot`, exposed as shell command `operationbot`
+- Show timezone names dynamically
