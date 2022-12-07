@@ -16,7 +16,9 @@ from discord.ext.commands.errors import (CommandError, CommandInvokeError,
 
 from operationbot import config as cfg
 from operationbot import messageFunctions as msgFnc
-from operationbot.converters import (ArgArchivedEvent, ArgDate, ArgDateTime, ArgEvent, ArgMember, ArgMessage, ArgRole, ArgTime, UnquotedStr)
+from operationbot.converters import (ArgArchivedEvent, ArgDate, ArgDateTime,
+                                     ArgEvent, ArgMember, ArgMessage, ArgRole,
+                                     ArgTime, UnquotedStr)
 from operationbot.errors import MessageNotFound, RoleError, UnexpectedRole
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase

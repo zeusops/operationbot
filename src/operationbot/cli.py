@@ -5,6 +5,7 @@ from typing import Optional
 
 from operationbot.main import main as bot_run
 
+
 def parse_arguments(arguments: list[str]) -> argparse.Namespace:
     """Parse generic arguments, given as parameters"""
     parser = argparse.ArgumentParser(

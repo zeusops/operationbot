@@ -93,7 +93,7 @@ make docs
 # Generates docs/build/html/
 ```
 
-To browse the website version of the documentation you just built, run:
+To browse the site version of the documentation you just built, run:
 
 ```shell
 make docs-serve
@@ -108,5 +108,5 @@ make docs docs-serve
 
 ### Templated repository
 
-This repo was created by the cookiecutter template available at
+This repository was created by the cookiecutter template available at
 <https://github.com/OverkillGuy/python-template>, using commit hash: `5c882f2e22311a2307263d14877c8229a2ed6961`.
