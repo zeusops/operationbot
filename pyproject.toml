@@ -11,6 +11,10 @@ operationbot = "operationbot.cli:cli"
 
 [tool.poetry.dependencies]
 python = "^3.9"
+# Discord bot lib
+"discord.py" = ">=1.3.4,<2.0.0"
+# Yaml parser
+pyyaml = "*"
 
 
 # Note: Linters not defined in this file but .pre-commit-config.yaml, which
