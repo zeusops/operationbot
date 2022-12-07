@@ -12,16 +12,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python_version }}
-        uses: actions/setup-python@v3
+      - name: Python ${{ matrix.python_version }} install
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python_version }}
-      - name: Install dependencies
+      - name: Poetry setup
+        uses: Gr1N/setup-poetry@v7
+      # TODO: Build docs separately
+      - run: poetry install --with=test --without=docs
+      - name: Run the tests
         run: |
-          python -m pip install --upgrade pip
-          pip install pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          cp secret.py.example secret.py
-      - name: Test with pytest
-        run: |
-          pytest
+          cp secret.py.example src/operationbot/secret.py
+          make test
