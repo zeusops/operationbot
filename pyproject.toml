@@ -1,0 +1,80 @@
+[tool.poetry]
+name = "operationbot"
+version = "0.39.1"
+description = "Operations bot for the Zeusops discord"
+authors = ["Sami Laine <sami.v.laine@gmail.com>"]
+readme = "README.md"
+license = "GPL-3.0-or-later"
+
+[tool.poetry.scripts]
+operationbot = "operationbot.cli:cli"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+
+# Note: Linters not defined in this file but .pre-commit-config.yaml, which
+# installs/manages each tool in its own isolated virtualenv
+
+[tool.poetry.group.test.dependencies]
+pytest = "7.*"
+# Test coverage
+pytest-cov = "3.*"
+# Clearer assertion failures (colorful diff)
+pytest-clarity = "1.*"
+# Expose unittest.Mocker in pytest
+pytest-mock = "*"
+
+[tool.poetry.group.docs.dependencies]
+# Main documentation-as-code (HTML/PDF generator)
+Sphinx = "5.*"
+# Read the docs (pretty) theme for sphinx
+sphinx-rtd-theme = "1.*"
+# Markdown parser for sphinx: Sphinx uses "RST" files, this adds markdown
+myst-parser = "*"
+# Automatic Python module docs (javadoc-style)
+sphinx-autoapi = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+# Make isort work with Black
+# Avoids conflicting imports
+# As per https://pycqa.github.io/isort/docs/configuration/black_compatibility/#using-a-config-file-such-as-isortcfg
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+# Avoid pointless warning about performance hit of f-string in loggers
+[tool.pylint.message_control]
+disable = ["logging-fstring-interpolation"]
+
+[tool.pytest.ini_options]
+addopts = """-vv \
+      --doctest-modules \
+      --cov=operationbot \
+      --cov-report=xml:test_results/coverage.xml \
+      --cov-report=html:test_results/coverage.html \
+      --cov-report=term \
+      --junit-xml=test_results/results.xml"""
+
+[tool.mypy]
+python_version = "3.9"
+
+[tool.ruff]
+# Black (formatter) uses 88 characters per line not PEP8's 79
+line-length = 88
+# Per-project ignored rules: show rule name + explain why ignored for whole project
+ignore = [
+    # "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
+    # This is useless in tests/ where we WANT to have asserts
+    "S101",
+    # "Docstrings first line must end in a period"
+    # Overly strict rule don't serve anyone. PEP8 be damned on this
+    "D400",
+    # "Line too long"
+    # We have "black" formatter to deal with those (splits line), and flake8
+    # still complains about long comments(!!!) automatically
+    "E501"
+]
