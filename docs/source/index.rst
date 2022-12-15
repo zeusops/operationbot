@@ -12,4 +12,5 @@ root of the code repository.
 
    Changelog <changelog>
    architecture
+..
    API Reference <autoapi/operationbot/index>
