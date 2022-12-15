@@ -8,13 +8,13 @@ from discord.ext.commands.converter import MemberConverter
 from discord.ext.commands.errors import (BadArgument, CommandError,
                                          MemberNotFound)
 
-import config as cfg
-import messageFunctions as msgFnc
-from errors import EventNotFound, MessageNotFound, RoleNotFound
-from event import Event
-from eventDatabase import EventDatabase
-from operationbot import OperationBot
-from role import Role
+from operationbot import config as cfg
+from operationbot import messageFunctions as msgFnc
+from operationbot.errors import EventNotFound, MessageNotFound, RoleNotFound
+from operationbot.event import Event
+from operationbot.eventDatabase import EventDatabase
+from operationbot.bot import OperationBot
+from operationbot.role import Role
 
 NUMBERS = {
     1: "one",

@@ -2,7 +2,7 @@ import traceback
 
 from discord.ext.commands import Bot, Cog, Context, ExtensionNotLoaded, command
 
-from main import initial_extensions
+from operationbot.main import initial_extensions
 
 
 class Reload(Cog):

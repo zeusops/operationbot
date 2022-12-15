@@ -4,13 +4,13 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import discord
 from discord import Embed, Emoji
 
-import config as cfg
-from additional_role_group import AdditionalRoleGroup
-from config import EMBED_COLOR
-from errors import RoleError, RoleGroupNotFound, RoleNotFound, RoleTaken
-from role import Role
-from roleGroup import RoleGroup
-from secret import PLATOON_SIZE
+from operationbot import config as cfg
+from operationbot.additional_role_group import AdditionalRoleGroup
+from operationbot.config import EMBED_COLOR
+from operationbot.errors import RoleError, RoleGroupNotFound, RoleNotFound, RoleTaken
+from operationbot.role import Role
+from operationbot.roleGroup import RoleGroup
+from operationbot.secret import PLATOON_SIZE
 
 TITLE = "Operation"
 SIDEOP_TITLE = "Side Operation"

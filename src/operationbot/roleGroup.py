@@ -2,9 +2,9 @@ from typing import Any, Dict, List, Tuple, Union
 
 from discord import Emoji
 
-import config as cfg
-from errors import RoleNotFound, UnexpectedRole
-from role import Role
+from operationbot import config as cfg
+from operationbot.errors import RoleNotFound, UnexpectedRole
+from operationbot.role import Role
 
 
 class RoleGroup:

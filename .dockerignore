@@ -1,18 +1,7 @@
-venv*
-secret.py
-__pycache__
-.vscode
-database/*
-.mypy_cache
-backup
-foo
-
-# Templated versions begin:
-
 # Poetry.lock is an exact version pinning tool (down to SHA256 of libs)
 # If writing a (reusable) library, exact versions don't matter that much so it
 # may make sense to gitignore that file, uncommenting the following line:
-poetry.lock
+# poetry.lock
 # If writing an App (binary-deployable), then exact library versions
 # do matter a lot, and you'll want to keep Poetry.lock tracked = keep
 # commented

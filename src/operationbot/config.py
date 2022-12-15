@@ -2,7 +2,7 @@ from datetime import timedelta
 from typing import Dict, List
 from zoneinfo import ZoneInfo
 
-import secret
+from operationbot import secret
 
 VERSION = 12
 # PURGE_ON_CONNECT = False

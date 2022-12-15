@@ -7,13 +7,13 @@ from discord.ext.commands import Cog
 from discord.partial_emoji import PartialEmoji
 from discord.user import User
 
-import config as cfg
-import messageFunctions as msgFnc
-from errors import EventNotFound, RoleNotFound, RoleTaken, UnknownEmoji
-from event import Event
-from eventDatabase import EventDatabase
-from operationbot import OperationBot
-from role import Role
+from operationbot import config as cfg
+from operationbot import messageFunctions as msgFnc
+from operationbot.errors import EventNotFound, RoleNotFound, RoleTaken, UnknownEmoji
+from operationbot.event import Event
+from operationbot.eventDatabase import EventDatabase
+from operationbot.bot import OperationBot
+from operationbot.role import Role
 
 
 class EventListener(Cog):

@@ -4,10 +4,10 @@ from discord import Emoji, Message, NotFound, TextChannel
 from discord.embeds import Embed
 from discord.errors import Forbidden
 
-from errors import MessageNotFound, RoleError
-from event import Event
-from eventDatabase import EventDatabase
-from operationbot import OperationBot
+from operationbot.errors import MessageNotFound, RoleError
+from operationbot.event import Event
+from operationbot.eventDatabase import EventDatabase
+from operationbot.bot import OperationBot
 
 
 async def getEventMessage(event: Event, bot: OperationBot, archived=False) \

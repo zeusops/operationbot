@@ -9,9 +9,9 @@ from discord import TextChannel, User
 from discord.ext.commands import Bot, DefaultHelpCommand
 from discord.guild import Guild
 
-import config as cfg
-from eventDatabase import EventDatabase
-from secret import ADMIN, SIGNOFF_NOTIFY_USER
+from operationbot import config as cfg
+from operationbot.eventDatabase import EventDatabase
+from operationbot.secret import ADMIN, SIGNOFF_NOTIFY_USER
 
 
 class AliasHelpCommand(DefaultHelpCommand):
