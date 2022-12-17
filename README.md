@@ -16,7 +16,8 @@
 3. Change the channel IDs in `config.py` if the bot is not running on the Zeus
    Operations discord.
 
-4. Install the package locally (via `poetry`, get it via `pip install poetry`).
+4. Install the package locally (via `poetry`, get it via `pip install poetry`,
+   or `pipx install poetry`).
 
    ```shell
    make install
