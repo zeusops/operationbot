@@ -11,11 +11,11 @@ install:
 # Enforce the pre-commit hooks
 .PHONY: install-hooks
 install-hooks:
-	pre-commit install
+	poetry run pre-commit install
 
 .PHONY: lint
 lint:  # Use all linters on all files (not just staged for commit)
-	pre-commit run --all --all-files
+	poetry run pre-commit run --all --all-files
 
 .PHONY: test
 test:

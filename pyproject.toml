@@ -42,6 +42,7 @@ sphinx-autoapi = "*"
 [tool.poetry.group.dev.dependencies]
 types-PyYAML = "*"
 "discord.py-stubs" = "*"
+pre-commit = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
