@@ -1,0 +1,26 @@
+---
+name: Test python
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: ["3.10"]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Python ${{ matrix.python_version }} install
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python_version }}
+    - name: Poetry setup
+      uses: Gr1N/setup-poetry@v7
+    # TODO: Build docs separately
+    - run: poetry install --without=docs
+    - name: Run linting
+      run: |
+        cp secret.py.example src/operationbot/secret.py
+        make lint
