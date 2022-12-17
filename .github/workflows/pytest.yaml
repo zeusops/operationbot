@@ -20,6 +20,10 @@ jobs:
       uses: Gr1N/setup-poetry@v8
     # TODO: Build docs separately
     - run: poetry install --with=test --without=docs
+    - name: Run linting
+      run: |
+        cp secret.py.example src/operationbot/secret.py
+        make lint
     - name: Run the tests
       run: |
         cp secret.py.example src/operationbot/secret.py
