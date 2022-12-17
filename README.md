@@ -1,6 +1,6 @@
 # Operationbot for the Zeusops discord
 
-**Note:** Requires Python 3.9 or newer.
+**Note:** Requires Python 3.10 or newer.
 
 ## Setting up
 
@@ -41,7 +41,7 @@ Then inside the virtual environment, launch the command:
 
 ### Python setup
 
-This repository uses Python3.9, using
+This repository uses Python 3.10, using
 [Poetry](https://python-poetry.org) as package manager to define a
 Python package inside `src/operationbot/`.
 

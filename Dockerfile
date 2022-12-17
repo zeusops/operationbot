@@ -1,4 +1,4 @@
-FROM python:3.9-bullseye
+FROM python:3.10-bullseye
 
 # Bring poetry, our package manager, and pre-commit hooks
 ARG POETRY_VERSION=1.2.0

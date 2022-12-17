@@ -6,6 +6,8 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Changed
+- Depends on Python version 3.10
 
 ## v0.39.2 - 2022-12-15
 

@@ -15,7 +15,7 @@
       "project_name": "Operation Bot",
       "project_slug": "operationbot",
       "project_variant": "just_a_CLI",
-      "python_version": "3.9"
+      "python_version": "3.10"
     }
   },
   "directory": null
