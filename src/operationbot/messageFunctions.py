@@ -10,8 +10,9 @@ from operationbot.eventDatabase import EventDatabase
 from operationbot.bot import OperationBot
 
 
-async def getEventMessage(event: Event, bot: OperationBot, archived=False) \
-        -> Message:
+async def getEventMessage(
+    event: Event, bot: OperationBot, archived=False
+) -> Message:
     """Get a message related to an event."""
     if archived:
         channel = bot.eventarchivechannel
@@ -21,8 +22,9 @@ async def getEventMessage(event: Event, bot: OperationBot, archived=False) \
     try:
         return await channel.fetch_message(event.messageID)
     except NotFound as e:
-        raise MessageNotFound("No event message found with "
-                              f"message ID {event.messageID}") from e
+        raise MessageNotFound(
+            f"No event message found with message ID {event.messageID}"
+        ) from e
 
 
 async def sortEventMessages(bot: OperationBot):
@@ -42,8 +44,9 @@ async def sortEventMessages(bot: OperationBot):
 
 
 # from EventDatabase
-async def createEventMessage(event: Event, channel: TextChannel,
-                             update_id=True) -> Message:
+async def createEventMessage(
+    event: Event, channel: TextChannel, update_id=True
+) -> Message:
     """Create a new event message."""
     # Create embed and message
     embed = event.createEmbed()
@@ -55,16 +58,18 @@ async def createEventMessage(event: Event, channel: TextChannel,
 
 
 # was: EventDatabase.updateEvent
-async def updateMessageEmbed(eventMessage: Message, updatedEvent: Event) \
-        -> None:
+async def updateMessageEmbed(
+    eventMessage: Message, updatedEvent: Event
+) -> None:
     """Update the embed and footer of a message."""
     newEventEmbed = updatedEvent.createEmbed()
     await eventMessage.edit(embed=newEventEmbed)
 
 
 # from EventDatabase
-async def updateReactions(event: Event, message: Message = None, bot=None,
-                          reorder=False):
+async def updateReactions(
+    event: Event, message: Message = None, bot=None, reorder=False
+):
     """
     Update reactions of an event message.
 
@@ -74,8 +79,9 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
     """
     if message is None:
         if bot is None:
-            raise ValueError("Requires either the `message` or `bot` argument"
-                             " to be provided")
+            raise ValueError(
+                "Requires either the `message` or `bot` argument to be provided"
+            )
         message = await getEventMessage(event, bot)
 
     reactions: List[Union[Emoji, str]] = event.getReactions()
@@ -117,8 +123,11 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
             await message.add_reaction(emoji)
         except Forbidden as e:
             if e.code == 30010:
-                raise RoleError("Too many reactions, not adding role "
-                                f"{emoji}. This should not happen.") from e
+                raise RoleError(
+                    "Too many reactions, not adding role "
+                    f"{emoji}. This should not happen."
+                ) from e
+
 
 # async def createMessages(events: Dict[int, Event], bot):
 #     # Update event message contents and add reactions
@@ -143,7 +152,7 @@ def messageEventId(message: Message) -> int:
         raise ValueError("Footer is empty")
     # Casting because mypy doesn't detect correctly that the type of
     # footer.text has been checked already
-    return int(cast(str, footer.text).split(' ')[-1])
+    return int(cast(str, footer.text).split(" ")[-1])
 
 
 async def syncMessages(events: Dict[int, Event], bot: OperationBot):
@@ -158,8 +167,9 @@ async def syncMessages(events: Dict[int, Event], bot: OperationBot):
             if messageEventId(message) == event.id:
                 print(f"Found message {message.id} for event {event}")
             else:
-                print(f"Found incorrect message for event {event}, deleting "
-                      f"and creating")
+                print(
+                    f"Found incorrect message for event {event}, deleting and creating"
+                )
                 # Technically multiple events might have the same saved
                 # messageID but it's simpler to just recreate messages here if
                 # the event ID doesn't match
