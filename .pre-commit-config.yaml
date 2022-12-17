@@ -30,14 +30,45 @@ repos:
   hooks:
   - id: hadolint
     name: Hadolint (Dockerfile checker)
-# Actual Python Linter
-- repo: https://github.com/charliermarsh/ruff-pre-commit
-  rev: v0.0.146
+# Sort python imports
+- repo: https://github.com/pycqa/isort
+  rev: 5.11.2
   hooks:
-  - id: ruff
+  - id: isort
+    name: isort (python)
+# Python formatter
+- repo: https://github.com/psf/black
+  rev: 22.12.0
+  hooks:
+  - id: black
+    name: Black (Python formatter)
+# Python type-checker
 - repo: https://github.com/pre-commit/mirrors-mypy
   rev: v0.982
   hooks:
   - id: mypy
     name: Mypy (Python type-checker)
     additional_dependencies: [types-PyYAML==6.0.12.2]
+# Python linter
+- repo: https://github.com/pycqa/flake8
+  rev: 6.0.0
+  hooks:
+  - id: flake8
+    name: Flake8 (Python linter)
+    # flake8 refuses to use pyproject.toml, needs a separate config.
+    # See https://github.com/PyCQA/flake8/issues/234
+    args: [
+      "--config=.github/linters/.flake8",
+      "--output-file",
+      "test_results/flake8.txt",
+      "--tee",
+      "src/",
+      "tests/"
+    ]
+    additional_dependencies:
+    # Bandit is currently disabled it because doesn't seem to respect
+    # per-file-ignores=tests:S101 and keeps complaining about asserts
+    # in tests.
+    # - "flake8-bandit==4.1.1"
+    - "flake8-bugbear==22.8.23"
+    - "flake8-docstrings==1.6.0"

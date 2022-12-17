@@ -1,3 +1,12 @@
+# This config is used by Super-Linter and .pre-commit-config.yaml
 [flake8]
-# Black uses 88 as line length
-max-line-length=88
+max-line-length=79
+# Disable complaints about the use of assert in tests
+per-file-ignores=tests:S101
+# E501: line too long; replaced by B950
+# W503: line break before binary operator; against PEP8
+# D100-D107: docstrings; disabled until we have docstrings for everything
+# D400: first line period; overly strict, might be enabled at some point though
+ignore=E501,W503,D100,D101,D102,D103,D105,D107,D400
+# B950: line too long, but tolerates 10% over the limit, like black
+extend-select=B950

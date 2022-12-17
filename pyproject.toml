@@ -39,6 +39,10 @@ myst-parser = "*"
 # Automatic Python module docs (javadoc-style)
 sphinx-autoapi = "*"
 
+[tool.poetry.group.dev.dependencies]
+types-PyYAML = "*"
+"discord.py-stubs" = "*"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
@@ -49,6 +53,10 @@ build-backend = "poetry.core.masonry.api"
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+line_length = 79
+
+[tool.black]
+line-length = 79
 
 # Avoid pointless warning about performance hit of f-string in loggers
 [tool.pylint.message_control]
@@ -65,20 +73,4 @@ addopts = """-vv \
 
 [tool.mypy]
 python_version = "3.10"
-
-[tool.ruff]
-# Black (formatter) uses 88 characters per line not PEP8's 79
-line-length = 88
-# Per-project ignored rules: show rule name + explain why ignored for whole project
-ignore = [
-    # "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code."
-    # This is useless in tests/ where we WANT to have asserts
-    "S101",
-    # "Docstrings first line must end in a period"
-    # Overly strict rule don't serve anyone. PEP8 be damned on this
-    "D400",
-    # "Line too long"
-    # We have "black" formatter to deal with those (splits line), and flake8
-    # still complains about long comments(!!!) automatically
-    "E501"
-]
+check_untyped_defs = true
