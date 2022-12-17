@@ -31,7 +31,7 @@ class User:
     # This class implements the same signature as the discord.abc.User class,
     # we need to use the 'id' argument here.
     # pylint: disable=redefined-builtin
-    def __init__(self, id: int = None, display_name: str = None):
+    def __init__(self, id: int | None = None, display_name: str | None = None):
         self.id = id
         self.display_name = display_name
 
@@ -133,7 +133,8 @@ class Event:
             msg = ""
             role = sourceGroup[roleName]
             print(
-                f"moving role {roleName} from {sourceGroup.name} to {targetGroupName}"
+                f"moving role {roleName} from {sourceGroup.name} "
+                f"to {targetGroupName}"
             )
             if targetGroupName is None:
                 if role.userID is not None:
@@ -232,7 +233,7 @@ class Event:
             else:
                 raise ValueError(
                     "Unsupported platoon size conversion: "
-                    "{self.platoon_size} -> {new_size}"
+                    f"{self.platoon_size} -> {new_size}"
                 )
         elif self.platoon_size == "1PLT":
             if new_size == "2PLT":
@@ -241,7 +242,8 @@ class Event:
                     "Conversion from 1PLT to 2PLT not implemented"
                 )
             raise ValueError(
-                "Unsupported platoon size conversion: {self.platoon_size} -> {new_size}"
+                "Unsupported platoon size conversion: "
+                f"{self.platoon_size} -> {new_size}"
             )
         else:
             raise ValueError(
@@ -354,7 +356,8 @@ class Event:
             for role in roleGroup.roles:
                 if role.name == name:
                     raise RoleError(
-                        f"Role with name {name} already exists, not adding new role"
+                        f"Role with name {name} already exists, "
+                        "not adding new role"
                     )
 
         # Find next emoji for additional role
@@ -371,7 +374,10 @@ class Event:
         return emoji
 
     def _check_additional(self, role: Role):
-        """Raises a RoleError if the supplied role is not an additional role"""
+        """Check if the supplied role is an additional role.
+
+        Raises a RoleError if it is not.
+        """
         if role not in self.roleGroups["Additional"].roles:
             raise RoleError(f"Role {role.name} is not an additional role")
 
@@ -388,8 +394,7 @@ class Event:
         self.roleGroups["Additional"].removeRole(role)
 
     def removeRoleGroup(self, groupName: str) -> bool:
-        """
-        Remove a role group.
+        """Remove a role group.
 
         Returns false if the group cannot be found.
         """
@@ -476,7 +481,8 @@ class Event:
     def findRoleWithName(self, roleName: str) -> Role:
         """Find a role with given name.
 
-        Raises a RoleNotFound if the role cannot be found."""
+        Raises a RoleNotFound if the role cannot be found.
+        """
         roleName = roleName.lower()
         for roleGroup in self.roleGroups.values():
             role: Role
@@ -503,7 +509,7 @@ class Event:
     def signup(
         self, roleToSet: Role, user: discord.abc.User, replace=False
     ) -> Tuple[Optional[Role], User]:
-        """Add username to role.
+        """Add user to a role.
 
         Raises an error if the role is taken, unless replace is set to True.
 
@@ -528,9 +534,10 @@ class Event:
         raise RoleNotFound(f"Could not find role: {roleToSet}")
 
     def undoSignup(self, user) -> Optional[Role]:
-        """Remove username from any signups.
+        """Remove user from any signups.
 
-        Returns Role if user was signed up, otherwise None."""
+        Returns Role if user was signed up, otherwise None.
+        """
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role.userID == user.id:

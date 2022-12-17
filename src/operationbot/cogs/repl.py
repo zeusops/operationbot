@@ -16,7 +16,7 @@ from discord.ext.commands import (
     MissingRequiredArgument,
 )
 
-from operationbot.eventDatabase import EventDatabase  # noqa
+from operationbot.eventDatabase import EventDatabase
 from operationbot.secret import COMMAND_CHAR as CMD
 
 

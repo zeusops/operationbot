@@ -4,10 +4,10 @@ from discord import Emoji, Message, NotFound, TextChannel
 from discord.embeds import Embed
 from discord.errors import Forbidden
 
+from operationbot.bot import OperationBot
 from operationbot.errors import MessageNotFound, RoleError
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase
-from operationbot.bot import OperationBot
 
 
 async def getEventMessage(
@@ -30,7 +30,8 @@ async def getEventMessage(
 async def sortEventMessages(bot: OperationBot):
     """Sort events in event database.
 
-    Raises MessageNotFound if messages are missing."""
+    Raises MessageNotFound if messages are missing.
+    """
     EventDatabase.sortEvents()
 
     event: Event
@@ -68,10 +69,9 @@ async def updateMessageEmbed(
 
 # from EventDatabase
 async def updateReactions(
-    event: Event, message: Message = None, bot=None, reorder=False
+    event: Event, message: Message | None = None, bot=None, reorder=False
 ):
-    """
-    Update reactions of an event message.
+    """Update reactions of an event message.
 
     Requires either the `message` or `bot` argument to be provided. Calling
     the function with reorder = True causes all reactions to be removed and
@@ -168,7 +168,8 @@ async def syncMessages(events: Dict[int, Event], bot: OperationBot):
                 print(f"Found message {message.id} for event {event}")
             else:
                 print(
-                    f"Found incorrect message for event {event}, deleting and creating"
+                    f"Found incorrect message for event {event}, "
+                    "deleting and creating"
                 )
                 # Technically multiple events might have the same saved
                 # messageID but it's simpler to just recreate messages here if

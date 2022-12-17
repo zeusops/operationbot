@@ -3,10 +3,11 @@
 import logging
 import sys
 import traceback
+from typing import Any
 
 import discord
 from discord import TextChannel, User
-from discord.ext.commands import Bot, DefaultHelpCommand
+from discord.ext.commands import Bot, DefaultHelpCommand, HelpCommand
 from discord.guild import Guild
 
 from operationbot import config as cfg
@@ -23,7 +24,6 @@ class AliasHelpCommand(DefaultHelpCommand):
         Copied with modifications from discord/ext/commands/help.py
         Includes the first alias of a command in the default help message.
         """
-
         # pylint: disable=W0212
         def get_max_size(names):
             as_lengths = (
@@ -57,7 +57,12 @@ class AliasHelpCommand(DefaultHelpCommand):
 class OperationBot(Bot):
     """A custom Discord bot."""
 
-    def __init__(self, *args, help_command=None, **kwargs):
+    def __init__(
+        self,
+        *args: Any,
+        help_command: HelpCommand | None = None,
+        **kwargs: Any,
+    ):
         super().__init__(*args, **kwargs)
         self.commandchannel: TextChannel
         self.logchannel: TextChannel

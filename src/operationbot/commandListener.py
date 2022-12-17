@@ -19,6 +19,7 @@ from discord.ext.commands.errors import (
 
 from operationbot import config as cfg
 from operationbot import messageFunctions as msgFnc
+from operationbot.bot import OperationBot
 from operationbot.converters import (
     ArgArchivedEvent,
     ArgDate,
@@ -33,7 +34,6 @@ from operationbot.converters import (
 from operationbot.errors import MessageNotFound, RoleError, UnexpectedRole
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase
-from operationbot.bot import OperationBot
 from operationbot.role import Role
 from operationbot.roleGroup import RoleGroup
 from operationbot.secret import ADMINS
@@ -63,8 +63,7 @@ class CommandListener(Cog):
 
         @bot.check
         async def command_channels_only(ctx: Context):
-            """Prevents the bot from being controlled outside of the specified
-            command and debug channels."""
+            """Prevent commands from being used outside of the command channel."""
             # pylint: disable=protected-access
             return (
                 ctx.channel == self.bot.commandchannel
@@ -73,8 +72,7 @@ class CommandListener(Cog):
 
     @command()
     async def testrole(self, ctx: Context, event: ArgEvent, role: ArgRole):
-        """
-        Test role parser.
+        """Test role parser.
 
         This command finds and displays roles from the given event. For testing purposes only.
         """  # NOQA
@@ -82,8 +80,7 @@ class CommandListener(Cog):
 
     @command(aliases=["t"])
     async def testmember(self, ctx: Context, member: ArgMember):
-        """
-        Test role parser.
+        """Test role parser.
 
         This command finds and displays roles from the given event. For testing purposes only.
         """  # NOQA
@@ -91,14 +88,12 @@ class CommandListener(Cog):
 
     @command()
     async def roleparserinfo(self, ctx: Context):
-        """
-        Display information about parsing roles.
-        """
-
+        """Display information about parsing roles."""
         if ArgRole.__doc__:
             doc = ArgRole.__doc__.split("\n\n")[2]
             await ctx.send(
-                f"How to use commands that use ArgRole for parsing roles: \n\n{doc}"
+                f"How to use commands that use ArgRole for "
+                f"parsing roles: \n\n{doc}"
             )
         else:
             await ctx.send("No documentation found")
@@ -125,8 +120,7 @@ class CommandListener(Cog):
 
     @command()
     async def exec(self, ctx: Context, flag: str, *, cmd: str):
-        """
-        Execute arbitrary code.
+        """Execute arbitrary code.
 
         If <flag> is p, the result gets wrapped in a print() statement
         If <flag> is c, the result gets printed in console
@@ -159,7 +153,10 @@ class CommandListener(Cog):
                 msg = "Executed"
             # sys.stdout = old_stdout
         except Exception:  # pylint: disable=broad-except
-            msg = f"An error occured while executing: ```py\n{traceback.format_exc()}```"
+            msg = (
+                "An error occured while executing: "
+                f"```py\n{traceback.format_exc()}```"
+            )
         await ctx.send(msg)
 
     async def _create_event(
@@ -209,11 +206,10 @@ class CommandListener(Cog):
         self,
         ctx: Context,
         _datetime: ArgDateTime,
-        force=None,
+        force=False,
         platoon_size=None,
     ):
-        """
-        Create a new event.
+        """Create a new event.
 
         Use the `force` argument to create past events.
 
@@ -223,39 +219,34 @@ class CommandListener(Cog):
                  create 2019-01-01 force
                  create 2019-01-01 force 2PLT
         """  # NOQA
-
         await self._create_event(
             ctx, _datetime, platoon_size=platoon_size, force=force
         )
 
     @command(aliases=["cs"])
     async def createside(
-        self, ctx: Context, _datetime: ArgDateTime, force=None
+        self, ctx: Context, _datetime: ArgDateTime, force=False
     ):
-        """
-        Create a new side op event.
+        """Create a new side op event.
 
         Use the `force` argument to create past events.
 
         Example: createside 2019-01-01
                  createside 2019-01-01 force
         """
-
         await self._create_event(ctx, _datetime, sideop=True, force=force)
 
     @command(aliases=["cs2"])
     async def createside2(
-        self, ctx: Context, _datetime: ArgDateTime, force=None
+        self, ctx: Context, _datetime: ArgDateTime, force=False
     ):
-        """
-        Create a new WW2 side op event.
+        """Create a new WW2 side op event.
 
         Use the `force` argument to create past events.
 
         Example: createside2 2019-01-01
                  createside2 2019-01-01 force
         """
-
         await self._create_event(
             ctx, _datetime, sideop=True, platoon_size="WW2side", force=force
         )
@@ -266,10 +257,10 @@ class CommandListener(Cog):
         _datetime: ArgDateTime,
         terrain: str,
         faction: str,
-        zeus: Member = None,
-        _time: ArgTime = None,
+        zeus: Member | None = None,
+        _time: ArgTime | None = None,
         sideop=False,
-        platoon_size: str = None,
+        platoon_size: str | None = None,
         quiet=False,
     ):
         if _time is not None:
@@ -302,11 +293,10 @@ class CommandListener(Cog):
         _datetime: ArgDateTime,
         terrain: str,
         faction: str,
-        zeus: ArgMember = None,
-        _time: ArgTime = None,
+        zeus: ArgMember | None = None,
+        _time: ArgTime | None = None,
     ):
-        """
-        Create and pre-fill a main op event.
+        """Create and pre-fill a main op event.
 
         Define the event time to force creation of past events.
 
@@ -326,11 +316,11 @@ class CommandListener(Cog):
         _datetime: ArgDateTime,
         terrain: str,
         faction: str,
-        zeus: ArgMember = None,
-        _time: ArgTime = None,
+        # NOTE: Optional[] is required by discord.py (instead of Arg | None)
+        zeus: Optional[ArgMember] = None,
+        _time: Optional[ArgTime] = None,
     ):
-        """
-        Create and pre-fill a side op event.
+        """Create and pre-fill a side op event.
 
         Define the event time to force creation of past events.
 
@@ -350,11 +340,10 @@ class CommandListener(Cog):
         _datetime: ArgDateTime,
         terrain: str,
         faction: str,
-        zeus: ArgMember = None,
-        _time: ArgTime = None,
+        zeus: Optional[ArgMember] = None,
+        _time: Optional[ArgTime] = None,
     ):
-        """
-        Create and pre-fill a WW2 side op event. Automatically sets description.
+        """Create and pre-fill a WW2 side op event. Automatically sets description.
 
         Define the event time to force creation of past events.
 
@@ -378,7 +367,11 @@ class CommandListener(Cog):
 
     @command(aliases=["mc"])
     async def multicreate(
-        self, ctx: Context, start: ArgDate, end: ArgDate = None, force=None
+        self,
+        ctx: Context,
+        start: ArgDate,
+        end: Optional[ArgDate] = None,
+        force=False,
     ):
         """Create events for all weekends within specified range.
 
@@ -392,7 +385,7 @@ class CommandListener(Cog):
         await self._multi_create(ctx, start, end, force)
 
     async def _multi_create(
-        self, ctx: Context, start: date, end: date = None, force=None
+        self, ctx: Context, start: date, end: date | None = None, force=False
     ):
         if end is None:
             last_day = calendar.monthrange(start.year, start.month)[1]
@@ -533,7 +526,8 @@ class CommandListener(Cog):
         except IndexError as e:
             user = self.bot.owner
             raise RoleError(
-                f"Too many additional roles. This should not happen. Nag at {user.mention}"
+                "Too many additional roles. This should not happen. "
+                f"Nag at {user.mention}"
             ) from e
         except RoleError as e:
             if batch:
@@ -546,8 +540,7 @@ class CommandListener(Cog):
     async def addrole(
         self, ctx: Context, event: ArgEvent, *, rolename: UnquotedStr
     ):
-        """
-        Add a new additional role or multiple roles to the event.
+        """Add a new additional role or multiple roles to the event.
 
         Separate different roles with a newline
 
@@ -582,8 +575,7 @@ class CommandListener(Cog):
     async def removerole(
         self, ctx: Context, event: ArgEvent, *, role: ArgRole
     ):
-        """
-        Remove an additional role from the event.
+        """Remove an additional role from the event.
 
         Example: removerole 1 Y1 (Bradley) Driver
         """
@@ -602,8 +594,7 @@ class CommandListener(Cog):
         *,
         new_name: UnquotedStr,
     ):
-        """
-        Rename an additional role of the event.
+        """Rename an additional role of the event.
 
         Example: renamerole 1 1 "Y2 (Bradley) Driver"
                  rename 1 two "Y2 (Bradley) Driver"
@@ -620,9 +611,7 @@ class CommandListener(Cog):
     async def removereaction(
         self, ctx: Context, event: ArgEvent, reaction: str
     ):
-        """
-        Removes a role and the corresponding reaction from the event and updates the message.
-        """  # NOQA
+        """Remove a role and the reaction from the event, update message."""
         self._find_remove_reaction(reaction, event)
         await self._update_event(event, reorder=False)
         await ctx.send(f"Reaction {reaction} removed from {event}")
@@ -640,8 +629,7 @@ class CommandListener(Cog):
     async def removegroup(
         self, ctx: Context, eventMessage: ArgMessage, *, groupName: UnquotedStr
     ):
-        """
-        Remove a role group from the event.
+        """Remove a role group from the event.
 
         Example: removegroup 1 Bravo
         """
@@ -665,8 +653,7 @@ class CommandListener(Cog):
     async def settitle(
         self, ctx: Context, event: ArgEvent, *, title: UnquotedStr
     ):
-        """
-        Set event title.
+        """Set event title.
 
         Example: settitle 1 Operation Striker
         """
@@ -676,7 +663,8 @@ class CommandListener(Cog):
         event.title = title
         await self._update_event(event)
         await ctx.send(
-            f"Title {event.title} set for operation ID {event.id} at {event.date}"
+            f"Title {event.title} set for operation "
+            f"ID {event.id} at {event.date}"
         )
         await self._show(ctx, event)
 
@@ -685,8 +673,7 @@ class CommandListener(Cog):
     async def setdate(
         self, ctx: Context, event: ArgEvent, _datetime: ArgDateTime
     ):
-        """
-        Set event date.
+        """Set event date.
 
         Example: setdate 1 2019-01-01
         """
@@ -706,8 +693,7 @@ class CommandListener(Cog):
     async def settime(
         self, ctx: Context, event: ArgEvent, event_time: ArgTime
     ):
-        """
-        Set event time.
+        """Set event time.
 
         Example: settime 1 18:30
         """
@@ -725,8 +711,7 @@ class CommandListener(Cog):
     async def setterrain(
         self, ctx: Context, event: ArgEvent, *, terrain: UnquotedStr
     ):
-        """
-        Set event terrain.
+        """Set event terrain.
 
         Example: settime 1 Takistan
         """
@@ -741,8 +726,7 @@ class CommandListener(Cog):
     async def setfaction(
         self, ctx: Context, event: ArgEvent, *, faction: UnquotedStr
     ):
-        """
-        Set event faction.
+        """Set event faction.
 
         Example: setfaction 1 Insurgents
         """
@@ -774,17 +758,18 @@ class CommandListener(Cog):
         *,
         description: UnquotedStr = "",  # type: ignore
     ):
-        """
-        Set or clear event description. To clear the description, run `setdescription [ID]` without the description parameter
+        """Set or clear event description.
+
+        To clear the description, run `setdescription [ID]` without the
+        description parameter.
 
         Example: setdescription 1 Extra mods required
-        """  # NOQA
+        """
         await self._set_description(ctx, event, description)
 
     @command(aliases=["cld"])
     async def cleardescription(self, ctx: Context, event: ArgEvent):
-        """
-        Clear event description. Alias for `setdescription [ID]`
+        """Clear event description. Alias for `setdescription [ID]`
 
         Example: cleardescription 1
         """
@@ -805,8 +790,9 @@ class CommandListener(Cog):
     async def setport(
         self, ctx: Context, event: ArgEvent, port: int = cfg.PORT_DEFAULT
     ):
-        """
-        Set or clear event server port. To clear the port, run `setport [ID]` without the port parameter
+        """Set or clear event server port.
+
+        To clear the port, run `setport [ID]` without the port parameter.
 
         Example: setport 1 2402
         """  # NOQA
@@ -814,8 +800,7 @@ class CommandListener(Cog):
 
     @command(aliases=["clp"])
     async def clearport(self, ctx: Context, event: ArgEvent):
-        """
-        Clear event port. Alias for `setport [ID]`
+        """Clear event port. Alias for `setport [ID]`
 
         Example: clearport 1
         """
@@ -842,22 +827,22 @@ class CommandListener(Cog):
         *,
         mods: UnquotedStr = "",  # type: ignore
     ):
-        """
-        Set or clear event server mods.
+        """Set or clear event server mods.
 
-        To clear the mods, run `setmods [ID]` without the mods parameter. Adding mods also sets the server port to the configured sideop port. Removing the mods sets the server port to the default port.
+        To clear the mods, run `setmods [ID]` without the mods parameter.
+        Adding mods also sets the server port to the configured sideop port.
+        Removing the mods sets the server port to the default port.
 
         Example: setmods 1 Custom modset
                  setmods 1 Mod 1
                    Mod 2
                    Mod 3
-        """  # NOQA
+        """
         await self._set_mods(ctx, event, mods)
 
     @command(aliases=["clm", "clearmod"])
     async def clearmods(self, ctx: Context, event: ArgEvent):
-        """
-        Clear event mods. Alias for `setmods [ID]`
+        """Clear event mods. Alias for `setmods [ID]`
 
         Example: clearmods 1
         """
@@ -869,8 +854,8 @@ class CommandListener(Cog):
         event: Event,
         terrain: str,
         faction: str,
-        zeus: Member = None,
-        _time: ArgTime = None,
+        zeus: Member | None = None,
+        _time: ArgTime | None = None,
         quiet=False,
     ):
         event.terrain = terrain
@@ -896,11 +881,10 @@ class CommandListener(Cog):
         event: ArgEvent,
         terrain: str,
         faction: str,
-        zeus: ArgMember = None,
-        _time: ArgTime = None,
+        zeus: Optional[ArgMember] = None,
+        _time: Optional[ArgTime] = None,
     ):
-        """
-        Quickly set event details.
+        """Quickly set event details.
 
         Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:30
 
@@ -915,8 +899,7 @@ class CommandListener(Cog):
     async def signup(
         self, ctx: Context, event: ArgEvent, user: ArgMember, *, role: ArgRole
     ):
-        """
-        Sign user up to a role.
+        """Sign user up to a role.
 
         Removes user's previous signup from another role and overrides existing signup to the target role, if any.
 
@@ -928,7 +911,10 @@ class CommandListener(Cog):
         # Sign user up, update event, export
         old_signup, replaced_user = event.signup(role, user, replace=True)
         await self._update_event(event)
-        message = f"User {user.display_name} signed up to event {event} as {role.name}"
+        message = (
+            f"User {user.display_name} signed up to "
+            f"event {event} as {role.name}"
+        )
         if old_signup:
             # User was signed on to a different role previously
             message += f". Signed off from {old_signup.name}"
@@ -943,8 +929,7 @@ class CommandListener(Cog):
     async def removesignup(
         self, ctx: Context, event: ArgEvent, user: ArgMember
     ):
-        """
-        Undo user signup (manually).
+        """Undo user's signup.
 
         <user> can either be: ID, mention, nickname in quotes, username or username#discriminator
 
@@ -955,23 +940,23 @@ class CommandListener(Cog):
         if role:
             await self._update_event(event)
             await ctx.send(
-                f"User {user.display_name} removed from role {role.display_name} in event {event}"
+                f"User {user.display_name} removed from "
+                f"role {role.display_name} in event {event}"
             )
             await self._show(ctx, event)
         else:
             await ctx.send(
-                f"No signup to remove for user {user.display_name} in event {event}"
+                f"No signup to remove for user {user.display_name} "
+                f"in event {event}"
             )
 
     # Archive event command
     @command(aliases=["a"])
     async def archive(self, ctx: Context, event: ArgEvent):
-        """
-        Archive event.
+        """Archive event.
 
         Example: archive 1
         """
-
         # Archive event and export
         EventDatabase.archiveEvent(event)
         try:
@@ -1005,8 +990,7 @@ class CommandListener(Cog):
     # Delete event command
     @command(aliases=["d"])
     async def delete(self, ctx: Context, event: ArgEvent):
-        """
-        Delete event.
+        """Delete event.
 
         Example: delete 1
         """
@@ -1015,8 +999,7 @@ class CommandListener(Cog):
 
     @command()
     async def deletearchived(self, ctx: Context, event: ArgArchivedEvent):
-        """
-        Delete archived event.
+        """Delete archived event.
 
         Example: deletearchived 1
         """
@@ -1058,7 +1041,9 @@ class CommandListener(Cog):
         await ctx.send(f"{len(EventDatabase.events)} events imported")
 
     @command()
-    async def dump(self, ctx: Context, event: ArgEvent, roleGroup: str = None):
+    async def dump(
+        self, ctx: Context, event: ArgEvent, roleGroup: Optional[str] = None
+    ):
         """Dump given event as YAML for mass editing.
 
         Use `load` to import the data back in after editing. Specify roleGroup
@@ -1109,7 +1094,7 @@ class CommandListener(Cog):
         event: Event,
         data: str,
         emojis: Tuple[Emoji, ...],
-        target: TextChannel = None,
+        target: TextChannel | None = None,
     ):
         if data.startswith("```") and data.endswith("```"):
             # Remove the first line (containing ```yaml) and the last three
@@ -1203,7 +1188,8 @@ class CommandListener(Cog):
         elif isinstance(error, CommandInvokeError):
             if isinstance(error.original, UnexpectedRole):
                 await ctx.send(
-                    f"Malformed data: {error.original}. See: `{CMD}help {ctx.command}`"
+                    f"Malformed data: {error.original}. "
+                    f"See: `{CMD}help {ctx.command}`"
                 )
                 return
             elif isinstance(error.original, RoleError):

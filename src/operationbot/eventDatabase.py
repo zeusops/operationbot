@@ -47,8 +47,8 @@ class EventDatabase:
         # Create event
         event = Event(
             date,
-            cls.emojis,
-            eventID=eventID,  # type: ignore
+            cls.emojis,  # type: ignore
+            eventID=eventID,
             importing=importing,
             sideop=sideop,
             platoon_size=platoon_size,
@@ -61,8 +61,7 @@ class EventDatabase:
 
     @classmethod
     def archiveEvent(cls, event: Event):
-        """
-        Move event to archive.
+        """Move event to archive.
 
         Does not remove or create messages.
         """
@@ -76,8 +75,7 @@ class EventDatabase:
 
     @classmethod
     def removeEvent(cls, eventID: int, archived=False) -> Optional[Event]:
-        """
-        Remove event.
+        """Remove event.
 
         Does not remove the message associated with the event.
         """
@@ -87,9 +85,10 @@ class EventDatabase:
     # was: findEvent
     @classmethod
     def getEventByMessage(cls, messageID: int, archived=False) -> Event:
-        """Finds an event with its message ID.
+        """Find an event with its message ID.
 
-        Raises EventNotFound if event cannot be found"""
+        Raises EventNotFound if event cannot be found
+        """
         if archived:
             collection = cls.eventsArchive
         else:
@@ -102,9 +101,10 @@ class EventDatabase:
 
     @classmethod
     def getEventByID(cls, eventID: int, archived=False) -> Event:
-        """Finds an event with its ID.
+        """Find an event with its ID.
 
-        Raises EventNotFound if event cannot be found."""
+        Raises EventNotFound if event cannot be found.
+        """
         if archived:
             collection = cls.eventsArchive
         else:
@@ -117,18 +117,19 @@ class EventDatabase:
 
     @classmethod
     def getArchivedEventByMessage(cls, messageID: int) -> Event:
-        """Finds an archived event with its message ID.
+        """Find an archived event with its message ID.
 
-        Raises EventNotFound if event cannot be found"""
-
+        Raises EventNotFound if event cannot be found
+        """
         return cls.getEventByMessage(messageID, archived=True)
 
     # was: findEventInArchiveeventid
     @classmethod
     def getArchivedEventByID(cls, eventID: int):
-        """Finds an archived event with its ID.
+        """Find an archived event with its ID.
 
-        Raises EventNotFound if event cannot be found."""
+        Raises EventNotFound if event cannot be found.
+        """
         return cls.getEventByID(eventID, archived=True)
 
     @classmethod
@@ -208,7 +209,8 @@ class EventDatabase:
                     data: Dict = json.load(jsonFile)
             except json.decoder.JSONDecodeError as e:
                 print(
-                    "Malformed JSON file! Backing up and creating an empty database"
+                    "Malformed JSON file! Backing up and "
+                    "creating an empty database"
                 )
                 backup_date = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
                 # Backup old file

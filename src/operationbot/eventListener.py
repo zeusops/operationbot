@@ -9,6 +9,7 @@ from discord.user import User
 
 from operationbot import config as cfg
 from operationbot import messageFunctions as msgFnc
+from operationbot.bot import OperationBot
 from operationbot.errors import (
     EventNotFound,
     RoleNotFound,
@@ -17,7 +18,6 @@ from operationbot.errors import (
 )
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase
-from operationbot.bot import OperationBot
 from operationbot.role import Role
 
 
@@ -33,7 +33,8 @@ class EventListener(Cog):
         commandchannel = self.bot.commandchannel
         print(f"Logged in as {self.bot.user.name} {self.bot.user.id}")
         print(
-            f"Command channel: {commandchannel} on server {commandchannel.guild}"
+            f"Command channel: {commandchannel} "
+            f"on server {commandchannel.guild}"
         )
         await commandchannel.send("Connected")
         print("Ready, importing")
@@ -120,7 +121,8 @@ class EventListener(Cog):
             role = event.findRoleWithEmoji(emoji)
         except RoleNotFound as e:
             raise RoleNotFound(
-                f"{str(e)} in event {event} by user {user.name}#{user.discriminator}"
+                f"{str(e)} in event {event} "
+                f"by user {user.name}#{user.discriminator}"
             ) from e
 
         if role.name == cfg.EMOJI_ZEUS:
@@ -195,7 +197,7 @@ class EventListener(Cog):
             EventDatabase.toJson()
         else:
             raise UnknownEmoji(
-                f"Reaction to unknown special emoji {emoji}"
+                f"Reaction to unknown special emoji {emoji} "
                 f"in event {event} by user {user}"
             )
 
@@ -207,9 +209,13 @@ class EventListener(Cog):
             owner = self.bot.owner
             await owner.send(f"DM: [{message.author}]: {message.content}")
 
-    def _calculate_signoff_delta(self, event: Event, role: Role, user):
-        """return a string (days or hours/mins) if it is shortly before op
-        else None"""
+    def _calculate_signoff_delta(
+        self, event: Event, role: Role, user
+    ) -> str | None:
+        """Return a time difference (days or hours/mins) to the op
+
+        If the time difference is greater than a certain threshold, returns None
+        """
         if role.name in cfg.SIGNOFF_NOTIFY_ROLES.get(event.platoon_size, []):
             time_delta = event.date - datetime.today()
             if time_delta > timedelta(days=0):

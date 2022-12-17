@@ -13,10 +13,10 @@ from discord.ext.commands.errors import (
 
 from operationbot import config as cfg
 from operationbot import messageFunctions as msgFnc
+from operationbot.bot import OperationBot
 from operationbot.errors import EventNotFound, MessageNotFound, RoleNotFound
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase
-from operationbot.bot import OperationBot
 from operationbot.role import Role
 
 NUMBERS = {
@@ -78,7 +78,8 @@ class ArgRole(Role):
         argument = UnquotedStr.unquote(argument)
         try:
             event: Event = ctx.args[2]
-            assert isinstance(event, Event)
+            if not isinstance(event, Event):
+                raise ValueError
         except (IndexError, AssertionError) as e:
             raise CommandError(
                 f"The command {ctx.command} is invalid. "

@@ -77,7 +77,10 @@ class RoleGroup:
         return data
 
     def fromJson(
-        self, data: dict, emojis: Tuple[Emoji, ...], manual_load=False
+        self,
+        data: dict[str, Any],
+        emojis: Tuple[Emoji, ...],
+        manual_load=False,
     ):
         self.name = data["name"]
         if not manual_load:
@@ -85,31 +88,33 @@ class RoleGroup:
 
         roles: List[str] = []
         for roleEmoji, roleData in data["roles"].items():
+            role_emoji: str | Emoji
             try:
-                roleEmoji = cfg.ADDITIONAL_ROLE_EMOJIS[int(roleEmoji)]
+                role_emoji = cfg.ADDITIONAL_ROLE_EMOJIS[int(roleEmoji)]
             except ValueError:
                 for emoji in emojis:
                     if emoji.name == roleEmoji:
-                        roleEmoji = emoji
+                        role_emoji = emoji
                         break
+                raise ValueError(f"Unknown emoji {roleEmoji} in role data")
             if not manual_load:
                 # Only create new roles if we're not loading data manually from
                 # the command channel
                 role = Role(
                     roleData["name"],
-                    roleEmoji,
+                    role_emoji,
                     self.get_corrected_name(roleData),
                 )
                 self.roles.append(role)
             else:
                 try:
-                    role = next(x for x in self.roles if x.emoji == roleEmoji)
+                    role = next(x for x in self.roles if x.emoji == role_emoji)
                 except StopIteration as e:
                     name = roleData.get("show_name") or roleData["name"]
                     raise UnexpectedRole(
                         f"Cannot import unexpected role '{name}'"
                     ) from e
-                roles.append(roleEmoji)
+                roles.append(role_emoji)
 
             role.fromJson(roleData, manual_load=manual_load)
         if manual_load:

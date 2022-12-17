@@ -4,9 +4,8 @@ import sys
 import discord
 
 from operationbot import config as cfg
-from operationbot.bot import OperationBot
-
 from operationbot import secret as s
+from operationbot.bot import OperationBot
 from operationbot.secret import COMMAND_CHAR, TOKEN
 
 CONFIG_VERSION = 12
