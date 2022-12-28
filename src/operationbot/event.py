@@ -1,4 +1,6 @@
 import datetime
+import hashlib
+import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import discord
@@ -55,6 +57,7 @@ class Event:
         self.sideop = sideop
         self.attendees: list[Union[User, discord.abc.User]] = []
         self.dlc: Optional[str] = None
+        self.embed_hash = ""
 
         if platoon_size is None:
             if sideop:
@@ -250,7 +253,8 @@ class Event:
         return warnings
 
     # Return an embed for the event
-    def createEmbed(self) -> Embed:
+    def createEmbed(self, cache=True) -> Embed | None:
+        logging.info(f"Creating embed for {self}")
         date_tz = self.date.replace(tzinfo=cfg.TIME_ZONE)
         date = date_tz.strftime(f"%a %Y-%m-%d - %H:%M {date_tz.tzname()}")
         title = f"{self.title} ({date})"
@@ -279,23 +283,37 @@ class Event:
                        f"{mods}")
         eventEmbed = Embed(title=title, description=description,
                            colour=self.color)
+        hash_string = f"{title}\n{description}\n{self.color}\n"
 
         # Add field to embed for every rolegroup
         for group in self.roleGroups.values():
             if len(group.roles) > 0:
                 eventEmbed.add_field(name=group.name, value=str(group),
                                      inline=group.isInline)
+                hash_string += (f"{hash_string}{group.name} {str(group)} "
+                                f"{group.isInline}\n")
             elif group.name == "Dummy":
                 eventEmbed.add_field(name="\N{ZERO WIDTH SPACE}",
                                      value="\N{ZERO WIDTH SPACE}",
                                      inline=group.isInline)
+                hash_string += f"{hash_string}Dummy\n"
 
         if self.sideop or cfg.ALWAYS_DISPLAY_ATTENDANCE:
             attendees = f"Attendees: {len(self.attendees)}\n\n"
         else:
             attendees = ""
-        eventEmbed.set_footer(text=f"{attendees}Event ID: {str(self.id)}")
-
+        footer_text = f"{attendees}Event ID: {str(self.id)}"
+        eventEmbed.set_footer(text=footer_text)
+        hash_string += f"{hash_string}{footer_text}\n"
+        embed_hash = hashlib.sha256(hash_string.encode("utf-8")).hexdigest()
+        if cache:
+            if embed_hash == self.embed_hash:
+                logging.info("Embed is unchanged, not updating")
+                return None
+            logging.info("Cached embed is changed, updating")
+            self.embed_hash = embed_hash
+        else:
+            logging.info("Ignoring cache")
         return eventEmbed
 
     # Add default role groups
@@ -554,6 +572,7 @@ class Event:
             data["platoon_size"] = self.platoon_size
             data["sideop"] = self.sideop
             data["attendees"] = attendees_data
+            data["embed_hash"] = self.embed_hash
         data["roleGroups"] = roleGroupsData
         return data
 
@@ -571,6 +590,7 @@ class Event:
             self.messageID = int(data.get("messageID", 0))
             self.platoon_size = str(data.get("platoon_size", PLATOON_SIZE))
             self.sideop = bool(data.get("sideop", False))
+            self.embed_hash = data.get("embed_hash", "")
             attendees_data = data.get("attendees", {})
             for userID, name in attendees_data.items():
                 self.attendees.append(User(int(userID), name))
