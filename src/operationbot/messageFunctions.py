@@ -1,4 +1,5 @@
 from typing import Dict, List, Union, cast
+import logging
 
 from discord import Emoji, Message, NotFound, TextChannel
 from discord.embeds import Embed
@@ -148,7 +149,13 @@ def messageEventId(message: Message) -> int:
 
 
 async def syncMessages(events: Dict[int, Event], bot: OperationBot):
-    sorted_events = sorted(list(events.values()), key=lambda event: event.date)
+    """Sync event messages with the event database.
+
+    Saves the database to disk after syncing."""
+    logging.info("syncMessages")
+    sorted_events = sorted(
+        list(events.values()), key=lambda event: event.date, reverse=True
+    )
     for event in sorted_events:
         try:
             message = await getEventMessage(event, bot)
