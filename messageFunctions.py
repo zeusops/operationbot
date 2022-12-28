@@ -27,9 +27,12 @@ async def getEventMessage(event: Event, bot: OperationBot, archived=False) \
 
 
 async def sortEventMessages(bot: OperationBot):
-    """Sort events in event database.
+    """Sort event messages according to the event database.
+
+    Saves the database to disk after sorting.
 
     Raises MessageNotFound if messages are missing."""
+    logging.info("sortEventMessages")
     EventDatabase.sortEvents()
 
     event: Event
