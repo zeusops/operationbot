@@ -3,7 +3,7 @@ import logging
 
 from discord import Emoji, Message, NotFound, TextChannel
 from discord.embeds import Embed
-from discord.errors import Forbidden
+from discord.errors import Forbidden, HTTPException
 
 from errors import MessageNotFound, RoleError
 from event import Event
@@ -48,7 +48,7 @@ async def createEventMessage(event: Event, channel: TextChannel,
                              update_id=True) -> Message:
     """Create a new event message."""
     # Create embed and message
-    embed = event.createEmbed()
+    embed = event.createEmbed(cache=False)
     message = await channel.send(embed=embed)
     if update_id:
         event.messageID = message.id
@@ -57,11 +57,23 @@ async def createEventMessage(event: Event, channel: TextChannel,
 
 
 # was: EventDatabase.updateEvent
-async def updateMessageEmbed(eventMessage: Message, updatedEvent: Event) \
-        -> None:
+async def updateMessageEmbed(
+    eventMessage: Message, updatedEvent: Event
+) -> bool:
     """Update the embed and footer of a message."""
-    newEventEmbed = updatedEvent.createEmbed()
-    await eventMessage.edit(embed=newEventEmbed)
+    embed = updatedEvent.createEmbed()
+    if embed:
+        try:
+            await eventMessage.edit(embed=embed)
+        except HTTPException as e:
+            # Failed to edit the newly-created embed in (probably due to a rate
+            # limit), invalidating the embed hash and saving the database
+            # before propagating the exception
+            updatedEvent.embed_hash = ""
+            EventDatabase.toJson()
+            raise e
+        return True
+    return False
 
 
 # from EventDatabase

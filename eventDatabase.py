@@ -128,8 +128,8 @@ class EventDatabase:
 
     @classmethod
     def sortEvents(cls):
-        sortedEvents = []
-        messageIDs = []
+        sortedEvents: list[Event] = []
+        messageIDs: list[int] = []
 
         # Store existing events
         for event in cls.events.values():
@@ -144,7 +144,12 @@ class EventDatabase:
         cls.events = {}
         for event in sortedEvents:
             # event = sortedEvents[index]
-            event.messageID = messageIDs.pop()
+            new_id = messageIDs.pop()
+            if new_id != event.messageID:
+                event.messageID = new_id
+                # If the message ID has changed, the new message needs a new
+                # embed
+                event.embed_hash = ""
             cls.events[event.id] = event
 
     @classmethod
