@@ -39,6 +39,7 @@ async def sortEventMessages(bot: OperationBot):
             raise MessageNotFound(f"sortEventMessages: {e}") from e
         await updateMessageEmbed(message, event)
         await updateReactions(event, message=message)
+    EventDatabase.toJson()
 
 
 # from EventDatabase

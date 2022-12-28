@@ -163,7 +163,6 @@ class CommandListener(Cog):
         await msgFnc.createEventMessage(event, self.bot.eventchannel)
         if not batch:
             await msgFnc.sortEventMessages(self.bot)
-            EventDatabase.toJson()  # Update JSON file
         if not silent:
             await ctx.send(f"Created event {event}")
             await self._show(ctx, event)
@@ -376,7 +375,6 @@ class CommandListener(Cog):
                     for day in with_time:
                         await self._create_event(ctx, day, batch=True)
                     await msgFnc.sortEventMessages(self.bot)
-                    EventDatabase.toJson()
                     await ctx.send("Done creating events")
                     self.bot.awaiting_reply = False
                     return
@@ -601,7 +599,6 @@ class CommandListener(Cog):
 
         # Update event and sort events, export
         await msgFnc.sortEventMessages(self.bot)
-        EventDatabase.toJson()  # Update JSON file
         await ctx.send(f"Date {event.date} set for operation "
                        f"{event.title} ID {event.id}")
         await self._show(ctx, event)
@@ -620,7 +617,6 @@ class CommandListener(Cog):
 
         # Update event and sort events, export
         await msgFnc.sortEventMessages(self.bot)
-        EventDatabase.toJson()  # Update JSON file
         await ctx.send(f"Time set for operation {event}")
         await self._show(ctx, event)
 
