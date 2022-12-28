@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import logging
 import sys
 
 import discord
@@ -31,6 +32,9 @@ if sys.version_info < (3, 9):
     raise Exception("Must be run with Python 3.9 or higher")
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+    logging.getLogger('discord').setLevel(logging.INFO)
+    logging.getLogger('discord.gateway').setLevel(logging.WARNING)
     print("Starting up")
     bot.load_extension('reload')
     print("Loading extensions")
