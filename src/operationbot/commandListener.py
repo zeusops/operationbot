@@ -998,32 +998,55 @@ class CommandListener(Cog):
     #     await ctx.send("Event messages created")
 
     async def _update_event(self, event: Event, import_db=False,
-                            reorder=True, export=True):
+                            reorder=True, export=True) -> bool:
+        """Update event message.
+
+        Creates a new message if missing.
+
+        Args:
+            event (Event): Event to be updated
+            import_db (bool, optional): Import database during update.
+                                        Defaults to False.
+            reorder (bool, optional): Reorder message reactions to match event
+                                      order (delete all and re-add).
+                                      Defaults to True.
+            export (bool, optional): Export database. Defaults to True.
+
+        Returns:
+            bool: Returns True if the message was edited.
+        """
         # TODO: Move to a more appropriate location
         if import_db:
             await self.bot.import_database()
             # Event instance might have changed because of DB import, get again
             event = EventDatabase.getEventByMessage(event.messageID)
 
+        changed = False
         try:
             message = await msgFnc.getEventMessage(event, self.bot)
         except MessageNotFound:
-            message = await msgFnc.createEventMessage(event,
-                                                      self.bot.eventchannel)
+            message = await msgFnc.createEventMessage(
+                event, self.bot.eventchannel
+            )
+            changed = True
 
-        await msgFnc.updateMessageEmbed(eventMessage=message,
-                                        updatedEvent=event)
-        await msgFnc.updateReactions(event=event, message=message,
-                                     reorder=reorder)
+        if await msgFnc.updateMessageEmbed(message, event):
+            changed = True
+        await msgFnc.updateReactions(
+            event=event, message=message, reorder=reorder
+        )
         if export:
             EventDatabase.toJson()
+        return changed
 
     @command(aliases=['upde'])
     async def updateevent(self, ctx: Context, event: ArgEvent,
                           import_db: bool = False):
         """Import database, update embed and reactions on a single event message."""  # NOQA
-        await self._update_event(event, import_db=import_db)
-        await ctx.send("Event updated")
+        if await self._update_event(event, import_db=import_db):
+            await ctx.send("Event updated")
+        else:
+            await ctx.send("No changes required")
 
     @command(aliases=['syncm'])
     async def syncmessages(self, ctx: Context):
