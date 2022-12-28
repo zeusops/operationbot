@@ -1093,7 +1093,8 @@ class CommandListener(Cog):
                         error.__traceback__, 2))
 
         messages = ctx.message.clean_content.split('\n')
-        if len(messages) >= 1:
+        print(f"{messages=}")
+        if len(messages) > 1:
             # Show only first line of the message
             message = f"{messages[0]} [...]"
         else:
