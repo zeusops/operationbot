@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import logging
 import sys
 
 import discord
@@ -37,6 +38,9 @@ if sys.version_info < (3, 10):
 
 
 def main():
+    logging.basicConfig(level=logging.DEBUG)
+    logging.getLogger('discord').setLevel(logging.INFO)
+    logging.getLogger('discord.gateway').setLevel(logging.WARNING)
     print("Starting up")
     bot.load_extension('operationbot.reload')
     print("Loading extensions")
