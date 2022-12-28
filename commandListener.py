@@ -238,6 +238,7 @@ class CommandListener(Cog):
             ctx, _datetime, sideop=sideop, platoon_size=platoon_size,
             force=(_time is not None), batch=True, silent=True)
 
+        # TODO: Shouldn't create a message and immediately edit
         await self._set_quick(ctx, event, terrain, faction, zeus, quiet=True)
 
         msg_zeus = f" with Zeus {zeus.display_name}" if zeus else ""
@@ -749,17 +750,16 @@ class CommandListener(Cog):
 
     async def _set_quick(self, ctx: Context, event: Event, terrain: str,
                          faction: str, zeus: Member = None,
-                         _time: ArgTime = None, quiet=False):
+                         quiet=False):
         event.terrain = terrain
         event.faction = faction
         if zeus is not None:
             event.signup(event.findRoleWithName(cfg.EMOJI_ZEUS), zeus,
                          replace=True)
-        if _time is not None:
-            event.time = _time
 
-        await msgFnc.sortEventMessages(self.bot)
-        EventDatabase.toJson()  # Update JSON file
+        message = await msgFnc.getEventMessage(event, self.bot)
+        await msgFnc.updateMessageEmbed(message, event)
+        EventDatabase.toJson()
         msg_zeus = f" with Zeus {zeus.display_name}" if zeus else ""
         if not quiet:
             await ctx.send(f"Updated event {event}{msg_zeus}")
@@ -767,19 +767,17 @@ class CommandListener(Cog):
 
     @command(aliases=['sq'])
     async def setquick(self, ctx: Context, event: ArgEvent,
-                       terrain: str, faction: str, zeus: ArgMember = None,
-                       _time: ArgTime = None):
+                       terrain: str, faction: str, zeus: ArgMember = None):
         """
         Quickly set event details.
 
-        Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:30
+        Can't be used to set time for now. Use `settime` after creating the event instead.
 
         Example: setquick 1 Altis USMC
                  setquick 1 Altis USMC Stroker
-                 setquick 1 Altis USMC Stroker 17:30
         """  # NOQA
         await self._set_quick(ctx, event, terrain,
-                              faction, zeus, _time)
+                              faction, zeus)
 
     # Sign user up to event command
     @command(aliases=['s'])
