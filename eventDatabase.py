@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, date
 from typing import Any, Dict, Optional, Tuple
 
 from discord import Emoji
@@ -30,7 +30,7 @@ class EventDatabase:
         return cls._emojis
 
     @classmethod
-    def createEvent(cls, date: datetime, eventID: int = -1,
+    def createEvent(cls, event_date: datetime, eventID: int = -1,
                     sideop=False, platoon_size=None) -> Event:
         """Create a new event and store it.
 
@@ -44,9 +44,16 @@ class EventDatabase:
             importing = True
 
         # Create event
-        event = Event(date, cls.emojis, eventID=eventID,  # type: ignore
-                      importing=importing,
-                      sideop=sideop, platoon_size=platoon_size)
+        event = Event(
+            event_date,
+            # NOTE: Ignoring the type here because mypy is buggy and doesn't
+            # detect class properties correctly
+            cls.emojis,  # type: ignore
+            eventID=eventID,
+            importing=importing,
+            sideop=sideop,
+            platoon_size=platoon_size
+        )
 
         # Store event
         cls.events[eventID] = event
@@ -93,6 +100,32 @@ class EventDatabase:
             if event.messageID == messageID:
                 return event
         raise EventNotFound(f"No event found with message ID {messageID}")
+
+    @classmethod
+    def get_event_by_date(cls, event_date: date, archived=False) -> Event:
+        """Find an event based on its date.
+
+        Raises EventNotFound if an event cannot be found and ValueError if
+        there are multiple events on the same date.
+        """
+        if archived:
+            collection = cls.eventsArchive
+        else:
+            collection = cls.events
+
+        events = list(filter(
+            lambda event: event.date.date() == event_date,
+            collection.values()
+        ))
+
+        if len(events) == 0:
+            raise EventNotFound(f"No event found on date {event_date}")
+        if len(events) > 1:
+            raise ValueError(
+                f"Multiple events found on date {event_date}:\n" +
+                "\n".join(str(event) for event in events)
+            )
+        return events[0]
 
     @classmethod
     def getEventByID(cls, eventID: int, archived=False) -> Event:
@@ -243,11 +276,16 @@ class EventDatabase:
                 (int(_id), _data)
                 for _id, _data in eventsData.items()]:
             # Create event
-            date = datetime.strptime(eventData['date'],
-                                     '%Y-%m-%d')
+            event_date = datetime.strptime(
+                eventData['date'], '%Y-%m-%d'
+            )
             # NOTE: Ignoring the type here because mypy is buggy and doesn't
             # detect class properties correctly
-            event = Event(date, emojis, importing=True)  # type: ignore
+            event = Event(
+                event_date,
+                emojis,  # type: ignore
+                importing=True
+            )
             event.fromJson(eventID, eventData, emojis)
             events[event.id] = event
 

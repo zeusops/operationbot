@@ -131,21 +131,36 @@ class ArgEvent(Event):
 
     @classmethod
     async def _convert(cls, arg: str, archived=False) -> Event:
+        is_integer = True
         try:
             event_id = int(arg)
-        except ValueError as e:
-            raise BadArgument(f"Invalid message ID {arg}, needs to be an "
-                              "integer") from e
+        except ValueError:
+            # Argument is not an integer, so it might be a date
+            is_integer = False
+        else:
+            try:
+                return EventDatabase.getEventByID(event_id, archived)
+            except EventNotFound:
+                # Argument could be a date that looks like an integer (e.g.
+                # yymmdd, etc)
+                pass
 
         try:
-            if not archived:
-                event = EventDatabase.getEventByID(event_id)
-            else:
-                event = EventDatabase.getArchivedEventByID(event_id)
+            event_date = await ArgDate.convert(None, arg)
+        except BadArgument as e:
+            if is_integer:
+                raise BadArgument(
+                    f"No event with the given ID {event_id} was found. "
+                    f"{str(e)}"
+                ) from e
+            raise e
+
+        try:
+            return EventDatabase.get_event_by_date(event_date)
+        except ValueError as e:
+            raise BadArgument(str(e)) from e
         except EventNotFound as e:
             raise BadArgument(str(e)) from e
-
-        return event
 
 
 class ArgArchivedEvent(ArgEvent):
