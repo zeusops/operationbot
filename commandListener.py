@@ -782,17 +782,22 @@ class CommandListener(Cog):
     # Sign user up to event command
     @command(aliases=['s'])
     async def signup(self, ctx: Context, event: ArgEvent, user: ArgMember, *,
-                     role: ArgRole):
+                     role: Optional[ArgRole] = None):
         """
         Sign user up to a role.
 
         Removes user's previous signup from another role and overrides existing signup to the target role, if any.
 
         <user> can either be: ID, mention, nickname in quotes, username or username#discriminator
-        <roleName> is case-insensitive
+        <roleName> is case-insensitive. Defaults to Zeus.
 
         Example: signup 1 "S. Gehock" Y1 (Bradley) Gunner
+                 signup 1 gehock
         """  # NOQA
+        if role is None:
+            # This is quite an unnecessary cast, but required by mypy unless
+            # converters are moved inside their corresponding classes
+            role = cast(ArgRole, event.findRoleWithName(cfg.EMOJI_ZEUS))
         # Sign user up, update event, export
         old_signup, replaced_user = event.signup(role, user, replace=True)
         await self._update_event(event)
