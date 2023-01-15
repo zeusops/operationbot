@@ -1,2 +1,4 @@
 discord.py>=1.3.4,<2.0.0
 pyyaml
+# For dev only
+# pytest-asyncio
