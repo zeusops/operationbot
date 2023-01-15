@@ -29,6 +29,8 @@ pytest = "7.*"
 pytest-cov = "4.*"
 # Clearer assertion failures (colorful diff)
 pytest-clarity = "1.*"
+# For testing async functions
+pytest-asyncio = "*"
 
 [tool.poetry.group.docs.dependencies]
 # Main documentation-as-code (HTML/PDF generator)
