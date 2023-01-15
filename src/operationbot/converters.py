@@ -156,8 +156,9 @@ class ArgArchivedEvent(ArgEvent):
 
 class ArgDateTime(datetime):
     @classmethod
-    async def convert(cls, ctx: Context, arg: str) -> datetime:
-        _date = await ArgDate.convert(ctx, arg)
+    async def convert(cls, _: Context, arg: str) -> datetime:
+        _date = await ArgDate.convert(None, arg)
+        # FIXME: Remove hardcoded time
         return datetime.combine(_date, time(hour=18, minute=30))
 
 
@@ -166,9 +167,39 @@ class ArgDate(date):
     async def convert(cls, _: Context, arg: str) -> date:
         try:
             return date.fromisoformat(arg)
+        except ValueError:
+            pass
+
+        try:
+            return cls._convert_date(arg)
         except ValueError as e:
-            raise BadArgument(f"Invalid date format {arg}. "
-                              "Has to be YYYY-MM-DD") from e
+            raise BadArgument(str(e)) from e
+
+    @classmethod
+    def _convert_date(cls, arg: str) -> date:
+        formats = [
+            # yyyy-mm-dd is already handled by date.fromisoformat()
+            ('%Y%m%d', 'yyyymmdd'),
+            ('%y-%m-%d', 'yy-mm-dd'),
+            ('%y%m%d', 'yymmdd'),
+            ('%m-%d', 'mm-dd'),
+            ('--%m%d', '--mmdd'),
+            # 'mmdd' is not allowed because it is too ambiguous (looks like an
+            # event ID)
+        ]
+        for fmt in ([f[0] for f in formats]):
+            try:
+                event_date = datetime.strptime(arg, fmt).date()
+                if event_date.year == 1900:
+                    event_date = event_date.replace(year=datetime.now().year)
+                return event_date
+            except ValueError:
+                pass
+        raise ValueError(
+            f"Invalid date format {arg}. "
+            "Has to be one of yyyy-mm-dd, "
+            f"{', '.join([f[1] for f in formats])}"
+        )
 
 
 class ArgTime(time):
