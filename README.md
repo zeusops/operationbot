@@ -10,11 +10,12 @@
    detailed instructions. Note that the bot does not have to be marked as
    public.
 
-2. Copy `secret.py.example` to `secret.py` and add your bot token. Other values
-   can be customised as well but they are not critical for a basic setup.
+2. Copy `secret.py.example` to `src/operationbot/secret.py` and add your bot
+   token. Other values can be customised as well but they are not critical for
+   a basic setup.
 
-3. Change the channel IDs in `config.py` if the bot is not running on the Zeus
-   Operations discord.
+3. Change the channel IDs in `src/operationbot/config.py` if the bot is not
+   running on the Zeusops discord.
 
 4. Install the package locally (via `poetry`, get it via `pip install poetry`).
 
@@ -22,6 +23,14 @@
    make install
    # or
    poetry install
+   ```
+
+   On Windows (or some other platforms which don't include the
+   [time zone data](https://docs.python.org/3/library/zoneinfo.html)
+   by default), you might need to install the `tzdata` package.
+
+   ```shell
+   poetry run pip install tzdata
    ```
 
 5. Activate the virtual environment:
