@@ -102,7 +102,6 @@ DEFAULT_GROUPS: Dict[str, List[str]] = {
 
         "Alpha",
         "Bravo",
-        "Charlie"
     ],
     "2PLT": [
         "Battalion",
@@ -142,9 +141,6 @@ DEFAULT_ROLES: Dict[str, Dict] = {
         "BSL": "Bravo",
         "B1": "Bravo",
         "B2": "Bravo",
-        "CSL": "Charlie",
-        "C1": "Charlie",
-        "C2": "Charlie",
     },
     "2PLT": {
         "ZEUS": "Battalion",
