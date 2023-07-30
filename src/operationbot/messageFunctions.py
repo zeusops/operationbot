@@ -5,7 +5,7 @@ from discord import Emoji, Message, NotFound, TextChannel
 from discord.embeds import Embed
 from discord.errors import Forbidden, HTTPException
 
-from operationbot.errors import MessageNotFound, RoleError
+from operationbot.errors import EventUpdateFailed, MessageNotFound, RoleError
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase
 from operationbot.bot import OperationBot
@@ -74,7 +74,10 @@ async def updateMessageEmbed(
             # before propagating the exception
             updatedEvent.embed_hash = ""
             EventDatabase.toJson()
-            raise e
+            raise EventUpdateFailed(
+                f"Failed to update embed for {updatedEvent} "
+                f"on message {eventMessage}"
+            ) from e
         return True
     return False
 
