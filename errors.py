@@ -28,3 +28,7 @@ class RoleTaken(Exception):
 
 class UnknownEmoji(Exception):
     pass
+
+
+class EventUpdateFailed(Exception):
+    pass
