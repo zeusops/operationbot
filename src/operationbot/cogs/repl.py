@@ -10,7 +10,6 @@ from typing import Callable, Set, cast
 import discord
 from discord.ext import commands
 from discord.ext.commands import BadArgument, Bot, Context, MissingRequiredArgument
-
 from operationbot.eventDatabase import EventDatabase  # noqa
 from operationbot.secret import COMMAND_CHAR as CMD
 

@@ -9,10 +9,10 @@ from discord.ext.commands.errors import BadArgument, CommandError, MemberNotFoun
 
 from operationbot import config as cfg
 from operationbot import messageFunctions as msgFnc
+from operationbot.bot import OperationBot
 from operationbot.errors import EventNotFound, MessageNotFound, RoleNotFound
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase
-from operationbot.bot import OperationBot
 from operationbot.role import Role
 
 NUMBERS = {
@@ -181,7 +181,7 @@ class ArgDateTime(datetime):
 
 class ArgDate(date):
     @classmethod
-    async def convert(cls, _: Context, arg: str) -> date:
+    async def convert(cls, _: Context | None, arg: str) -> date:
         try:
             return date.fromisoformat(arg)
         except ValueError:

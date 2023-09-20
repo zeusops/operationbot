@@ -19,6 +19,7 @@ from discord.ext.commands.errors import (
 
 from operationbot import config as cfg
 from operationbot import messageFunctions as msgFnc
+from operationbot.bot import OperationBot
 from operationbot.converters import (
     ArgArchivedEvent,
     ArgDate,
@@ -33,12 +34,10 @@ from operationbot.converters import (
 from operationbot.errors import MessageNotFound, RoleError, UnexpectedRole
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase
-from operationbot.bot import OperationBot
 from operationbot.role import Role
 from operationbot.roleGroup import RoleGroup
-from operationbot.secret import ADMINS
+from operationbot.secret import ADMINS, WW2_MODS
 from operationbot.secret import COMMAND_CHAR as CMD
-from operationbot.secret import WW2_MODS
 
 
 class CommandListener(Cog):
@@ -94,10 +93,7 @@ class CommandListener(Cog):
 
     @command()
     async def roleparserinfo(self, ctx: Context):
-        """
-        Display information about parsing roles.
-        """
-
+        """Display information about parsing roles."""
         if ArgRole.__doc__:
             doc = ArgRole.__doc__.split("\n\n")[2]
             await ctx.send(
@@ -126,8 +122,7 @@ class CommandListener(Cog):
 
     @command()
     async def exec(self, ctx: Context, flag: str, *, cmd: str):
-        """
-        Execute arbitrary code.
+        """Execute arbitrary code.
 
         If <flag> is p, the result gets wrapped in a print() statement
         If <flag> is c, the result gets printed in console
@@ -234,7 +229,6 @@ class CommandListener(Cog):
         Example: createside 2019-01-01
                  createside 2019-01-01 force
         """
-
         await self._create_event(ctx, _datetime, sideop=True, force=force)
 
     @command(aliases=["cs2"])
@@ -246,7 +240,6 @@ class CommandListener(Cog):
         Example: createside2 2019-01-01
                  createside2 2019-01-01 force
         """
-
         await self._create_event(
             ctx, _datetime, sideop=True, platoon_size="WW2side", force=force
         )
@@ -536,8 +529,7 @@ class CommandListener(Cog):
 
     @command(aliases=["ar"])
     async def addrole(self, ctx: Context, event: ArgEvent, *, rolename: UnquotedStr):
-        """
-        Add a new additional role or multiple roles to the event.
+        """Add a new additional role or multiple roles to the event.
 
         Separate different roles with a newline
 
@@ -570,8 +562,7 @@ class CommandListener(Cog):
     # Remove additional role from event command
     @command(aliases=["rr"])
     async def removerole(self, ctx: Context, event: ArgEvent, *, role: ArgRole):
-        """
-        Remove an additional role from the event.
+        """Remove an additional role from the event.
 
         Example: removerole 1 Y1 (Bradley) Driver
         """
@@ -585,8 +576,7 @@ class CommandListener(Cog):
     async def renamerole(
         self, ctx: Context, event: ArgEvent, role: ArgRole, *, new_name: UnquotedStr
     ):
-        """
-        Rename an additional role of the event.
+        """Rename an additional role of the event.
 
         Example: renamerole 1 1 "Y2 (Bradley) Driver"
                  rename 1 two "Y2 (Bradley) Driver"
@@ -621,8 +611,7 @@ class CommandListener(Cog):
     async def removegroup(
         self, ctx: Context, eventMessage: ArgMessage, *, groupName: UnquotedStr
     ):
-        """
-        Remove a role group from the event.
+        """Remove a role group from the event.
 
         Example: removegroup 1 Bravo
         """
@@ -644,8 +633,7 @@ class CommandListener(Cog):
     # Set title of event command
     @command(aliases=["stt"])
     async def settitle(self, ctx: Context, event: ArgEvent, *, title: UnquotedStr):
-        """
-        Set event title.
+        """Set event title.
 
         Example: settitle 1 Operation Striker
         """
@@ -662,8 +650,7 @@ class CommandListener(Cog):
     # Set date of event command
     @command(aliases=["sdt"])
     async def setdate(self, ctx: Context, event: ArgEvent, _datetime: ArgDateTime):
-        """
-        Set event date.
+        """Set event date.
 
         Example: setdate 1 2019-01-01
         """
@@ -680,8 +667,7 @@ class CommandListener(Cog):
     # Set time of event command
     @command(aliases=["stm"])
     async def settime(self, ctx: Context, event: ArgEvent, event_time: ArgTime):
-        """
-        Set event time.
+        """Set event time.
 
         Example: settime 1 18:30
         """
@@ -696,8 +682,7 @@ class CommandListener(Cog):
     # Set terrain of event command
     @command(aliases=["st"])
     async def setterrain(self, ctx: Context, event: ArgEvent, *, terrain: UnquotedStr):
-        """
-        Set event terrain.
+        """Set event terrain.
 
         Example: settime 1 Takistan
         """
@@ -710,8 +695,7 @@ class CommandListener(Cog):
     # Set faction of event command
     @command(aliases=["sf"])
     async def setfaction(self, ctx: Context, event: ArgEvent, *, faction: UnquotedStr):
-        """
-        Set event faction.
+        """Set event faction.
 
         Example: setfaction 1 Insurgents
         """
@@ -750,8 +734,7 @@ class CommandListener(Cog):
 
     @command(aliases=["cld"])
     async def cleardescription(self, ctx: Context, event: ArgEvent):
-        """
-        Clear event description. Alias for `setdescription [ID]`
+        """Clear event description. Alias for `setdescription [ID]`
 
         Example: cleardescription 1
         """
@@ -779,8 +762,7 @@ class CommandListener(Cog):
 
     @command(aliases=["clp"])
     async def clearport(self, ctx: Context, event: ArgEvent):
-        """
-        Clear event port. Alias for `setport [ID]`
+        """Clear event port. Alias for `setport [ID]`
 
         Example: clearport 1
         """
@@ -815,8 +797,7 @@ class CommandListener(Cog):
 
     @command(aliases=["clm", "clearmod"])
     async def clearmods(self, ctx: Context, event: ArgEvent):
-        """
-        Clear event mods. Alias for `setmods [ID]`
+        """Clear event mods. Alias for `setmods [ID]`
 
         Example: clearmods 1
         """
@@ -930,12 +911,10 @@ class CommandListener(Cog):
     # Archive event command
     @command(aliases=["a"])
     async def archive(self, ctx: Context, event: ArgEvent):
-        """
-        Archive event.
+        """Archive event.
 
         Example: archive 1
         """
-
         # Archive event and export
         EventDatabase.archiveEvent(event)
         try:
@@ -967,8 +946,7 @@ class CommandListener(Cog):
     # Delete event command
     @command(aliases=["d"])
     async def delete(self, ctx: Context, event: ArgEvent):
-        """
-        Delete event.
+        """Delete event.
 
         Example: delete 1
         """
@@ -977,8 +955,7 @@ class CommandListener(Cog):
 
     @command()
     async def deletearchived(self, ctx: Context, event: ArgArchivedEvent):
-        """
-        Delete archived event.
+        """Delete archived event.
 
         Example: deletearchived 1
         """

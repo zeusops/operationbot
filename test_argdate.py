@@ -2,8 +2,7 @@ from datetime import date
 
 import pytest
 from discord.ext.commands import BadArgument
-
-from converters import ArgDate
+from operationbot.converters import ArgDate
 
 
 @pytest.mark.asyncio

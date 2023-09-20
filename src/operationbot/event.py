@@ -391,8 +391,7 @@ class Event:
         self.roleGroups["Additional"].removeRole(role)
 
     def removeRoleGroup(self, groupName: str) -> bool:
-        """
-        Remove a role group.
+        """Remove a role group.
 
         Returns false if the group cannot be found.
         """
@@ -475,7 +474,8 @@ class Event:
     def findRoleWithName(self, roleName: str) -> Role:
         """Find a role with given name.
 
-        Raises a RoleNotFound if the role cannot be found."""
+        Raises a RoleNotFound if the role cannot be found.
+        """
         roleName = roleName.lower()
         for roleGroup in self.roleGroups.values():
             role: Role
@@ -528,7 +528,8 @@ class Event:
     def undoSignup(self, user) -> Optional[Role]:
         """Remove username from any signups.
 
-        Returns Role if user was signed up, otherwise None."""
+        Returns Role if user was signed up, otherwise None.
+        """
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role.userID == user.id:

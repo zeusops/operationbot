@@ -9,10 +9,10 @@ from discord.user import User
 
 from operationbot import config as cfg
 from operationbot import messageFunctions as msgFnc
+from operationbot.bot import OperationBot
 from operationbot.errors import EventNotFound, RoleNotFound, RoleTaken, UnknownEmoji
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase
-from operationbot.bot import OperationBot
 from operationbot.role import Role
 
 

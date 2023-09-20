@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import Any, Dict, Optional, Tuple
 
 from discord import Emoji
@@ -61,8 +61,7 @@ class EventDatabase:
 
     @classmethod
     def archiveEvent(cls, event: Event):
-        """
-        Move event to archive.
+        """Move event to archive.
 
         Does not remove or create messages.
         """
@@ -76,8 +75,7 @@ class EventDatabase:
 
     @classmethod
     def removeEvent(cls, eventID: int, archived=False) -> Optional[Event]:
-        """
-        Remove event.
+        """Remove event.
 
         Does not remove the message associated with the event.
         """
@@ -89,7 +87,8 @@ class EventDatabase:
     def getEventByMessage(cls, messageID: int, archived=False) -> Event:
         """Finds an event with its message ID.
 
-        Raises EventNotFound if event cannot be found"""
+        Raises EventNotFound if event cannot be found
+        """
         if archived:
             collection = cls.eventsArchive
         else:
@@ -129,7 +128,8 @@ class EventDatabase:
     def getEventByID(cls, eventID: int, archived=False) -> Event:
         """Finds an event with its ID.
 
-        Raises EventNotFound if event cannot be found."""
+        Raises EventNotFound if event cannot be found.
+        """
         if archived:
             collection = cls.eventsArchive
         else:
@@ -144,8 +144,8 @@ class EventDatabase:
     def getArchivedEventByMessage(cls, messageID: int) -> Event:
         """Finds an archived event with its message ID.
 
-        Raises EventNotFound if event cannot be found"""
-
+        Raises EventNotFound if event cannot be found
+        """
         return cls.getEventByMessage(messageID, archived=True)
 
     # was: findEventInArchiveeventid
@@ -153,7 +153,8 @@ class EventDatabase:
     def getArchivedEventByID(cls, eventID: int):
         """Finds an archived event with its ID.
 
-        Raises EventNotFound if event cannot be found."""
+        Raises EventNotFound if event cannot be found.
+        """
         return cls.getEventByID(eventID, archived=True)
 
     @classmethod
