@@ -5,6 +5,10 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Changed
+
+- Drop support for Python 3.9 and older.
+
 ## v0.40.0 - 2023-09-20
 
 ### Changed
