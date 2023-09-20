@@ -84,8 +84,20 @@ extend-exclude = ["docs/*"]
 # Add I = isort (import sorter), to remove need for isort itself
 # And D = pydocstyle for docstrings
 select = ["E", "F", "I", "D"]
-# D400/D415 = First line (of dosctrings) should end with [.?!]
-extend-ignore = ["D400", "D415"]
+extend-ignore = [
+    # D400/D415 = First line (of dosctrings) should end with [.?!]
+    "D400",
+    "D415",
+    # Disable most docstring checks for now
+    "D100",  # Missing docstring in public module
+    "D101",  # Missing docstring in public class
+    "D102",  # Missing docstring in public method
+    "D103",  # Missing docstring in public function
+    # "D104",  # Missing docstring in public package
+    "D105",  # Missing docstring in magic method
+    "D106",  # Missing docstring in public nested class
+    "D107",  # Missing docstring in __init__
+]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
 fixable = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "EM", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID", "TRY", "UP", "YTT"]
