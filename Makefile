@@ -24,6 +24,11 @@ test:
 .PHONY: docs
 docs:
 	cd docs && make html
+	poetry run doc2dash \
+		--force \
+		--name operationbot \
+		docs/build/html \
+		--destination docs/build/docset
 
 .PHONY: docs-serve
 docs-serve:
@@ -31,13 +36,13 @@ docs-serve:
 
 .PHONY: build
 build:
-	poetry build -f wheel
+	poetry build
 
 .PHONY: docker-build-release
-docker-build-release:
+docker-build-release: export-requirements
 	docker build \
 		-t "${DOCKER_IMAGE_NAME}:${APP_VERSION}" \
-		-f Dockerfile.release \
+		-f release.Dockerfile \
 		.
 
 .PHONY: docker-build-dev
@@ -54,9 +59,9 @@ release:
 # Set the new version Makefile variable after the version bump
 	$(eval NEW_VERSION := $(shell poetry version --short ${BUMP}))
 	sed -i \
-		"s/\(## \[Unreleased\]\)/\1\n\n\n## v${NEW_VERSION} - $(shell date -I)/" \
+		"s/\(## \[Unreleased\]\)/\1\n\n## v${NEW_VERSION} - $(shell date -I)/" \
 		CHANGELOG.md
-	git add -A
+	git add CHANGELOG.md pyproject.toml
 	git commit -m "Bump to version v${NEW_VERSION}"
 	git tag -a v${NEW_VERSION} \
 		-m "Release v${NEW_VERSION}"
@@ -66,7 +71,7 @@ release:
 # Generate/update the poetry.lock file
 .PHONY: lock
 lock:
-	poetry lock
+	poetry lock --no-update
 
 # Update dependencies (within pyproject.toml specs)
 # Update the lock-file at the same time
@@ -77,8 +82,16 @@ update:
 # Generate a pip-compatible requirements.txt
 # From the poetry.lock. Mostly for CI use.
 .PHONY: export-requirements
-export-requirements:
-	poetry run pip freeze > requirements.txt
+export-requirements: lock
+	sha256sum poetry.lock > requirements.txt \
+		&& sed -i '1s/^/# /' requirements.txt \
+		&& poetry export --format=requirements.txt >>requirements.txt
+
+
+# Confirm the requirements.txt's source (poetry.lock) is identical to current
+# poetry.lock file
+check-requirements:
+	head -n1 requirements.txt | sed 's/^# //' | sha256sum -c
 
 # Install poetry from pip
 # IMPORTANT: Make sure "pip" resolves to a virtualenv

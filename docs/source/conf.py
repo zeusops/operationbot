@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.abspath("../../src"))
 # -- Project information -----------------------------------------------------
 
 project = "Operation Bot"
-copyright = "2022, Jb Doyon"
-author = "Jb Doyon"
+copyright = "2023, Sami Laine"
+author = "Sami Laine"
 
 
 # -- General configuration ---------------------------------------------------
@@ -34,7 +34,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.viewcode",
     "myst_parser",
-    # "autoapi.extension",
+    "autodoc2",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -43,7 +43,7 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns: list[str] = []
+exclude_patterns = []
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -59,14 +59,12 @@ html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 
 
-# autoapi_type = "python"
-# autoapi_dirs = ["../../src"]
-#
-#
-# Do not hijack toctree to add entry
-# autoapi_add_toctree_entry = False
-
-# Make sure the target is unique
-autosectionlabel_prefix_document = True
+autodoc2_packages = [
+    "../../src/operationbot",
+]
+# Enable all docstrings as Myst Markdown
+autodoc2_docstring_parser_regexes = [
+    (r".*", "myst"),
+]
 
 myst_heading_anchors = 2

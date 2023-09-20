@@ -7,6 +7,8 @@ database/*
 backup
 foo
 
+docs/source/apidocs/
+
 # Templated versions begin:
 
 # Poetry.lock is an exact version pinning tool (down to SHA256 of libs)
