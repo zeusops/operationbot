@@ -1,6 +1,9 @@
-# Operationbot for the Zeusops discord
+# Operationbot
 
-**Note:** Requires Python 3.9 or newer.
+A Discord bot for listing events on a channel. Originally made for handling
+Arma 3 operations in the [Zeusops](https://www.zeusops.com) community.
+
+**Note:** Requires Python 3.11 or newer.
 
 ## Setting up
 
@@ -33,8 +36,7 @@
    poetry run pip install tzdata
    ```
 
-5. Activate the virtual environment:
-Then inside the virtual environment, launch the command:
+5. Then inside the virtual environment, launch the command:
 
    ```shell
    # Run single command inside virtualenv
@@ -50,7 +52,7 @@ Then inside the virtual environment, launch the command:
 
 ### Python setup
 
-This repository uses Python3.9, using
+This repository uses Python3.11, using
 [Poetry](https://python-poetry.org) as package manager to define a
 Python package inside `src/operationbot/`.
 
@@ -91,8 +93,9 @@ using the cool [myst_parser](https://myst-parser.readthedocs.io/en/latest/)
 plugin to support Markdown files like this one.
 
 Other Sphinx plugins provide extra documentation features, like the recent
-[AutoAPI](https://sphinx-autoapi.readthedocs.io/en/latest/index.html) to
-generate API reference without headaches.
+[sphinx-autodoc2](https://sphinx-autodoc2.readthedocs.io/en/latest/index.html)
+to generate API reference without headaches, and with myst-markdown support in
+docstrings too!
 
 To build the documentation, run
 
@@ -102,7 +105,7 @@ make docs
 # Generates docs/build/html/
 ```
 
-To browse the site version of the documentation you just built, run:
+To browse the web version of the documentation you just built, run:
 
 ```shell
 make docs-serve
@@ -117,5 +120,5 @@ make docs docs-serve
 
 ### Templated repository
 
-This repository was created by the cookiecutter template available at
-<https://github.com/OverkillGuy/python-template>, using commit hash: `5c882f2e22311a2307263d14877c8229a2ed6961`.
+This repository was created by the copier template available at
+gh:OverkillGuy/python-template, using version v1.3.1-2-g705747a.
