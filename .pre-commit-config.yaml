@@ -1,8 +1,7 @@
 ---
-exclude: "^docs/source/conf.py$"
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.3.0
+  rev: v4.4.0
   hooks:
   - id: trailing-whitespace
   - id: end-of-file-fixer
@@ -20,24 +19,53 @@ repos:
   - id: check-yaml
   - id: check-json
 - repo: https://github.com/shellcheck-py/shellcheck-py
-  rev: v0.8.0.4
+  rev: v0.9.0.5
   hooks:
   - id: shellcheck
     name: Shellcheck
     args: ["-f", "gcc"]  # output filename:linenum:colnum (clickable)
 - repo: https://github.com/AleksaC/hadolint-py
-  rev: v2.10.0
+  rev: v2.12.0.2
   hooks:
   - id: hadolint
     name: Hadolint (Dockerfile checker)
-# Actual Python Linter
-- repo: https://github.com/charliermarsh/ruff-pre-commit
-  rev: v0.0.146
+# Actual Python Linters
+- repo: https://github.com/python-poetry/poetry
+  rev: 1.6.1
+  hooks:  # Validate poetry package + ensure lockfile updated
+  - id: poetry-check
+  - id: poetry-lock
+- repo: https://github.com/psf/black
+  rev: 23.7.0
+  hooks:
+  - id: black
+    name: Black (Python formatter)
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.0.285
   hooks:
   - id: ruff
+    args: ["--fix", "--exit-non-zero-on-fix"]
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v0.982
+  rev: v1.5.1
   hooks:
   - id: mypy
     name: Mypy (Python type-checker)
+    exclude: "docs/source/conf.py"
+    # Uncomment below if mypy requires extra type stub packages
     additional_dependencies: [types-PyYAML==6.0.12.2]
+- repo: https://github.com/igorshubovych/markdownlint-cli
+  rev: v0.35.0
+  hooks:
+  - id: markdownlint
+    args: ["--fix", "--config", ".markdown-lint.yml"]
+- repo: https://github.com/adrienverge/yamllint.git
+  rev: v1.32.0
+  hooks:
+  - id: yamllint
+    exclude: \.copier.*\.yaml
+    args: [
+      "-d",
+      # Allows both indented and unindented list, as long as the whole document
+      # uses consistent indentation
+      "{extends: default, rules: {indentation: {indent-sequences: consistent}}}"
+    ]
