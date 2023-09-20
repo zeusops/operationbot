@@ -8,7 +8,6 @@ from operationbot.role import Role
 
 
 class RoleGroup:
-
     def __init__(self, name: str, isInline: bool = True):
         self.name = name
         self.isInline = isInline
@@ -49,14 +48,14 @@ class RoleGroup:
             # assignment on 'name', couldn't figure out the reason so ignoring
             # for now
             raise RoleNotFound(
-                "Could not find an additional role to remove "
-                f"with the name {name}") from e  # pylint: disable=E0601
+                "Could not find an additional role to remove " f"with the name {name}"
+            ) from e  # pylint: disable=E0601
 
     def __str__(self) -> str:
         roleGroupString = ""
 
         for role in self.roles:
-            roleGroupString += f'{str(role)}\n'
+            roleGroupString += f"{str(role)}\n"
 
         return roleGroupString
 
@@ -76,8 +75,7 @@ class RoleGroup:
         data["roles"] = rolesData
         return data
 
-    def fromJson(self, data: dict, emojis: Tuple[Emoji, ...],
-                 manual_load=False):
+    def fromJson(self, data: dict, emojis: Tuple[Emoji, ...], manual_load=False):
         self.name = data["name"]
         if not manual_load:
             self.isInline = data["isInline"]
@@ -94,16 +92,18 @@ class RoleGroup:
             if not manual_load:
                 # Only create new roles if we're not loading data manually from
                 # the command channel
-                role = Role(roleData["name"], roleEmoji,
-                            self.get_corrected_name(roleData))
+                role = Role(
+                    roleData["name"], roleEmoji, self.get_corrected_name(roleData)
+                )
                 self.roles.append(role)
             else:
                 try:
                     role = next(x for x in self.roles if x.emoji == roleEmoji)
                 except StopIteration as e:
                     name = roleData.get("show_name") or roleData["name"]
-                    raise UnexpectedRole(f"Cannot import unexpected role "
-                                         f"'{name}'") from e
+                    raise UnexpectedRole(
+                        f"Cannot import unexpected role " f"'{name}'"
+                    ) from e
                 roles.append(roleEmoji)
 
             role.fromJson(roleData, manual_load=manual_load)

@@ -5,8 +5,7 @@ from typing import cast
 from discord import Member, Message
 from discord.ext.commands.context import Context
 from discord.ext.commands.converter import MemberConverter
-from discord.ext.commands.errors import (BadArgument, CommandError,
-                                         MemberNotFound)
+from discord.ext.commands.errors import BadArgument, CommandError, MemberNotFound
 
 from operationbot import config as cfg
 from operationbot import messageFunctions as msgFnc
@@ -40,13 +39,11 @@ def _get_index(argument: str) -> int:
         # Argument might already be a numeral
         pass
     except KeyError as e:
-        raise ValueError(f"{argument} is not a number or a numeral.") \
-            from e
+        raise ValueError(f"{argument} is not a number or a numeral.") from e
     try:
         return cfg.ADDITIONAL_ROLE_NAMES.index(argument)
     except ValueError as e:
-        raise ValueError(f"{argument} is not a number or a numeral.") \
-            from e
+        raise ValueError(f"{argument} is not a number or a numeral.") from e
 
 
 class ArgRole(Role):
@@ -64,12 +61,13 @@ class ArgRole(Role):
 
     Finally, raises a BadArgument if no role was found.
     """
+
     # NOTE: the third chapter of the docstring (Converts the following [..]) is
     # dynamically parsed and displayed as a part of the `roleparserinfo`
     # command. If the structure of the docstring is changed, the command must
     # be ajusted accordingly.
 
-    EMOJI_PATTERN = r'<a?:([a-zA-Z0-9_])+:[0-9]+>'
+    EMOJI_PATTERN = r"<a?:([a-zA-Z0-9_])+:[0-9]+>"
 
     @classmethod
     async def convert(cls, ctx: Context, argument: str) -> Role:
@@ -78,12 +76,13 @@ class ArgRole(Role):
             event: Event = ctx.args[2]
             assert isinstance(event, Event)
         except (IndexError, AssertionError) as e:
-            raise CommandError(f"The command {ctx.command} is invalid. "
-                               "The ArgRole converter requires an Event to be "
-                               "the first argument of the calling command") \
-                from e
+            raise CommandError(
+                f"The command {ctx.command} is invalid. "
+                "The ArgRole converter requires an Event to be "
+                "the first argument of the calling command"
+            ) from e
         additional = event.getRoleGroup("Additional")
-        first_arg = argument.split(' ')[0]
+        first_arg = argument.split(" ")[0]
         try:
             index = _get_index(first_arg)
         except ValueError:
@@ -118,8 +117,12 @@ class UnquotedStr(str):
 
     @classmethod
     def unquote(cls, argument: str) -> str:
-        if (argument.startswith('"') and argument.endswith('"')
-                or argument.startswith("'") and argument.endswith("'")):
+        if (
+            argument.startswith('"')
+            and argument.endswith('"')
+            or argument.startswith("'")
+            and argument.endswith("'")
+        ):
             return argument[1:-1]
         return argument
 
@@ -150,8 +153,7 @@ class ArgEvent(Event):
         except BadArgument as e:
             if is_integer:
                 raise BadArgument(
-                    f"No event with the given ID {event_id} was found. "
-                    f"{str(e)}"
+                    f"No event with the given ID {event_id} was found. " f"{str(e)}"
                 ) from e
             raise e
 
@@ -194,15 +196,15 @@ class ArgDate(date):
     def _convert_date(cls, arg: str) -> date:
         formats = [
             # yyyy-mm-dd is already handled by date.fromisoformat()
-            ('%Y%m%d', 'yyyymmdd'),
-            ('%y-%m-%d', 'yy-mm-dd'),
-            ('%y%m%d', 'yymmdd'),
-            ('%m-%d', 'mm-dd'),
-            ('--%m%d', '--mmdd'),
+            ("%Y%m%d", "yyyymmdd"),
+            ("%y-%m-%d", "yy-mm-dd"),
+            ("%y%m%d", "yymmdd"),
+            ("%m-%d", "mm-dd"),
+            ("--%m%d", "--mmdd"),
             # 'mmdd' is not allowed because it is too ambiguous (looks like an
             # event ID)
         ]
-        for fmt in ([f[0] for f in formats]):
+        for fmt in [f[0] for f in formats]:
             try:
                 event_date = datetime.strptime(arg, fmt).date()
                 if event_date.year == 1900:
@@ -220,14 +222,13 @@ class ArgDate(date):
 class ArgTime(time):
     @classmethod
     async def convert(cls, _: Context, arg: str) -> time:
-        for fmt in ('%H:%M', '%H%M'):
+        for fmt in ("%H:%M", "%H%M"):
             try:
                 _date = datetime.strptime(arg, fmt)
                 return time(_date.hour, _date.minute)
             except ValueError:
                 pass
-        raise BadArgument(f"Invalid time format {arg}. "
-                          "Has to be HH:MM or HHMM")
+        raise BadArgument(f"Invalid time format {arg}. " "Has to be HH:MM or HHMM")
 
 
 class ArgMessage(Message):
@@ -236,12 +237,12 @@ class ArgMessage(Message):
         try:
             event_id = int(arg)
         except ValueError as e:
-            raise BadArgument(f"Invalid message ID {arg}, needs to be an "
-                              "integer") from e
+            raise BadArgument(
+                f"Invalid message ID {arg}, needs to be an " "integer"
+            ) from e
         try:
             event = EventDatabase.getEventByID(event_id)
-            message = await msgFnc.getEventMessage(
-                event, cast(OperationBot, ctx.bot))
+            message = await msgFnc.getEventMessage(event, cast(OperationBot, ctx.bot))
         except (EventNotFound, MessageNotFound) as e:
             raise BadArgument(str(e)) from e
 
@@ -257,8 +258,7 @@ class ArgMember(Member):
             return await converter.convert(ctx, argument)
         except MemberNotFound:
             pass
-        name_regex = re.compile(f'^([A-Z]\\. )?{argument}( \\(.+/.+\\))?$'
-                                .lower())
+        name_regex = re.compile(f"^([A-Z]\\. )?{argument}( \\(.+/.+\\))?$".lower())
         guild = ctx.guild
         if guild is not None:
             for member in guild.members:

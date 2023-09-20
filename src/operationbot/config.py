@@ -12,19 +12,19 @@ if secret.DEBUG:
     EVENT_ARCHIVE_CHANNEL = _test_channel
     COMMAND_CHANNEL = _test_channel
     LOG_CHANNEL = _test_channel
-    GAME = 'with bugs'
+    GAME = "with bugs"
     EMOJI_GUILD = 219564389462704130
 else:
     EVENT_CHANNEL = 502824760036818964
     EVENT_ARCHIVE_CHANNEL = 528914471700267029
     COMMAND_CHANNEL = 528980590930821131
     LOG_CHANNEL = 621066917339201547
-    GAME = 'with events'
+    GAME = "with events"
     # If set to 0, the bot uses Command Channel's guild
     EMOJI_GUILD = 0
 
 JSON_FILEPATH = {
-    "events":  "database/events.json",
+    "events": "database/events.json",
     "archive": "database/archive.json",
 }
 ADDITIONAL_ROLE_EMOJIS = [
@@ -89,7 +89,7 @@ SPECIAL_EMOJIS: List[str] = [
     ATTENDANCE_EMOJI,
 ]
 
-PLATOON_SIZES = ['1PLT', '2PLT', 'sideop', 'WW2side']
+PLATOON_SIZES = ["1PLT", "2PLT", "sideop", "WW2side"]
 
 # Dummy: an empty spacer. An embed can only have either one or three
 # items on a line.
@@ -99,7 +99,6 @@ DEFAULT_GROUPS: Dict[str, List[str]] = {
         "Company",
         "1st Platoon",
         "Dummy",
-
         "Alpha",
         "Bravo",
     ],
@@ -107,14 +106,12 @@ DEFAULT_GROUPS: Dict[str, List[str]] = {
         "Battalion",
         "Company",
         "Dummy",
-
         "1st Platoon",
         "Alpha",
         "Bravo",
-
         "2nd Platoon",
         "Echo",
-        "Foxtrot"
+        "Foxtrot",
     ],
     "sideop": [
         "Company",
@@ -134,7 +131,6 @@ DEFAULT_ROLES: Dict[str, Dict] = {
         "1PLT": "1st Platoon",
         "FAC": "1st Platoon",
         "RTO": "1st Platoon",
-
         "ASL": "Alpha",
         "A1": "Alpha",
         "A2": "Alpha",
@@ -147,7 +143,6 @@ DEFAULT_ROLES: Dict[str, Dict] = {
         "CO": "Company",
         "FAC": "Company",
         "RTO": "Company",
-
         "1PLT": "1st Platoon",
         "ASL": "Alpha",
         "A1": "Alpha",
@@ -157,7 +152,6 @@ DEFAULT_ROLES: Dict[str, Dict] = {
         "C1": "Charlie",
         "DSL": "Delta",
         "D1": "Delta",
-
         "2PLT": "2nd Platoon",
         "ESL": "Echo",
         "E1": "Echo",
@@ -190,13 +184,20 @@ EMOJI_ZEUS = "ZEUS"
 # a user defined in secrets.py gets notified about that.
 SIGNOFF_NOTIFY_TIME = timedelta(days=1)
 SIGNOFF_NOTIFY_ROLES: Dict[str, List] = {
-    "1PLT": [
-        "1PLT", "HQ", "ASL", "BSL", "CSL"
-    ],
+    "1PLT": ["1PLT", "HQ", "ASL", "BSL", "CSL"],
     "2PLT": [
-        "CO", "HQ", "1PLT", "2PLT",
-        "ASL", "BSL", "CSL", "DSL",
-        "ESL", "FSL", "GSL", "HSL",
+        "CO",
+        "HQ",
+        "1PLT",
+        "2PLT",
+        "ASL",
+        "BSL",
+        "CSL",
+        "DSL",
+        "ESL",
+        "FSL",
+        "GSL",
+        "HSL",
     ],
     "sideop": [],
     "WW2side": [],
@@ -215,7 +216,4 @@ EMBED_COLOR = {
     "DLC_SIDEOP": 0x00FFFF,
 }
 
-DLC_TERRAINS = {
-    "Tanoa": "APEX",
-    "Livonia": "Contact"
-}
+DLC_TERRAINS = {"Tanoa": "APEX", "Livonia": "Contact"}

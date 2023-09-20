@@ -26,10 +26,7 @@ class AliasHelpCommand(DefaultHelpCommand):
 
         # pylint: disable=W0212
         def get_max_size(names):
-            as_lengths = (
-                discord.utils._string_width(n)
-                for n in names.values()
-            )
+            as_lengths = (discord.utils._string_width(n) for n in names.values())
             return max(as_lengths, default=0)
 
         if not commands:
@@ -42,7 +39,7 @@ class AliasHelpCommand(DefaultHelpCommand):
             name = command.name
             aliases = command.aliases
             if aliases:
-                name = f'{aliases[0]}|{name}'
+                name = f"{aliases[0]}|{name}"
             names[command.name] = name
 
         max_size = get_max_size(names)
@@ -125,11 +122,14 @@ class OperationBot(Bot):
         _, error, _ = sys.exc_info()
 
         ctx = self.commandchannel
-        msg = (f"Unexpected error occured in {event_method}: ```{error}```\n"
-               f"```py\n{trace}```")
+        msg = (
+            f"Unexpected error occured in {event_method}: ```{error}```\n"
+            f"```py\n{trace}```"
+        )
         if len(msg) >= 2000:
-            await ctx.send("Received error message that's over 2000 "
-                           "characters, check log.")
+            await ctx.send(
+                "Received error message that's over 2000 " "characters, check log."
+            )
             print(msg)
         else:
             await ctx.send(msg)

@@ -4,9 +4,7 @@ from discord import Emoji
 
 
 class Role:
-
-    def __init__(self, name: str, emoji: Union[str, Emoji],
-                 show_name: bool = False):
+    def __init__(self, name: str, emoji: Union[str, Emoji], show_name: bool = False):
         self.name = name
         self.emoji = emoji
         self.show_name = show_name
