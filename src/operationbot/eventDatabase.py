@@ -47,8 +47,6 @@ class EventDatabase:
         # Create event
         event = Event(
             event_date,
-            # NOTE: Ignoring the type here because mypy is buggy and doesn't
-            # detect class properties correctly
             cls.emojis,  # type: ignore
             eventID=eventID,
             importing=importing,
@@ -239,9 +237,7 @@ class EventDatabase:
                 with open(filename) as jsonFile:
                     data: Dict = json.load(jsonFile)
             except json.decoder.JSONDecodeError as e:
-                print(
-                    "Malformed JSON file! Backing up and", "creating an empty database"
-                )
+                print("Malformed JSON file! Backing up and creating an empty database")
                 backup_date = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
                 # Backup old file
                 backupName = f"{filename}-{backup_date}.bak"

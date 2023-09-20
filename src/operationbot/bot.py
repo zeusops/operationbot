@@ -128,7 +128,7 @@ class OperationBot(Bot):
         )
         if len(msg) >= 2000:
             await ctx.send(
-                "Received error message that's over 2000 " "characters, check log."
+                "Received error message that's over 2000 characters, check log."
             )
             print(msg)
         else:

@@ -153,7 +153,7 @@ class ArgEvent(Event):
         except BadArgument as e:
             if is_integer:
                 raise BadArgument(
-                    f"No event with the given ID {event_id} was found. " f"{str(e)}"
+                    f"No event with the given ID {event_id} was found. {str(e)}"
                 ) from e
             raise e
 
@@ -213,8 +213,7 @@ class ArgDate(date):
             except ValueError:
                 pass
         raise ValueError(
-            f"Invalid date format {arg}. "
-            "Has to be one of yyyy-mm-dd, "
+            f"Invalid date format {arg}. Has to be one of yyyy-mm-dd, "
             f"{', '.join([f[1] for f in formats])}"
         )
 
@@ -228,7 +227,7 @@ class ArgTime(time):
                 return time(_date.hour, _date.minute)
             except ValueError:
                 pass
-        raise BadArgument(f"Invalid time format {arg}. " "Has to be HH:MM or HHMM")
+        raise BadArgument(f"Invalid time format {arg}. Has to be HH:MM or HHMM")
 
 
 class ArgMessage(Message):
@@ -238,7 +237,7 @@ class ArgMessage(Message):
             event_id = int(arg)
         except ValueError as e:
             raise BadArgument(
-                f"Invalid message ID {arg}, needs to be an " "integer"
+                f"Invalid message ID {arg}, needs to be an integer"
             ) from e
         try:
             event = EventDatabase.getEventByID(event_id)

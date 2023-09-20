@@ -28,7 +28,7 @@ class User:
     # This class implements the same signature as the discord.abc.User class,
     # we need to use the 'id' argument here.
     # pylint: disable=redefined-builtin
-    def __init__(self, id: int = None, display_name: str = None):
+    def __init__(self, id: int | None = None, display_name: str | None = None):
         self.id = id
         self.display_name = display_name
 
@@ -235,16 +235,14 @@ class Event:
             if new_size == "2PLT":
                 # TODO: implement 1PLT -> 2PLT conversion
                 raise NotImplementedError(
-                    "Conversion from 1PLT to 2PLT " "not implemented"
+                    "Conversion from 1PLT to 2PLT not implemented"
                 )
             raise ValueError(
                 "Unsupported platoon size conversion: "
                 f"{self.platoon_size} -> {new_size}"
             )
         else:
-            raise ValueError(
-                "Unsupported current platoon size: " f"{self.platoon_size}"
-            )
+            raise ValueError(f"Unsupported current platoon size: {self.platoon_size}")
         return warnings
 
     def reorder(self):
@@ -278,7 +276,7 @@ class Event:
             f"\nServer port: **{self.port}**" if self.port != cfg.PORT_DEFAULT else ""
         )
         dlc_note = (
-            f"\n\nThe **{self.dlc} DLC** is required to " "join this event"
+            f"\n\nThe **{self.dlc} DLC** is required to join this event"
             if self.dlc
             else ""
         )
@@ -359,7 +357,7 @@ class Event:
             for role in roleGroup.roles:
                 if role.name == name:
                     raise RoleError(
-                        f"Role with name {name} already exists, " "not adding new role"
+                        f"Role with name {name} already exists, not adding new role"
                     )
 
         # Find next emoji for additional role
@@ -490,9 +488,7 @@ class Event:
         try:
             return self.roleGroups[groupName]
         except KeyError as e:
-            raise RoleGroupNotFound(
-                "No role group found with name " f"{groupName}"
-            ) from e
+            raise RoleGroupNotFound(f"No role group found with name {groupName}") from e
 
     def hasRoleGroup(self, groupName: str) -> bool:
         """Check if a role group with given name exists in the event."""

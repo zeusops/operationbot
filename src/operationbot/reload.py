@@ -18,9 +18,7 @@ class Reload(Cog):
                 self.bot.unload_extension(extension)
                 print("unloaded", extension)
             except ExtensionNotLoaded:
-                await ctx.send(
-                    "Skipping unload for not loaded extension " f"{extension}"
-                )
+                await ctx.send(f"Skipping unload for not loaded extension {extension}")
             else:
                 unloaded.append(extension)
         loaded = []
@@ -39,9 +37,7 @@ class Reload(Cog):
             await ctx.send(f"Reloaded following extensions: {loaded}")
             not_loaded = [item for item in unloaded if item not in loaded]
             if len(not_loaded) > 0:
-                await ctx.send(
-                    "Failed to reload following extensions: " f"{not_loaded}"
-                )
+                await ctx.send(f"Failed to reload following extensions: {not_loaded}")
 
 
 def setup(bot):

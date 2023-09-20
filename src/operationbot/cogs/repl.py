@@ -99,14 +99,12 @@ class REPL(commands.Cog):
 
         if msg.channel.id in self.sessions:
             await ctx.send(
-                "Already running a REPL session in this channel." "Exit it with `quit`."
+                "Already running a REPL session in this channel. Exit it with `quit`."
             )
             return
 
         self.sessions.add(msg.channel.id)
-        await ctx.send(
-            "Enter code to execute or evaluate." "`exit()` or `quit` to exit."
-        )
+        await ctx.send("Enter code to execute or evaluate. `exit()` or `quit` to exit.")
 
         def pred(m):
             return (
@@ -125,7 +123,7 @@ class REPL(commands.Cog):
                 self.sessions.remove(msg.channel.id)
                 return
 
-            executor = exec
+            executor: Callable = exec
             if cleaned.count("\n") == 0:
                 # single statement, potentially 'eval'
                 try:
@@ -181,9 +179,7 @@ class REPL(commands.Cog):
         if isinstance(error, MissingRequiredArgument):
             await ctx.send(f"Missing argument. See: {CMD}help {ctx.command}")
         elif isinstance(error, BadArgument):
-            await ctx.send(
-                f"Invalid argument: {error}. See: {CMD}help " f"{ctx.command}"
-            )
+            await ctx.send(f"Invalid argument: {error}. See: {CMD}help {ctx.command}")
         else:
             await ctx.send(f"Unexpected error occured: ```{error}```")
             print(error)

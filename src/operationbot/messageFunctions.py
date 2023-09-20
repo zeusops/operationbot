@@ -22,7 +22,7 @@ async def getEventMessage(event: Event, bot: OperationBot, archived=False) -> Me
         return await channel.fetch_message(event.messageID)
     except NotFound as e:
         raise MessageNotFound(
-            "No event message found with " f"message ID {event.messageID}"
+            f"No event message found with message ID {event.messageID}"
         ) from e
 
 
@@ -83,7 +83,7 @@ async def updateMessageEmbed(eventMessage: Message, updatedEvent: Event) -> bool
 
 # from EventDatabase
 async def updateReactions(
-    event: Event, message: Message = None, bot=None, reorder=False
+    event: Event, message: Message | None = None, bot=None, reorder=False
 ):
     """
     Update reactions of an event message.
@@ -95,7 +95,7 @@ async def updateReactions(
     if message is None:
         if bot is None:
             raise ValueError(
-                "Requires either the `message` or `bot` argument" " to be provided"
+                "Requires either the `message` or `bot` argument to be provided"
             )
         message = await getEventMessage(event, bot)
 
