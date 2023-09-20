@@ -1,5 +1,7 @@
 from datetime import datetime, time, timezone
+from typing import cast
 
+from discord import Embed
 from operationbot import config as cfg
 from operationbot.event import Event
 
@@ -27,7 +29,9 @@ def test_default():
     assert event.title == "Operation"
     assert event.description == ""
     timestamp = _timestamp(date)
-    assert event.createEmbed().description == (
+    # A non-cached embed will never be None, casting to make the linters happy
+    embed = cast(Embed, event.createEmbed(cache=False))
+    assert embed.description == (
         f"Local time: <t:{timestamp}> "
         f"(<t:{timestamp}:R>)"
         f"\nTerrain: Stratis - Faction: USMC"
@@ -44,7 +48,9 @@ def test_dlc():
     assert event.title == "APEX Operation"
     assert event.description == ""
     timestamp = _timestamp(date)
-    assert event.createEmbed().description == (
+    # A non-cached embed will never be None, casting to make the linters happy
+    embed = cast(Embed, event.createEmbed(cache=False))
+    assert embed.description == (
         f"Local time: <t:{timestamp}> "
         f"(<t:{timestamp}:R>)"
         f"\nTerrain: {event.terrain} - Faction: {event.faction}\n\n"

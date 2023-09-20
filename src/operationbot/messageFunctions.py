@@ -1,14 +1,14 @@
-from typing import Dict, List, Union, cast
 import logging
+from typing import Dict, List, Union, cast
 
 from discord import Emoji, Message, NotFound, TextChannel
 from discord.embeds import Embed
 from discord.errors import Forbidden, HTTPException
 
+from operationbot.bot import OperationBot
 from operationbot.errors import EventUpdateFailed, MessageNotFound, RoleError
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase
-from operationbot.bot import OperationBot
 
 
 async def getEventMessage(event: Event, bot: OperationBot, archived=False) -> Message:
@@ -31,7 +31,8 @@ async def sortEventMessages(bot: OperationBot):
 
     Saves the database to disk after sorting.
 
-    Raises MessageNotFound if messages are missing."""
+    Raises MessageNotFound if messages are missing.
+    """
     logging.info("sortEventMessages")
     EventDatabase.sortEvents()
 
@@ -85,8 +86,7 @@ async def updateMessageEmbed(eventMessage: Message, updatedEvent: Event) -> bool
 async def updateReactions(
     event: Event, message: Message | None = None, bot=None, reorder=False
 ):
-    """
-    Update reactions of an event message.
+    """Update reactions of an event message.
 
     Requires either the `message` or `bot` argument to be provided. Calling
     the function with reorder = True causes all reactions to be removed and
@@ -173,7 +173,8 @@ def messageEventId(message: Message) -> int:
 async def syncMessages(events: Dict[int, Event], bot: OperationBot):
     """Sync event messages with the event database.
 
-    Saves the database to disk after syncing."""
+    Saves the database to disk after syncing.
+    """
     logging.info("syncMessages")
     sorted_events = sorted(
         list(events.values()), key=lambda event: event.date, reverse=True
