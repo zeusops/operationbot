@@ -56,15 +56,18 @@ class CommandListener(Cog):
                 return False
             if self.bot.processing:
                 await ctx.send(
-                    "Please wait for the previous operation to " "finish first."
+                    "Please wait for the previous operation to finish first."
                 )
                 return False
             return True
 
         @bot.check
         async def command_channels_only(ctx: Context):
-            """Prevents the bot from being controlled outside of the specified
-            command and debug channels."""
+            """Limit the bot commands to specific channels.
+
+            Prevents the bot from being controlled outside of the specified
+            command and debug channels.
+            """
             # pylint: disable=protected-access
             return (
                 ctx.channel == self.bot.commandchannel
@@ -98,7 +101,7 @@ class CommandListener(Cog):
         if ArgRole.__doc__:
             doc = ArgRole.__doc__.split("\n\n")[2]
             await ctx.send(
-                f"How to use commands that use ArgRole for " f"parsing roles: \n\n{doc}"
+                f"How to use commands that use ArgRole for parsing roles: \n\n{doc}"
             )
         else:
             await ctx.send("No documentation found")
@@ -117,7 +120,7 @@ class CommandListener(Cog):
         except ImportError as e:
             await ctx.send(f"Failed to reload module {moduleName}: {str(e)}")
         except Exception as e:  # pylint: disable=broad-except
-            await ctx.send("An error occured while reloading: " f"```py\n{str(e)}```")
+            await ctx.send(f"An error occured while reloading: ```py\n{str(e)}```")
         else:
             await ctx.send(f"Reloaded {moduleName}")
 
@@ -206,7 +209,7 @@ class CommandListener(Cog):
     # Create event command
     @command(aliases=["c"])
     async def create(
-        self, ctx: Context, _datetime: ArgDateTime, force=None, platoon_size=None
+        self, ctx: Context, _datetime: ArgDateTime, force=False, platoon_size=None
     ):
         """
         Create a new event.
@@ -223,9 +226,8 @@ class CommandListener(Cog):
         await self._create_event(ctx, _datetime, platoon_size=platoon_size, force=force)
 
     @command(aliases=["cs"])
-    async def createside(self, ctx: Context, _datetime: ArgDateTime, force=None):
-        """
-        Create a new side op event.
+    async def createside(self, ctx: Context, _datetime: ArgDateTime, force=False):
+        """Create a new side op event.
 
         Use the `force` argument to create past events.
 
@@ -236,9 +238,8 @@ class CommandListener(Cog):
         await self._create_event(ctx, _datetime, sideop=True, force=force)
 
     @command(aliases=["cs2"])
-    async def createside2(self, ctx: Context, _datetime: ArgDateTime, force=None):
-        """
-        Create a new WW2 side op event.
+    async def createside2(self, ctx: Context, _datetime: ArgDateTime, force=False):
+        """Create a new WW2 side op event.
 
         Use the `force` argument to create past events.
 
@@ -256,10 +257,10 @@ class CommandListener(Cog):
         _datetime: ArgDateTime,
         terrain: str,
         faction: str,
-        zeus: Member = None,
-        _time: ArgTime = None,
+        zeus: Member | None = None,
+        _time: ArgTime | None = None,
         sideop=False,
-        platoon_size: str = None,
+        platoon_size: str | None = None,
         quiet=False,
     ):
         if _time is not None:
@@ -293,8 +294,8 @@ class CommandListener(Cog):
         _datetime: ArgDateTime,
         terrain: str,
         faction: str,
-        zeus: ArgMember = None,
-        _time: ArgTime = None,
+        zeus: ArgMember | None = None,
+        _time: ArgTime | None = None,
     ):
         """
         Create and pre-fill a main op event.
@@ -317,8 +318,8 @@ class CommandListener(Cog):
         _datetime: ArgDateTime,
         terrain: str,
         faction: str,
-        zeus: ArgMember = None,
-        _time: ArgTime = None,
+        zeus: ArgMember | None = None,
+        _time: ArgTime | None = None,
     ):
         """
         Create and pre-fill a side op event.
@@ -341,8 +342,8 @@ class CommandListener(Cog):
         _datetime: ArgDateTime,
         terrain: str,
         faction: str,
-        zeus: ArgMember = None,
-        _time: ArgTime = None,
+        zeus: ArgMember | None = None,
+        _time: ArgTime | None = None,
     ):
         """
         Create and pre-fill a WW2 side op event. Automatically sets description.
@@ -369,7 +370,7 @@ class CommandListener(Cog):
 
     @command(aliases=["mc"])
     async def multicreate(
-        self, ctx: Context, start: ArgDate, end: ArgDate = None, force=None
+        self, ctx: Context, start: ArgDate, end: ArgDate | None = None, force=False
     ):
         """Create events for all weekends within specified range.
 
@@ -383,7 +384,7 @@ class CommandListener(Cog):
         await self._multi_create(ctx, start, end, force)
 
     async def _multi_create(
-        self, ctx: Context, start: date, end: date = None, force=None
+        self, ctx: Context, start: date, end: date | None = None, force=False
     ):
         if end is None:
             last_day = calendar.monthrange(start.year, start.month)[1]
@@ -594,7 +595,7 @@ class CommandListener(Cog):
         event.renameAdditionalRole(role, new_name)
         await self._update_event(event, reorder=False)
         await ctx.send(
-            f"Role renamed. Old name: {old_name}, " f"new name: {role} @ {event}"
+            f"Role renamed. Old name: {old_name}, new name: {role} @ {event}"
         )
         await self._show(ctx, event)
 
@@ -654,7 +655,7 @@ class CommandListener(Cog):
         event.title = title
         await self._update_event(event)
         await ctx.send(
-            f"Title {event.title} set for operation " f"ID {event.id} at {event.date}"
+            f"Title {event.title} set for operation ID {event.id} at {event.date}"
         )
         await self._show(ctx, event)
 
@@ -672,7 +673,7 @@ class CommandListener(Cog):
         # Update event and sort events, export
         await msgFnc.sortEventMessages(self.bot)
         await ctx.send(
-            f"Date {event.date} set for operation " f"{event.title} ID {event.id}"
+            f"Date {event.date} set for operation {event.title} ID {event.id}"
         )
         await self._show(ctx, event)
 
@@ -734,8 +735,12 @@ class CommandListener(Cog):
 
     @command(aliases=["sd"])
     async def setdescription(
-        self, ctx: Context, event: ArgEvent, *, description: UnquotedStr = ""
-    ):  # type: ignore
+        self,
+        ctx: Context,
+        event: ArgEvent,
+        *,
+        description: UnquotedStr = UnquotedStr(""),
+    ):
         """
         Set or clear event description. To clear the description, run `setdescription [ID]` without the description parameter
 
@@ -785,7 +790,7 @@ class CommandListener(Cog):
         event.mods = mods
         await self._update_event(event)
         if mods:
-            await ctx.send(f"Mods ```\n{event.mods}\n``` " f"set for operation {event}")
+            await ctx.send(f"Mods ```\n{event.mods}\n``` set for operation {event}")
             await self._set_port(ctx, event, cfg.PORT_MODDED)
             await self._show(ctx, event)
         else:
@@ -794,8 +799,8 @@ class CommandListener(Cog):
 
     @command(aliases=["sm", "setmod"])
     async def setmods(
-        self, ctx: Context, event: ArgEvent, *, mods: UnquotedStr = ""
-    ):  # type: ignore
+        self, ctx: Context, event: ArgEvent, *, mods: UnquotedStr = UnquotedStr("")
+    ):
         """
         Set or clear event server mods.
 
@@ -823,7 +828,8 @@ class CommandListener(Cog):
         event: Event,
         terrain: str,
         faction: str,
-        zeus: Member = None,
+        zeus: Member | None = None,
+        _time: ArgTime | None = None,
         quiet=False,
     ):
         event.terrain = terrain
@@ -846,7 +852,8 @@ class CommandListener(Cog):
         event: ArgEvent,
         terrain: str,
         faction: str,
-        zeus: ArgMember = None,
+        zeus: ArgMember | None = None,
+        _time: ArgTime | None = None,
     ):
         """
         Quickly set event details.
@@ -886,9 +893,7 @@ class CommandListener(Cog):
         # Sign user up, update event, export
         old_signup, replaced_user = event.signup(role, user, replace=True)
         await self._update_event(event)
-        message = (
-            f"User {user.display_name} signed up to event " f"{event} as {role.name}"
-        )
+        message = f"User {user.display_name} signed up to event {event} as {role.name}"
         if old_signup:
             # User was signed on to a different role previously
             message += f". Signed off from {old_signup.name}"
@@ -919,7 +924,7 @@ class CommandListener(Cog):
             await self._show(ctx, event)
         else:
             await ctx.send(
-                f"No signup to remove for user {user.display_name} " f"in event {event}"
+                f"No signup to remove for user {user.display_name} in event {event}"
             )
 
     # Archive event command
@@ -936,7 +941,7 @@ class CommandListener(Cog):
         try:
             eventMessage = await msgFnc.getEventMessage(event, self.bot)
         except MessageNotFound:
-            await ctx.send(f"Internal error: event {event} without " "a message found")
+            await ctx.send(f"Internal error: event {event} without a message found")
         else:
             await eventMessage.delete()
 
@@ -1015,7 +1020,7 @@ class CommandListener(Cog):
         await ctx.send(f"{len(EventDatabase.events)} events imported")
 
     @command()
-    async def dump(self, ctx: Context, event: ArgEvent, roleGroup: str = None):
+    async def dump(self, ctx: Context, event: ArgEvent, roleGroup: str | None = None):
         """Dump given event as YAML for mass editing.
 
         Use `load` to import the data back in after editing. Specify roleGroup
@@ -1066,7 +1071,7 @@ class CommandListener(Cog):
         event: Event,
         data: str,
         emojis: Tuple[Emoji, ...],
-        target: TextChannel = None,
+        target: TextChannel | None = None,
     ):
         if data.startswith("```") and data.endswith("```"):
             # Remove the first line (containing ```yaml) and the last three
@@ -1167,9 +1172,7 @@ class CommandListener(Cog):
             await ctx.send(f"Missing argument. See: `{CMD}help {ctx.command}`")
             return
         elif isinstance(error, BadArgument):
-            await ctx.send(
-                f"Invalid argument: {error}. " f"See: `{CMD}help {ctx.command}`"
-            )
+            await ctx.send(f"Invalid argument: {error}. See: `{CMD}help {ctx.command}`")
             return
         elif isinstance(error, CommandInvokeError):
             if isinstance(error.original, UnexpectedRole):
@@ -1206,7 +1209,7 @@ class CommandListener(Cog):
         )
         if len(msg) >= 2000:
             await ctx.send(
-                "Received error message that's over 2000 " "characters, check log."
+                "Received error message that's over 2000 characters, check log."
             )
             print("Message:", ctx.message.clean_content)
         else:

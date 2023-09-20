@@ -26,8 +26,10 @@ class EventListener(Cog):
         await self.bot.wait_until_ready()
         self.bot.fetch_data()
         commandchannel = self.bot.commandchannel
+        if self.bot.user is None:
+            raise ValueError("Bot failed to log in")
         print(f"Logged in as {self.bot.user.name} {self.bot.user.id}")
-        print(f"Command channel: {commandchannel} on server " f"{commandchannel.guild}")
+        print(f"Command channel: {commandchannel} on server {commandchannel.guild}")
         await commandchannel.send("Connected")
         print("Ready, importing")
         await commandchannel.send("Importing events")
@@ -158,8 +160,7 @@ class EventListener(Cog):
             if late_signoff_delta is not None and not event.sideop:
                 delta_message = (
                     f"{self.bot.signoff_notify_user.mention}: "
-                    f"{late_signoff_delta} before the "
-                    "operation:\n"
+                    f"{late_signoff_delta} before the operation:\n"
                 )
 
         text = (
@@ -200,8 +201,11 @@ class EventListener(Cog):
             await owner.send(f"DM: [{message.author}]: {message.content}")
 
     def _calculate_signoff_delta(self, event: Event, role: Role, user):
-        """return a string (days or hours/mins) if it is shortly before op
-        else None"""
+        """Calculate the time delta between now and the operation start
+
+        Returns a string (days or hours/mins) if it is shortly before op,
+        otherwise returns None
+        """
         if role.name in cfg.SIGNOFF_NOTIFY_ROLES.get(event.platoon_size, []):
             time_delta = event.date - datetime.today()
             if time_delta > timedelta(days=0):

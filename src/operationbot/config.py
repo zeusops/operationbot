@@ -94,6 +94,7 @@ PLATOON_SIZES = ["1PLT", "2PLT", "sideop", "WW2side"]
 # Dummy: an empty spacer. An embed can only have either one or three
 # items on a line.
 # Additional roles are automatically added at the end of the group list
+# fmt: off
 DEFAULT_GROUPS: Dict[str, List[str]] = {
     "1PLT": [
         "Company",
@@ -106,9 +107,11 @@ DEFAULT_GROUPS: Dict[str, List[str]] = {
         "Battalion",
         "Company",
         "Dummy",
+
         "1st Platoon",
         "Alpha",
         "Bravo",
+
         "2nd Platoon",
         "Echo",
         "Foxtrot",
@@ -131,6 +134,7 @@ DEFAULT_ROLES: Dict[str, Dict] = {
         "1PLT": "1st Platoon",
         "FAC": "1st Platoon",
         "RTO": "1st Platoon",
+
         "ASL": "Alpha",
         "A1": "Alpha",
         "A2": "Alpha",
@@ -143,6 +147,7 @@ DEFAULT_ROLES: Dict[str, Dict] = {
         "CO": "Company",
         "FAC": "Company",
         "RTO": "Company",
+
         "1PLT": "1st Platoon",
         "ASL": "Alpha",
         "A1": "Alpha",
@@ -152,6 +157,7 @@ DEFAULT_ROLES: Dict[str, Dict] = {
         "C1": "Charlie",
         "DSL": "Delta",
         "D1": "Delta",
+
         "2PLT": "2nd Platoon",
         "ESL": "Echo",
         "E1": "Echo",
@@ -176,6 +182,7 @@ DEFAULT_ROLES: Dict[str, Dict] = {
     },
     "empty": {},
 }
+# fmt: on
 
 EMOJI_ZEUS = "ZEUS"
 
@@ -183,25 +190,20 @@ EMOJI_ZEUS = "ZEUS"
 # there is less than SIGNOFF_NOTIFY_TIME left until the operation start,
 # a user defined in secrets.py gets notified about that.
 SIGNOFF_NOTIFY_TIME = timedelta(days=1)
+# fmt: off
 SIGNOFF_NOTIFY_ROLES: Dict[str, List] = {
-    "1PLT": ["1PLT", "HQ", "ASL", "BSL", "CSL"],
+    "1PLT": [
+        "1PLT", "HQ", "ASL", "BSL", "CSL"
+    ],
     "2PLT": [
-        "CO",
-        "HQ",
-        "1PLT",
-        "2PLT",
-        "ASL",
-        "BSL",
-        "CSL",
-        "DSL",
-        "ESL",
-        "FSL",
-        "GSL",
-        "HSL",
+        "CO", "HQ", "1PLT", "2PLT",
+        "ASL", "BSL", "CSL", "DSL",
+        "ESL", "FSL", "GSL", "HSL",
     ],
     "sideop": [],
     "WW2side": [],
 }
+# fmt: on
 
 TIME_ZONE = ZoneInfo("Europe/Amsterdam")
 
@@ -216,4 +218,7 @@ EMBED_COLOR = {
     "DLC_SIDEOP": 0x00FFFF,
 }
 
-DLC_TERRAINS = {"Tanoa": "APEX", "Livonia": "Contact"}
+DLC_TERRAINS = {
+    "Tanoa": "APEX",
+    "Livonia": "Contact",
+}

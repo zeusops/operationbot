@@ -36,6 +36,7 @@ class RoleGroup:
 
     # Remove role from the group
     def removeRole(self, role: Union[str, Role]):
+        name = ""
         try:
             if isinstance(role, str):
                 name = role
@@ -44,12 +45,10 @@ class RoleGroup:
                 name = role.name
             self.roles.remove(role)
         except (KeyError, ValueError) as e:
-            # Super-Linter's pylint is complaining about variable usage before
-            # assignment on 'name', couldn't figure out the reason so ignoring
             # for now
             raise RoleNotFound(
-                "Could not find an additional role to remove " f"with the name {name}"
-            ) from e  # pylint: disable=E0601
+                f"Could not find an additional role to remove with the name {name}"
+            ) from e
 
     def __str__(self) -> str:
         roleGroupString = ""
@@ -102,7 +101,7 @@ class RoleGroup:
                 except StopIteration as e:
                     name = roleData.get("show_name") or roleData["name"]
                     raise UnexpectedRole(
-                        f"Cannot import unexpected role " f"'{name}'"
+                        f"Cannot import unexpected role '{name}'"
                     ) from e
                 roles.append(roleEmoji)
 
