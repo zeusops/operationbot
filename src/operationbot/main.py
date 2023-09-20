@@ -15,16 +15,18 @@ SECRET_VERSION = 1
 if cfg.VERSION != CONFIG_VERSION:
     raise ValueError(
         f"Incompatible config file, expecting version {CONFIG_VERSION}, "
-        f"found version {cfg.VERSION}")
+        f"found version {cfg.VERSION}"
+    )
 if s.VERSION != SECRET_VERSION:
     raise ValueError(
         f"Incompatible secrets file, expecting version {SECRET_VERSION}, "
-        f"found version {s.VERSION}")
+        f"found version {s.VERSION}"
+    )
 
 initial_extensions = [
-    'operationbot.commandListener',
-    'operationbot.eventListener',
-    'operationbot.cogs.repl',
+    "operationbot.commandListener",
+    "operationbot.eventListener",
+    "operationbot.cogs.repl",
 ]
 
 intents = discord.Intents.default()
@@ -39,10 +41,10 @@ if sys.version_info < (3, 10):
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
-    logging.getLogger('discord').setLevel(logging.INFO)
-    logging.getLogger('discord.gateway').setLevel(logging.WARNING)
+    logging.getLogger("discord").setLevel(logging.INFO)
+    logging.getLogger("discord.gateway").setLevel(logging.WARNING)
     print("Starting up")
-    bot.load_extension('operationbot.reload')
+    bot.load_extension("operationbot.reload")
     print("Loading extensions")
     for extension in initial_extensions:
         # try:
