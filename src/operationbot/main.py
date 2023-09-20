@@ -32,8 +32,8 @@ intents.messages = True  # pylint: disable=assigning-non-slot
 bot = OperationBot(command_prefix=COMMAND_CHAR, intents=intents)
 # bot.remove_command("help")
 
-if sys.version_info < (3, 9):
-    raise Exception("Must be run with Python 3.9 or higher")
+if sys.version_info < (3, 10):
+    raise Exception("Must be run with Python 3.10 or higher")
 
 
 def main():
