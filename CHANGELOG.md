@@ -5,9 +5,18 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+## v0.41.0 - 2023-09-21
+
 ### Changed
 
 - Drop support for Python 3.9 and older.
+- Disable setting time with !setquick
+- Make argument date parsing more flexible
+- Allow finding events by date in commands
+
+### Removed
+
+- Remove Charlie from 1PLT roles
 
 ## v0.40.0 - 2023-09-20
 
