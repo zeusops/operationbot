@@ -3,7 +3,7 @@ requires-python = ">=3.10"
 
 [tool.poetry]
 name = "operationbot"
-version = "0.40.0"
+version = "0.41.0"
 description = "Operations bot for the Zeusops discord"
 authors = ["Sami Laine <sami.v.laine@gmail.com>"]
 readme = "README.md"
@@ -29,6 +29,8 @@ pytest = "7.*"
 pytest-cov = "4.*"
 # Clearer assertion failures (colorful diff)
 pytest-clarity = "1.*"
+# For testing async functions
+pytest-asyncio = "*"
 
 [tool.poetry.group.docs.dependencies]
 # Main documentation-as-code (HTML/PDF generator)

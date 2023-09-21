@@ -9,15 +9,14 @@ from discord.user import User
 
 from operationbot import config as cfg
 from operationbot import messageFunctions as msgFnc
+from operationbot.bot import OperationBot
 from operationbot.errors import EventNotFound, RoleNotFound, RoleTaken, UnknownEmoji
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase
-from operationbot.bot import OperationBot
 from operationbot.role import Role
 
 
 class EventListener(Cog):
-
     def __init__(self, bot: OperationBot):
         self.bot = bot
 
@@ -27,9 +26,10 @@ class EventListener(Cog):
         await self.bot.wait_until_ready()
         self.bot.fetch_data()
         commandchannel = self.bot.commandchannel
+        if self.bot.user is None:
+            raise ValueError("Bot failed to log in")
         print(f"Logged in as {self.bot.user.name} {self.bot.user.id}")
-        print(f"Command channel: {commandchannel} on server "
-              f"{commandchannel.guild}")
+        print(f"Command channel: {commandchannel} on server {commandchannel.guild}")
         await commandchannel.send("Connected")
         print("Ready, importing")
         await commandchannel.send("Importing events")
@@ -37,27 +37,26 @@ class EventListener(Cog):
         await commandchannel.send("Syncing")
         await msgFnc.syncMessages(EventDatabase.events, self.bot)
         await commandchannel.send("Synced")
-        EventDatabase.toJson()
         msg = f"{len(EventDatabase.events)} events imported"
         print(msg)
         await commandchannel.send(msg)
         await self.bot.change_presence(activity=Game(name=cfg.GAME))
-        print('Logged in as', self.bot.user.name, self.bot.user.id)
+        print("Logged in as", self.bot.user.name, self.bot.user.id)
         self.bot.processing = False
 
     @Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
-
-        if payload.member == self.bot.user or \
-                payload.channel_id != self.bot.eventchannel.id:
+        if (
+            payload.member == self.bot.user
+            or payload.channel_id != self.bot.eventchannel.id
+        ):
             # Bot's own reaction, or reaction outside of the event channel
             return
 
         if payload.emoji.name in cfg.IGNORED_EMOJIS:
             return
 
-        message: Message = await self.bot.eventchannel.fetch_message(
-            payload.message_id)
+        message: Message = await self.bot.eventchannel.fetch_message(payload.message_id)
         if message.author != self.bot.user:
             # We don't care about reactions to other messages than our own.
             # Makes it easier to test multiple bot instances on the same
@@ -78,7 +77,8 @@ class EventListener(Cog):
                 f"msg: {message.id} role: {payload.emoji} "
                 f"user: {user.display_name} "
                 f"({user.name}#{user.discriminator})\n"
-                f"{message.jump_url}")
+                f"{message.jump_url}"
+            )
             return
         else:
             if payload.emoji.is_custom_emoji():
@@ -87,14 +87,17 @@ class EventListener(Cog):
                 emoji = cast(str, payload.emoji.name)
 
             if payload.emoji.name in cfg.SPECIAL_EMOJIS:
-                await self._handle_special_emoji(event, emoji, user,
-                                                 message)
+                await self._handle_special_emoji(event, emoji, user, message)
             else:
                 await self._handle_signup(event, emoji, user, message)
 
-    async def _handle_signup(self, event: Event,
-                             emoji: Union[PartialEmoji, str], user: User,
-                             message: Message):
+    async def _handle_signup(
+        self,
+        event: Event,
+        emoji: Union[PartialEmoji, str],
+        user: User,
+        message: Message,
+    ):
         # Find signup of user
         old_signup: Optional[Role] = event.findSignupRole(user.id)
 
@@ -108,8 +111,10 @@ class EventListener(Cog):
         try:
             role = event.findRoleWithEmoji(emoji)
         except RoleNotFound as e:
-            raise RoleNotFound(f"{str(e)} in event {event} by user "
-                               f"{user.name}#{user.discriminator}") from e
+            raise RoleNotFound(
+                f"{str(e)} in event {event} by user "
+                f"{user.name}#{user.discriminator}"
+            ) from e
 
         if role.name == cfg.EMOJI_ZEUS:
             # Somebody with Nitro added the ZEUS reaction by hand, ignoring
@@ -150,23 +155,30 @@ class EventListener(Cog):
             # User signed off or changed role, checking if there's a need to
             # ping
             late_signoff_delta = self._calculate_signoff_delta(
-                event, removed_role, user)
+                event, removed_role, user
+            )
             if late_signoff_delta is not None and not event.sideop:
-                delta_message = (f"{self.bot.signoff_notify_user.mention}: "
-                                 f"{late_signoff_delta} before the "
-                                 "operation:\n")
+                delta_message = (
+                    f"{self.bot.signoff_notify_user.mention}: "
+                    f"{late_signoff_delta} before the operation:\n"
+                )
 
-        text = f"{delta_message}{message_action}: {event}, role: " \
-               f"{old_role}{role.display_name}, " \
-               f"user: {user.display_name} " \
-               f"({user.name}#{user.discriminator})"
+        text = (
+            f"{delta_message}{message_action}: {event}, role: "
+            f"{old_role}{role.display_name}, "
+            f"user: {user.display_name} "
+            f"({user.name}#{user.discriminator})"
+        )
 
         await self.bot.logchannel.send(text)
 
-    async def _handle_special_emoji(self, event: Event,
-                                    emoji: Union[PartialEmoji, str],
-                                    user: User, message: Message):
-
+    async def _handle_special_emoji(
+        self,
+        event: Event,
+        emoji: Union[PartialEmoji, str],
+        user: User,
+        message: Message,
+    ):
         if emoji == cfg.ATTENDANCE_EMOJI:
             if event.has_attendee(user):
                 event.remove_attendee(user)
@@ -175,8 +187,10 @@ class EventListener(Cog):
             await msgFnc.updateMessageEmbed(message, event)
             EventDatabase.toJson()
         else:
-            raise UnknownEmoji(f"Reaction to unknown special emoji {emoji} "
-                               f"in event {event} by user {user}")
+            raise UnknownEmoji(
+                f"Reaction to unknown special emoji {emoji} "
+                f"in event {event} by user {user}"
+            )
 
     @Cog.listener()
     async def on_message(self, message: Message):
@@ -187,8 +201,11 @@ class EventListener(Cog):
             await owner.send(f"DM: [{message.author}]: {message.content}")
 
     def _calculate_signoff_delta(self, event: Event, role: Role, user):
-        """return a string (days or hours/mins) if it is shortly before op
-        else None"""
+        """Calculate the time delta between now and the operation start
+
+        Returns a string (days or hours/mins) if it is shortly before op,
+        otherwise returns None
+        """
         if role.name in cfg.SIGNOFF_NOTIFY_ROLES.get(event.platoon_size, []):
             time_delta = event.date - datetime.today()
             if time_delta > timedelta(days=0):
@@ -199,8 +216,10 @@ class EventListener(Cog):
                     timeframe = f"{days} days"
                 else:
                     timeframe = f"{hours}h{mins}min"
-                if time_delta < cfg.SIGNOFF_NOTIFY_TIME and \
-                        self.bot.signoff_notify_user != user:
+                if (
+                    time_delta < cfg.SIGNOFF_NOTIFY_TIME
+                    and self.bot.signoff_notify_user != user
+                ):
                     return timeframe
         return None
 

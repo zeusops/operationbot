@@ -18,8 +18,7 @@ class Reload(Cog):
                 self.bot.unload_extension(extension)
                 print("unloaded", extension)
             except ExtensionNotLoaded:
-                await ctx.send("Skipping unload for not loaded extension "
-                               f"{extension}")
+                await ctx.send(f"Skipping unload for not loaded extension {extension}")
             else:
                 unloaded.append(extension)
         loaded = []
@@ -28,17 +27,17 @@ class Reload(Cog):
                 self.bot.load_extension(extension)
                 print("loaded", extension)
             except Exception:  # pylint: disable=broad-except
-                await ctx.send("An error occured while reloading: "
-                               f"```py\n{traceback.format_exc()}```")
+                await ctx.send(
+                    "An error occured while reloading: "
+                    f"```py\n{traceback.format_exc()}```"
+                )
             else:
                 loaded.append(extension)
         if len(loaded) > 0:
-            await ctx.send(
-                f"Reloaded following extensions: {loaded}")
+            await ctx.send(f"Reloaded following extensions: {loaded}")
             not_loaded = [item for item in unloaded if item not in loaded]
             if len(not_loaded) > 0:
-                await ctx.send("Failed to reload following extensions: "
-                               f"{not_loaded}")
+                await ctx.send(f"Failed to reload following extensions: {not_loaded}")
 
 
 def setup(bot):

@@ -12,19 +12,19 @@ if secret.DEBUG:
     EVENT_ARCHIVE_CHANNEL = _test_channel
     COMMAND_CHANNEL = _test_channel
     LOG_CHANNEL = _test_channel
-    GAME = 'with bugs'
+    GAME = "with bugs"
     EMOJI_GUILD = 219564389462704130
 else:
     EVENT_CHANNEL = 502824760036818964
     EVENT_ARCHIVE_CHANNEL = 528914471700267029
     COMMAND_CHANNEL = 528980590930821131
     LOG_CHANNEL = 621066917339201547
-    GAME = 'with events'
+    GAME = "with events"
     # If set to 0, the bot uses Command Channel's guild
     EMOJI_GUILD = 0
 
 JSON_FILEPATH = {
-    "events":  "database/events.json",
+    "events": "database/events.json",
     "archive": "database/archive.json",
 }
 ADDITIONAL_ROLE_EMOJIS = [
@@ -89,20 +89,19 @@ SPECIAL_EMOJIS: List[str] = [
     ATTENDANCE_EMOJI,
 ]
 
-PLATOON_SIZES = ['1PLT', '2PLT', 'sideop', 'WW2side']
+PLATOON_SIZES = ["1PLT", "2PLT", "sideop", "WW2side"]
 
 # Dummy: an empty spacer. An embed can only have either one or three
 # items on a line.
 # Additional roles are automatically added at the end of the group list
+# fmt: off
 DEFAULT_GROUPS: Dict[str, List[str]] = {
     "1PLT": [
         "Company",
         "1st Platoon",
         "Dummy",
-
         "Alpha",
         "Bravo",
-        "Charlie"
     ],
     "2PLT": [
         "Battalion",
@@ -115,7 +114,7 @@ DEFAULT_GROUPS: Dict[str, List[str]] = {
 
         "2nd Platoon",
         "Echo",
-        "Foxtrot"
+        "Foxtrot",
     ],
     "sideop": [
         "Company",
@@ -142,9 +141,6 @@ DEFAULT_ROLES: Dict[str, Dict] = {
         "BSL": "Bravo",
         "B1": "Bravo",
         "B2": "Bravo",
-        "CSL": "Charlie",
-        "C1": "Charlie",
-        "C2": "Charlie",
     },
     "2PLT": {
         "ZEUS": "Battalion",
@@ -186,6 +182,7 @@ DEFAULT_ROLES: Dict[str, Dict] = {
     },
     "empty": {},
 }
+# fmt: on
 
 EMOJI_ZEUS = "ZEUS"
 
@@ -193,6 +190,7 @@ EMOJI_ZEUS = "ZEUS"
 # there is less than SIGNOFF_NOTIFY_TIME left until the operation start,
 # a user defined in secrets.py gets notified about that.
 SIGNOFF_NOTIFY_TIME = timedelta(days=1)
+# fmt: off
 SIGNOFF_NOTIFY_ROLES: Dict[str, List] = {
     "1PLT": [
         "1PLT", "HQ", "ASL", "BSL", "CSL"
@@ -205,6 +203,7 @@ SIGNOFF_NOTIFY_ROLES: Dict[str, List] = {
     "sideop": [],
     "WW2side": [],
 }
+# fmt: on
 
 TIME_ZONE = ZoneInfo("Europe/Amsterdam")
 
@@ -221,5 +220,5 @@ EMBED_COLOR = {
 
 DLC_TERRAINS = {
     "Tanoa": "APEX",
-    "Livonia": "Contact"
+    "Livonia": "Contact",
 }

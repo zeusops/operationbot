@@ -8,7 +8,6 @@ from operationbot.role import Role
 
 
 class RoleGroup:
-
     def __init__(self, name: str, isInline: bool = True):
         self.name = name
         self.isInline = isInline
@@ -37,6 +36,7 @@ class RoleGroup:
 
     # Remove role from the group
     def removeRole(self, role: Union[str, Role]):
+        name = ""
         try:
             if isinstance(role, str):
                 name = role
@@ -45,18 +45,16 @@ class RoleGroup:
                 name = role.name
             self.roles.remove(role)
         except (KeyError, ValueError) as e:
-            # Super-Linter's pylint is complaining about variable usage before
-            # assignment on 'name', couldn't figure out the reason so ignoring
             # for now
             raise RoleNotFound(
-                "Could not find an additional role to remove "
-                f"with the name {name}") from e  # pylint: disable=E0601
+                f"Could not find an additional role to remove with the name {name}"
+            ) from e
 
     def __str__(self) -> str:
         roleGroupString = ""
 
         for role in self.roles:
-            roleGroupString += f'{str(role)}\n'
+            roleGroupString += f"{str(role)}\n"
 
         return roleGroupString
 
@@ -76,8 +74,7 @@ class RoleGroup:
         data["roles"] = rolesData
         return data
 
-    def fromJson(self, data: dict, emojis: Tuple[Emoji, ...],
-                 manual_load=False):
+    def fromJson(self, data: dict, emojis: Tuple[Emoji, ...], manual_load=False):
         self.name = data["name"]
         if not manual_load:
             self.isInline = data["isInline"]
@@ -94,16 +91,18 @@ class RoleGroup:
             if not manual_load:
                 # Only create new roles if we're not loading data manually from
                 # the command channel
-                role = Role(roleData["name"], roleEmoji,
-                            self.get_corrected_name(roleData))
+                role = Role(
+                    roleData["name"], roleEmoji, self.get_corrected_name(roleData)
+                )
                 self.roles.append(role)
             else:
                 try:
                     role = next(x for x in self.roles if x.emoji == roleEmoji)
                 except StopIteration as e:
                     name = roleData.get("show_name") or roleData["name"]
-                    raise UnexpectedRole(f"Cannot import unexpected role "
-                                         f"'{name}'") from e
+                    raise UnexpectedRole(
+                        f"Cannot import unexpected role '{name}'"
+                    ) from e
                 roles.append(roleEmoji)
 
             role.fromJson(roleData, manual_load=manual_load)

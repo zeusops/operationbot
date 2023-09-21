@@ -1,4 +1,6 @@
 import datetime
+import hashlib
+import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import discord
@@ -26,11 +28,11 @@ class User:
     # This class implements the same signature as the discord.abc.User class,
     # we need to use the 'id' argument here.
     # pylint: disable=redefined-builtin
-    def __init__(self, id: int = None, display_name: str = None):
+    def __init__(self, id: int | None = None, display_name: str | None = None):
         self.id = id
         self.display_name = display_name
 
-    def __eq__(self, other: Union['User', discord.abc.User]):  # type: ignore
+    def __eq__(self, other: Union["User", discord.abc.User]):  # type: ignore
         # This makes it so that User objects can be compared to
         # discord.abc.User by doing `user == discord.abc.User`. The comparison
         # will not work in the other direction because discord.abc.User checks
@@ -39,9 +41,15 @@ class User:
 
 
 class Event:
-
-    def __init__(self, date: datetime.datetime, guildEmojis: Tuple[Emoji, ...],
-                 eventID=0, importing=False, sideop=False, platoon_size=None):
+    def __init__(
+        self,
+        date: datetime.datetime,
+        guildEmojis: Tuple[Emoji, ...],
+        eventID=0,
+        importing=False,
+        sideop=False,
+        platoon_size=None,
+    ):
         self._title: Optional[str] = None
         self.date = date
         self._terrain = TERRAIN
@@ -55,6 +63,7 @@ class Event:
         self.sideop = sideop
         self.attendees: list[Union[User, discord.abc.User]] = []
         self.dlc: Optional[str] = None
+        self.embed_hash = ""
 
         if platoon_size is None:
             if sideop:
@@ -81,12 +90,12 @@ class Event:
     @property
     def color(self) -> int:
         if self.dlc and self.sideop:
-            return EMBED_COLOR['DLC_SIDEOP']
+            return EMBED_COLOR["DLC_SIDEOP"]
         if self.dlc:
-            return EMBED_COLOR['DLC']
+            return EMBED_COLOR["DLC"]
         if self.sideop:
-            return EMBED_COLOR['SIDEOP']
-        return EMBED_COLOR['DEFAULT']
+            return EMBED_COLOR["SIDEOP"]
+        return EMBED_COLOR["DEFAULT"]
 
     @property
     def title(self) -> str:
@@ -121,19 +130,22 @@ class Event:
             print("sourcegroup", type(sourceGroup), sourceGroup.name)
             msg = ""
             role = sourceGroup[roleName]
-            print(f"moving role {roleName} from {sourceGroup.name} to "
-                  f"{targetGroupName}")
+            print(
+                f"moving role {roleName} from {sourceGroup.name} to "
+                f"{targetGroupName}"
+            )
             if targetGroupName is None:
                 if role.userID is not None:
-                    msg = (f"Warning: removing an active role {role} "
-                           f"from {sourceGroup.name}, {self}")
+                    msg = (
+                        f"Warning: removing an active role {role} "
+                        f"from {sourceGroup.name}, {self}"
+                    )
                     print("removing active role")
                 sourceGroup.removeRole(roleName)
             else:
                 if targetGroupName not in self.roleGroups:
                     print("creating target group")
-                    self.roleGroups[targetGroupName] = \
-                        RoleGroup(targetGroupName)
+                    self.roleGroups[targetGroupName] = RoleGroup(targetGroupName)
                 self.roleGroups[targetGroupName][roleName] = role
                 self.roleGroups[sourceGroup.name].removeRole(roleName)
             if not self.roleGroups[sourceGroup.name]:
@@ -157,26 +169,25 @@ class Event:
                 msg = _moveRole("ZEUS", sourceGroup, "Company")
                 if msg != "":
                     print(msg)
-                    warnings += msg + '\n'
+                    warnings += msg + "\n"
 
                 sourceGroup = self.roleGroups["Company"]
                 for roleName in ["FAC", "RTO"]:
-                    msg = _moveRole(roleName, sourceGroup,
-                                    "1st Platoon")
+                    msg = _moveRole(roleName, sourceGroup, "1st Platoon")
                     if msg != "":
                         print(msg)
-                        warnings += msg + '\n'
+                        warnings += msg + "\n"
                 sourceGroup = self.roleGroups["Company"]
                 msg = _moveRole("CO", sourceGroup, None)
                 if msg != "":
                     print(msg)
-                    warnings += msg + '\n'
+                    warnings += msg + "\n"
 
                 sourceGroup = self.roleGroups["2nd Platoon"]
                 msg = _moveRole("2PLT", self.roleGroups["2nd Platoon"], None)
                 if msg != "":
                     print(msg)
-                    warnings += msg + '\n'
+                    warnings += msg + "\n"
 
                 targetGroup = _getTargetGroup(new_groups)
                 sourceGroupName = "Echo"
@@ -185,7 +196,7 @@ class Event:
                     msg = _moveRole(roleName, sourceGroup, targetGroup)
                     if msg != "":
                         print(msg)
-                        warnings += msg + '\n'
+                        warnings += msg + "\n"
 
                 targetGroup = _getTargetGroup(new_groups)
                 sourceGroupName = "Foxtrot"
@@ -199,7 +210,7 @@ class Event:
                     for roleName in ["FSL", "F1"]:
                         msg = _moveRole(roleName, sourceGroup, targetGroup)
                         print(msg)
-                        warnings += msg + '\n'
+                        warnings += msg + "\n"
                 else:
                     del self.roleGroups[sourceGroupName]
 
@@ -216,18 +227,22 @@ class Event:
                 self.platoon_size = "1PLT"
 
             else:
-                raise ValueError("Unsupported platoon size conversion: "
-                                 f"{self.platoon_size} -> {new_size}")
+                raise ValueError(
+                    "Unsupported platoon size conversion: "
+                    f"{self.platoon_size} -> {new_size}"
+                )
         elif self.platoon_size == "1PLT":
             if new_size == "2PLT":
                 # TODO: implement 1PLT -> 2PLT conversion
-                raise NotImplementedError("Conversion from 1PLT to 2PLT "
-                                          "not implemented")
-            raise ValueError("Unsupported platoon size conversion: "
-                             f"{self.platoon_size} -> {new_size}")
+                raise NotImplementedError(
+                    "Conversion from 1PLT to 2PLT not implemented"
+                )
+            raise ValueError(
+                "Unsupported platoon size conversion: "
+                f"{self.platoon_size} -> {new_size}"
+            )
         else:
-            raise ValueError("Unsupported current platoon size: "
-                             f"{self.platoon_size}")
+            raise ValueError(f"Unsupported current platoon size: {self.platoon_size}")
         return warnings
 
     def reorder(self):
@@ -236,66 +251,87 @@ class Event:
 
         newGroups = {}
         warnings = ""
-        for groupName in cfg.DEFAULT_GROUPS[self.platoon_size] + \
-                ["Additional"]:
+        for groupName in cfg.DEFAULT_GROUPS[self.platoon_size] + ["Additional"]:
             try:
                 group = self.roleGroups[groupName]
             except KeyError:
                 group = RoleGroup("Dummy")
                 msg = f"Could not find group {groupName}"
                 print(msg)
-                warnings += msg + '\n'
+                warnings += msg + "\n"
             newGroups[groupName] = group
         self.roleGroups = newGroups
         return warnings
 
     # Return an embed for the event
-    def createEmbed(self) -> Embed:
+    def createEmbed(self, cache=True) -> Embed | None:
+        logging.info(f"Creating embed for {self}")
         date_tz = self.date.replace(tzinfo=cfg.TIME_ZONE)
         date = date_tz.strftime(f"%a %Y-%m-%d - %H:%M {date_tz.tzname()}")
         title = f"{self.title} ({date})"
         timestamp = int(date_tz.astimezone(datetime.timezone.utc).timestamp())
         local_time = f"<t:{timestamp}>"
         relative_time = f"<t:{timestamp}:R>"
-        server_port = (f"\nServer port: **{self.port}**"
-                       if self.port != cfg.PORT_DEFAULT else "")
-        dlc_note = (f"\n\nThe **{self.dlc} DLC** is required to "
-                    "join this event"
-                    if self.dlc else "")
-        event_description = (f"\n\n{self.description}"
-                             if self.description else "")
+        server_port = (
+            f"\nServer port: **{self.port}**" if self.port != cfg.PORT_DEFAULT else ""
+        )
+        dlc_note = (
+            f"\n\nThe **{self.dlc} DLC** is required to join this event"
+            if self.dlc
+            else ""
+        )
+        event_description = f"\n\n{self.description}" if self.description else ""
         if self.mods:
-            if '\n' in self.mods:
+            if "\n" in self.mods:
                 mods = f"\n\nMods:\n{self.mods}\n"
             else:
                 mods = f"\n\nMods: {self.mods}\n"
         else:
             mods = ""
-        description = (f"Local time: {local_time} ({relative_time})\n"
-                       f"Terrain: {self.terrain} - Faction: {self.faction}"
-                       f"{server_port}"
-                       f"{dlc_note}"
-                       f"{event_description}"
-                       f"{mods}")
-        eventEmbed = Embed(title=title, description=description,
-                           colour=self.color)
+        description = (
+            f"Local time: {local_time} ({relative_time})\n"
+            f"Terrain: {self.terrain} - Faction: {self.faction}"
+            f"{server_port}"
+            f"{dlc_note}"
+            f"{event_description}"
+            f"{mods}"
+        )
+        eventEmbed = Embed(title=title, description=description, colour=self.color)
+        hash_string = f"{title}\n{description}\n{self.color}\n"
 
         # Add field to embed for every rolegroup
         for group in self.roleGroups.values():
             if len(group.roles) > 0:
-                eventEmbed.add_field(name=group.name, value=str(group),
-                                     inline=group.isInline)
+                eventEmbed.add_field(
+                    name=group.name, value=str(group), inline=group.isInline
+                )
+                hash_string += (
+                    f"{hash_string}{group.name} {str(group)} " f"{group.isInline}\n"
+                )
             elif group.name == "Dummy":
-                eventEmbed.add_field(name="\N{ZERO WIDTH SPACE}",
-                                     value="\N{ZERO WIDTH SPACE}",
-                                     inline=group.isInline)
+                eventEmbed.add_field(
+                    name="\N{ZERO WIDTH SPACE}",
+                    value="\N{ZERO WIDTH SPACE}",
+                    inline=group.isInline,
+                )
+                hash_string += f"{hash_string}Dummy\n"
 
         if self.sideop or cfg.ALWAYS_DISPLAY_ATTENDANCE:
             attendees = f"Attendees: {len(self.attendees)}\n\n"
         else:
             attendees = ""
-        eventEmbed.set_footer(text=f"{attendees}Event ID: {str(self.id)}")
-
+        footer_text = f"{attendees}Event ID: {str(self.id)}"
+        eventEmbed.set_footer(text=footer_text)
+        hash_string += f"{hash_string}{footer_text}\n"
+        embed_hash = hashlib.sha256(hash_string.encode("utf-8")).hexdigest()
+        if cache:
+            if embed_hash == self.embed_hash:
+                logging.info("Embed is unchanged, not updating")
+                return None
+            logging.info("Cached embed is changed, updating")
+            self.embed_hash = embed_hash
+        else:
+            logging.info("Ignoring cache")
         return eventEmbed
 
     # Add default role groups
@@ -315,14 +351,14 @@ class Event:
 
     # Add an additional role to the event
     def addAdditionalRole(self, name: str) -> str:
-
         # check if this role already exists
         for roleGroup in self.roleGroups.values():
             role: Role
             for role in roleGroup.roles:
                 if role.name == name:
-                    raise RoleError(f"Role with name {name} already exists, "
-                                    "not adding new role")
+                    raise RoleError(
+                        f"Role with name {name} already exists, not adding new role"
+                    )
 
         # Find next emoji for additional role
         if self.countReactions() >= MAX_REACTIONS:
@@ -355,8 +391,7 @@ class Event:
         self.roleGroups["Additional"].removeRole(role)
 
     def removeRoleGroup(self, groupName: str) -> bool:
-        """
-        Remove a role group.
+        """Remove a role group.
 
         Returns false if the group cannot be found.
         """
@@ -386,8 +421,7 @@ class Event:
         self._terrain = terrain
 
     # Get emojis for normal roles
-    def _getNormalEmojis(self, guildEmojis: Tuple[Emoji, ...]) \
-            -> Dict[str, Emoji]:
+    def _getNormalEmojis(self, guildEmojis: Tuple[Emoji, ...]) -> Dict[str, Emoji]:
         normalEmojis = {}
 
         for emoji in guildEmojis:
@@ -406,8 +440,7 @@ class Event:
                 emoji = role.emoji
                 # Skip the ZEUS reaction. Zeuses can only be signed up using
                 # the signup command
-                if not (isinstance(emoji, Emoji)
-                        and emoji.name == cfg.EMOJI_ZEUS):
+                if not (isinstance(emoji, Emoji) and emoji.name == cfg.EMOJI_ZEUS):
                     reactions.append(role.emoji)
 
         if self.sideop or cfg.ALWAYS_DISPLAY_ATTENDANCE:
@@ -441,7 +474,8 @@ class Event:
     def findRoleWithName(self, roleName: str) -> Role:
         """Find a role with given name.
 
-        Raises a RoleNotFound if the role cannot be found."""
+        Raises a RoleNotFound if the role cannot be found.
+        """
         roleName = roleName.lower()
         for roleGroup in self.roleGroups.values():
             role: Role
@@ -454,8 +488,7 @@ class Event:
         try:
             return self.roleGroups[groupName]
         except KeyError as e:
-            raise RoleGroupNotFound("No role group found with name "
-                                    f"{groupName}") from e
+            raise RoleGroupNotFound(f"No role group found with name {groupName}") from e
 
     def hasRoleGroup(self, groupName: str) -> bool:
         """Check if a role group with given name exists in the event."""
@@ -464,8 +497,9 @@ class Event:
     def get_additional_role(self, role_name: str) -> Role:
         return self.roleGroups["Additional"][role_name]
 
-    def signup(self, roleToSet: Role, user: discord.abc.User, replace=False) \
-            -> Tuple[Optional[Role], User]:
+    def signup(
+        self, roleToSet: Role, user: discord.abc.User, replace=False
+    ) -> Tuple[Optional[Role], User]:
         """Add username to role.
 
         Raises an error if the role is taken, unless replace is set to True.
@@ -478,9 +512,11 @@ class Event:
             for role in roleGroup.roles:
                 if role == roleToSet:
                     if role.userID and not replace:
-                        raise RoleTaken(f"Can't sign up {user.display_name}, "
-                                        f"role {roleToSet.name} is already "
-                                        "taken")
+                        raise RoleTaken(
+                            f"Can't sign up {user.display_name}, "
+                            f"role {roleToSet.name} is already "
+                            "taken"
+                        )
                     old_user = User(role.userID, role.userName)
                     old_role = self.undoSignup(user)
                     role.userID = user.id
@@ -492,7 +528,8 @@ class Event:
     def undoSignup(self, user) -> Optional[Role]:
         """Remove username from any signups.
 
-        Returns Role if user was signed up, otherwise None."""
+        Returns Role if user was signed up, otherwise None.
+        """
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
                 if role.userID == user.id:
@@ -517,8 +554,7 @@ class Event:
     def add_attendee(self, user: discord.abc.User) -> None:
         """Add user to the attendance list"""
         if not self.has_attendee(user):
-            self.attendees.append(
-                User(id=user.id, display_name=user.display_name))
+            self.attendees.append(User(id=user.id, display_name=user.display_name))
 
     def remove_attendee(self, user: discord.abc.User) -> None:
         """Remove user from the attendance list"""
@@ -554,14 +590,14 @@ class Event:
             data["platoon_size"] = self.platoon_size
             data["sideop"] = self.sideop
             data["attendees"] = attendees_data
+            data["embed_hash"] = self.embed_hash
         data["roleGroups"] = roleGroupsData
         return data
 
     def fromJson(self, eventID, data: dict, emojis, manual_load=False):
         self.id = int(eventID)
         self.title = data.get("title", None)
-        self.time = datetime.datetime.strptime(data.get("time", "00:00"),
-                                               "%H:%M")
+        self.time = datetime.datetime.strptime(data.get("time", "00:00"), "%H:%M")
         self.terrain = data.get("terrain", TERRAIN)
         self.faction = str(data.get("faction", FACTION))
         self.port = int(data.get("port", cfg.PORT_DEFAULT))
@@ -571,6 +607,7 @@ class Event:
             self.messageID = int(data.get("messageID", 0))
             self.platoon_size = str(data.get("platoon_size", PLATOON_SIZE))
             self.sideop = bool(data.get("sideop", False))
+            self.embed_hash = data.get("embed_hash", "")
             attendees_data = data.get("attendees", {})
             for userID, name in attendees_data.items():
                 self.attendees.append(User(int(userID), name))

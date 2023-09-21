@@ -1,17 +1,17 @@
+import logging
 from typing import Dict, List, Union, cast
 
 from discord import Emoji, Message, NotFound, TextChannel
 from discord.embeds import Embed
-from discord.errors import Forbidden
+from discord.errors import Forbidden, HTTPException
 
-from operationbot.errors import MessageNotFound, RoleError
+from operationbot.bot import OperationBot
+from operationbot.errors import EventUpdateFailed, MessageNotFound, RoleError
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase
-from operationbot.bot import OperationBot
 
 
-async def getEventMessage(event: Event, bot: OperationBot, archived=False) \
-        -> Message:
+async def getEventMessage(event: Event, bot: OperationBot, archived=False) -> Message:
     """Get a message related to an event."""
     if archived:
         channel = bot.eventarchivechannel
@@ -21,14 +21,19 @@ async def getEventMessage(event: Event, bot: OperationBot, archived=False) \
     try:
         return await channel.fetch_message(event.messageID)
     except NotFound as e:
-        raise MessageNotFound("No event message found with "
-                              f"message ID {event.messageID}") from e
+        raise MessageNotFound(
+            f"No event message found with message ID {event.messageID}"
+        ) from e
 
 
 async def sortEventMessages(bot: OperationBot):
-    """Sort events in event database.
+    """Sort event messages according to the event database.
 
-    Raises MessageNotFound if messages are missing."""
+    Saves the database to disk after sorting.
+
+    Raises MessageNotFound if messages are missing.
+    """
+    logging.info("sortEventMessages")
     EventDatabase.sortEvents()
 
     event: Event
@@ -39,14 +44,16 @@ async def sortEventMessages(bot: OperationBot):
             raise MessageNotFound(f"sortEventMessages: {e}") from e
         await updateMessageEmbed(message, event)
         await updateReactions(event, message=message)
+    EventDatabase.toJson()
 
 
 # from EventDatabase
-async def createEventMessage(event: Event, channel: TextChannel,
-                             update_id=True) -> Message:
+async def createEventMessage(
+    event: Event, channel: TextChannel, update_id=True
+) -> Message:
     """Create a new event message."""
     # Create embed and message
-    embed = event.createEmbed()
+    embed = event.createEmbed(cache=False)
     message = await channel.send(embed=embed)
     if update_id:
         event.messageID = message.id
@@ -55,18 +62,31 @@ async def createEventMessage(event: Event, channel: TextChannel,
 
 
 # was: EventDatabase.updateEvent
-async def updateMessageEmbed(eventMessage: Message, updatedEvent: Event) \
-        -> None:
+async def updateMessageEmbed(eventMessage: Message, updatedEvent: Event) -> bool:
     """Update the embed and footer of a message."""
-    newEventEmbed = updatedEvent.createEmbed()
-    await eventMessage.edit(embed=newEventEmbed)
+    embed = updatedEvent.createEmbed()
+    if embed:
+        try:
+            await eventMessage.edit(embed=embed)
+        except HTTPException as e:
+            # Failed to edit the newly-created embed in (probably due to a rate
+            # limit), invalidating the embed hash and saving the database
+            # before propagating the exception
+            updatedEvent.embed_hash = ""
+            EventDatabase.toJson()
+            raise EventUpdateFailed(
+                f"Failed to update embed for {updatedEvent} "
+                f"on message {eventMessage}"
+            ) from e
+        return True
+    return False
 
 
 # from EventDatabase
-async def updateReactions(event: Event, message: Message = None, bot=None,
-                          reorder=False):
-    """
-    Update reactions of an event message.
+async def updateReactions(
+    event: Event, message: Message | None = None, bot=None, reorder=False
+):
+    """Update reactions of an event message.
 
     Requires either the `message` or `bot` argument to be provided. Calling
     the function with reorder = True causes all reactions to be removed and
@@ -74,8 +94,9 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
     """
     if message is None:
         if bot is None:
-            raise ValueError("Requires either the `message` or `bot` argument"
-                             " to be provided")
+            raise ValueError(
+                "Requires either the `message` or `bot` argument to be provided"
+            )
         message = await getEventMessage(event, bot)
 
     reactions: List[Union[Emoji, str]] = event.getReactions()
@@ -117,8 +138,11 @@ async def updateReactions(event: Event, message: Message = None, bot=None,
             await message.add_reaction(emoji)
         except Forbidden as e:
             if e.code == 30010:
-                raise RoleError("Too many reactions, not adding role "
-                                f"{emoji}. This should not happen.") from e
+                raise RoleError(
+                    "Too many reactions, not adding role "
+                    f"{emoji}. This should not happen."
+                ) from e
+
 
 # async def createMessages(events: Dict[int, Event], bot):
 #     # Update event message contents and add reactions
@@ -143,11 +167,18 @@ def messageEventId(message: Message) -> int:
         raise ValueError("Footer is empty")
     # Casting because mypy doesn't detect correctly that the type of
     # footer.text has been checked already
-    return int(cast(str, footer.text).split(' ')[-1])
+    return int(cast(str, footer.text).split(" ")[-1])
 
 
 async def syncMessages(events: Dict[int, Event], bot: OperationBot):
-    sorted_events = sorted(list(events.values()), key=lambda event: event.date)
+    """Sync event messages with the event database.
+
+    Saves the database to disk after syncing.
+    """
+    logging.info("syncMessages")
+    sorted_events = sorted(
+        list(events.values()), key=lambda event: event.date, reverse=True
+    )
     for event in sorted_events:
         try:
             message = await getEventMessage(event, bot)
@@ -158,8 +189,10 @@ async def syncMessages(events: Dict[int, Event], bot: OperationBot):
             if messageEventId(message) == event.id:
                 print(f"Found message {message.id} for event {event}")
             else:
-                print(f"Found incorrect message for event {event}, deleting "
-                      f"and creating")
+                print(
+                    f"Found incorrect message for event {event}, deleting "
+                    f"and creating"
+                )
                 # Technically multiple events might have the same saved
                 # messageID but it's simpler to just recreate messages here if
                 # the event ID doesn't match
