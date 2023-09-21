@@ -2,7 +2,9 @@
 name: pre-commit
 
 # Run this workflow every time a new commit pushed to your repository
-on: [push]
+on:
+  pull_request:
+  push:
 
 jobs:
   # Set the job key. The key is displayed as the job name
@@ -22,5 +24,4 @@ jobs:
     - name: Copy secret.py
       run: |
         cp secret.py.example src/operationbot/secret.py
-    - uses: pre-commit-ci/lite-action@v1.0.0
-      if: always()
+    - uses: pre-commit/action@v3.0.0
