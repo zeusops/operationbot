@@ -162,3 +162,7 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Text editor temp files
+*~
+*.swp
