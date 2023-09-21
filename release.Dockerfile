@@ -23,4 +23,12 @@ COPY requirements.txt /app
 RUN pip install --no-cache-dir -r /app/requirements.txt && \
     pip install --no-cache-dir /app/*.whl
 
+RUN \
+    mv /usr/local/lib/python3.11/site-packages/operationbot/config.py /app/config.py && \
+    ln -s /app/config.py /usr/local/lib/python3.11/site-packages/operationbot/config.py && \
+    touch /app/secret.py && \
+    ln -s /app/secret.py /usr/local/lib/python3.11/site-packages/operationbot/secret.py
+
+WORKDIR /app
+
 ENTRYPOINT ["operationbot"]
