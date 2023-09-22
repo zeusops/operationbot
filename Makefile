@@ -1,4 +1,5 @@
 DOCKER_IMAGE_NAME=operationbot
+DOCKER_REGISTRY=
 APP_VERSION=$(shell poetry version --short)
 
 .PHONY: all
@@ -41,7 +42,7 @@ build:
 .PHONY: docker-build-release
 docker-build-release: export-requirements
 	docker build \
-		-t "${DOCKER_IMAGE_NAME}:${APP_VERSION}" \
+		-t "${DOCKER_REGISTRY}${DOCKER_IMAGE_NAME}:${APP_VERSION}" \
 		-f release.Dockerfile \
 		.
 
