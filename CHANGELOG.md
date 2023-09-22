@@ -5,6 +5,10 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed a broken type hint in Event
+
 ## v0.42.0 - 2023-09-22
 
 ### Fixed

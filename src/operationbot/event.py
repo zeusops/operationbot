@@ -1,7 +1,7 @@
 import datetime
 import hashlib
 import logging
-from typing import Any
+from typing import Any, Union
 
 import discord
 from discord import Embed, Emoji
@@ -32,7 +32,7 @@ class User:
         self.id = id
         self.display_name = display_name
 
-    def __eq__(self, other: "User" | discord.abc.User):  # type: ignore
+    def __eq__(self, other: Union["User", discord.abc.User]):  # type: ignore
         # This makes it so that User objects can be compared to
         # discord.abc.User by doing `user == discord.abc.User`. The comparison
         # will not work in the other direction because discord.abc.User checks
