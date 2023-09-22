@@ -34,7 +34,6 @@ from operationbot.converters import (
 from operationbot.errors import MessageNotFound, RoleError, UnexpectedRole
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase
-from operationbot.role import Role
 from operationbot.roleGroup import RoleGroup
 from operationbot.secret import ADMINS, WW2_MODS
 from operationbot.secret import COMMAND_CHAR as CMD
@@ -895,18 +894,19 @@ class CommandListener(Cog):
         Example: removesignup 1 "S. Gehock"
         """  # NOQA
         # Remove signup, update event, export
-        role: Optional[Role] = event.undoSignup(user)
-        if role:
-            await self._update_event(event)
-            await ctx.send(
-                f"User {user.display_name} removed from role "
-                f"{role.display_name} in event {event}"
-            )
-            await self._show(ctx, event)
-        else:
+        role = event.undoSignup(user)
+        if role is None:
             await ctx.send(
                 f"No signup to remove for user {user.display_name} in event {event}"
             )
+            return
+
+        await self._update_event(event)
+        await ctx.send(
+            f"User {user.display_name} removed from role "
+            f"{role.display_name} in event {event}"
+        )
+        await self._show(ctx, event)
 
     # Archive event command
     @command(aliases=["a"])
