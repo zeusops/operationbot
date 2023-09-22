@@ -5,6 +5,10 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed optional arguments for discord commands
+
 ## v0.41.0 - 2023-09-21
 
 ### Changed

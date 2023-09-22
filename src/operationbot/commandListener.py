@@ -287,8 +287,8 @@ class CommandListener(Cog):
         _datetime: ArgDateTime,
         terrain: str,
         faction: str,
-        zeus: ArgMember | None = None,
-        _time: ArgTime | None = None,
+        zeus: Optional[ArgMember] = None,
+        _time: Optional[ArgTime] = None,
     ):
         """
         Create and pre-fill a main op event.
@@ -311,8 +311,8 @@ class CommandListener(Cog):
         _datetime: ArgDateTime,
         terrain: str,
         faction: str,
-        zeus: ArgMember | None = None,
-        _time: ArgTime | None = None,
+        zeus: Optional[ArgMember] = None,
+        _time: Optional[ArgTime] = None,
     ):
         """
         Create and pre-fill a side op event.
@@ -335,8 +335,8 @@ class CommandListener(Cog):
         _datetime: ArgDateTime,
         terrain: str,
         faction: str,
-        zeus: ArgMember | None = None,
-        _time: ArgTime | None = None,
+        zeus: Optional[ArgMember] = None,
+        _time: Optional[ArgTime] = None,
     ):
         """
         Create and pre-fill a WW2 side op event. Automatically sets description.
@@ -363,7 +363,7 @@ class CommandListener(Cog):
 
     @command(aliases=["mc"])
     async def multicreate(
-        self, ctx: Context, start: ArgDate, end: ArgDate | None = None, force=False
+        self, ctx: Context, start: ArgDate, end: Optional[ArgDate] = None, force=False
     ):
         """Create events for all weekends within specified range.
 
@@ -833,8 +833,8 @@ class CommandListener(Cog):
         event: ArgEvent,
         terrain: str,
         faction: str,
-        zeus: ArgMember | None = None,
-        _time: ArgTime | None = None,
+        zeus: Optional[ArgMember] = None,
+        _time: Optional[ArgTime] = None,
     ):
         """
         Quickly set event details.
@@ -997,7 +997,9 @@ class CommandListener(Cog):
         await ctx.send(f"{len(EventDatabase.events)} events imported")
 
     @command()
-    async def dump(self, ctx: Context, event: ArgEvent, roleGroup: str | None = None):
+    async def dump(
+        self, ctx: Context, event: ArgEvent, roleGroup: Optional[str] = None
+    ):
         """Dump given event as YAML for mass editing.
 
         Use `load` to import the data back in after editing. Specify roleGroup
