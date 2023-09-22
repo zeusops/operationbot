@@ -1,7 +1,7 @@
 import datetime
 import hashlib
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import discord
 from discord import Embed, Emoji
@@ -32,7 +32,7 @@ class User:
         self.id = id
         self.display_name = display_name
 
-    def __eq__(self, other: Union["User", discord.abc.User]):  # type: ignore
+    def __eq__(self, other: "User" | discord.abc.User):  # type: ignore
         # This makes it so that User objects can be compared to
         # discord.abc.User by doing `user == discord.abc.User`. The comparison
         # will not work in the other direction because discord.abc.User checks
@@ -44,25 +44,25 @@ class Event:
     def __init__(
         self,
         date: datetime.datetime,
-        guildEmojis: Tuple[Emoji, ...],
+        guildEmojis: tuple[Emoji, ...],
         eventID=0,
         importing=False,
         sideop=False,
         platoon_size=None,
     ):
-        self._title: Optional[str] = None
+        self._title: str | None = None
         self.date = date
         self._terrain = TERRAIN
         self.faction = FACTION
         self.description = DESCRIPTION
         self.port = cfg.PORT_DEFAULT
         self.mods = MODS
-        self.roleGroups: Dict[str, RoleGroup] = {}
+        self.roleGroups: dict[str, RoleGroup] = {}
         self.messageID = 0
         self.id = eventID
         self.sideop = sideop
-        self.attendees: list[Union[User, discord.abc.User]] = []
-        self.dlc: Optional[str] = None
+        self.attendees: list[User | discord.abc.User] = []
+        self.dlc: str | None = None
         self.embed_hash = ""
 
         if platoon_size is None:
@@ -153,7 +153,7 @@ class Event:
                 del self.roleGroups[sourceGroup.name]
             return msg
 
-        def _getTargetGroup(new_groups: List[str]) -> str:
+        def _getTargetGroup(new_groups: list[str]) -> str:
             for new_group in new_groups:
                 if new_group not in self.roleGroups:
                     new_groups.remove(new_group)
@@ -383,7 +383,7 @@ class Event:
         self._check_additional(role)
         role.name = new_name
 
-    def removeAdditionalRole(self, role: Union[str, Role]):
+    def removeAdditionalRole(self, role: str | Role):
         """Remove an additional role from the event."""
         # Remove role from additional roles
         if isinstance(role, Role):
@@ -405,7 +405,7 @@ class Event:
         return datetime.time(hour=self.date.hour, minute=self.date.minute)
 
     @time.setter
-    def time(self, time: Union[datetime.time, datetime.datetime]):
+    def time(self, time: datetime.time | datetime.datetime):
         self.date = self.date.replace(hour=time.hour, minute=time.minute)
 
     @property
@@ -421,7 +421,7 @@ class Event:
         self._terrain = terrain
 
     # Get emojis for normal roles
-    def _getNormalEmojis(self, guildEmojis: Tuple[Emoji, ...]) -> Dict[str, Emoji]:
+    def _getNormalEmojis(self, guildEmojis: tuple[Emoji, ...]) -> dict[str, Emoji]:
         normalEmojis = {}
 
         for emoji in guildEmojis:
@@ -430,7 +430,7 @@ class Event:
 
         return normalEmojis
 
-    def getReactions(self) -> List[Union[str, Emoji]]:
+    def getReactions(self) -> list[str | Emoji]:
         """Return reactions of all roles and extra reactions"""
         reactions = []
 
@@ -453,7 +453,7 @@ class Event:
         """Count how many reactions a message should have."""
         return len(self.getReactions())
 
-    def getReactionsOfGroup(self, groupName: str) -> List[Union[str, Emoji]]:
+    def getReactionsOfGroup(self, groupName: str) -> list[str | Emoji]:
         """Find reactions of a given role group."""
         reactions = []
 
@@ -499,7 +499,7 @@ class Event:
 
     def signup(
         self, roleToSet: Role, user: discord.abc.User, replace=False
-    ) -> Tuple[Optional[Role], User]:
+    ) -> tuple[Role | None, User]:
         """Add username to role.
 
         Raises an error if the role is taken, unless replace is set to True.
@@ -525,7 +525,7 @@ class Event:
         # Probably shouldn't ever reach this
         raise RoleNotFound(f"Could not find role: {roleToSet}")
 
-    def undoSignup(self, user) -> Optional[Role]:
+    def undoSignup(self, user) -> Role | None:
         """Remove username from any signups.
 
         Returns Role if user was signed up, otherwise None.
@@ -538,7 +538,7 @@ class Event:
                     return role
         return None
 
-    def findSignupRole(self, userID) -> Optional[Role]:
+    def findSignupRole(self, userID) -> Role | None:
         """Check if given user is already signed up."""
         for roleGroup in self.roleGroups.values():
             for role in roleGroup.roles:
@@ -567,7 +567,7 @@ class Event:
     def __repr__(self):
         return f"<Event title='{self.title}' id={self.id} date='{self.date}'>"
 
-    def toJson(self, brief_output=False) -> Dict[str, Any]:
+    def toJson(self, brief_output=False) -> dict[str, Any]:
         roleGroupsData = {}
         for groupName, roleGroup in self.roleGroups.items():
             roleGroupsData[groupName] = roleGroup.toJson(brief_output)
@@ -576,7 +576,7 @@ class Event:
         for user in self.attendees:
             attendees_data[user.id] = user.display_name
 
-        data: Dict[str, Any] = {}
+        data: dict[str, Any] = {}
         data["title"] = self._title
         data["date"] = self.date.strftime("%Y-%m-%d")
         data["description"] = self.description
@@ -613,7 +613,7 @@ class Event:
                 self.attendees.append(User(int(userID), name))
 
         # TODO: Handle missing roleGroups
-        groups: List[str] = []
+        groups: list[str] = []
         for groupName, roleGroupData in data["roleGroups"].items():
             if not manual_load:
                 # Only create new role groups if we're not loading data

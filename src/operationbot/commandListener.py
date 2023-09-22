@@ -4,7 +4,7 @@ import sys
 import traceback
 from datetime import date, datetime, time, timedelta
 from io import StringIO
-from typing import List, Optional, Tuple, cast
+from typing import Optional, cast
 
 import yaml
 from discord import Member
@@ -383,8 +383,8 @@ class CommandListener(Cog):
             end = start.replace(day=last_day)
 
         delta = end - start
-        days: List[date] = []
-        past_days: List[date] = []
+        days: list[date] = []
+        past_days: list[date] = []
         weekend = [5, 6, 7]
         day: date
         for i in range(delta.days + 1):
@@ -1049,7 +1049,7 @@ class CommandListener(Cog):
         _: Context,
         event: Event,
         data: str,
-        emojis: Tuple[Emoji, ...],
+        emojis: tuple[Emoji, ...],
         target: TextChannel | None = None,
     ):
         if data.startswith("```") and data.endswith("```"):
