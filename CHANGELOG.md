@@ -5,6 +5,8 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+## v0.42.1 - 2023-09-22
+
 ### Fixed
 
 - Fixed a broken type hint in Event
