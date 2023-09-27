@@ -6,6 +6,8 @@ database/*
 .mypy_cache
 backup
 foo
+# Exported for the docker build, not needed in the repo
+requirements.txt
 
 docs/source/apidocs/
 
