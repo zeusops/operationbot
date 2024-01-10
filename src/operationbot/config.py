@@ -74,7 +74,7 @@ ADDITIONAL_ROLE_NAMES = [
 ]
 
 # By default, the number of attendees will only be displayed for sideops
-ALWAYS_DISPLAY_ATTENDANCE = False
+ALWAYS_DISPLAY_ATTENDANCE = True
 
 ATTENDANCE_EMOJI = "\N{HEAVY PLUS SIGN}"
 
