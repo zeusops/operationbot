@@ -5,6 +5,8 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+## v0.42.2 - 2024-01-10
+
 ### Changed
 
 - Alway display the attendance emoji
