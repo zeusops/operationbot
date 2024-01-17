@@ -1,6 +1,6 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
 _commit: v1.3.1-2-g705747a
-_src_path: gh:OverkillGuy/python-template
+_src_path: gh:Gehock/python-template
 author_email: sami.v.laine@gmail.com
 author_name: Sami Laine
 description: Operations bot for the Zeusops discord
