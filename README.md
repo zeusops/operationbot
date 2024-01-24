@@ -121,4 +121,4 @@ make docs docs-serve
 ### Templated repository
 
 This repository was created by the copier template available at
-gh:OverkillGuy/python-template, using version v1.3.1-2-g705747a.
+gh:Gehock/python-template, using version v1.4.1a3.

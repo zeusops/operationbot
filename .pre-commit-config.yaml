@@ -1,7 +1,7 @@
 ---
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.4.0
+  rev: v4.5.0
   hooks:
   - id: trailing-whitespace
   - id: end-of-file-fixer
@@ -19,13 +19,13 @@ repos:
   - id: check-yaml
   - id: check-json
 - repo: https://github.com/shellcheck-py/shellcheck-py
-  rev: v0.9.0.5
+  rev: v0.9.0.6
   hooks:
   - id: shellcheck
     name: Shellcheck
     args: ["-f", "gcc"]  # output filename:linenum:colnum (clickable)
 - repo: https://github.com/AleksaC/hadolint-py
-  rev: v2.12.0.2
+  rev: v2.12.0.3
   hooks:
   - id: hadolint
     name: Hadolint (Dockerfile checker)
@@ -36,17 +36,17 @@ repos:
   - id: poetry-check
   - id: poetry-lock
 - repo: https://github.com/psf/black
-  rev: 23.7.0
+  rev: 23.9.1
   hooks:
   - id: black
     name: Black (Python formatter)
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.0.285
+  rev: v0.1.0
   hooks:
   - id: ruff
     args: ["--fix", "--exit-non-zero-on-fix"]
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.5.1
+  rev: v1.6.0
   hooks:
   - id: mypy
     name: Mypy (Python type-checker)

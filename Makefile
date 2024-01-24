@@ -59,13 +59,15 @@ release: BUMP=patch
 release:
 # Set the new version Makefile variable after the version bump
 	$(eval NEW_VERSION := $(shell poetry version --short ${BUMP}))
-	sed -i \
-		"s/\(## \[Unreleased\]\)/\1\n\n## v${NEW_VERSION} - $(shell date -I)/" \
-		CHANGELOG.md
+	$(eval TMP_CHANGELOG := $(shell mktemp))
+	sed \
+		"s/\(## \[Unreleased\]\)/\1\n\n## v${NEW_VERSION} - $(shell date +%Y-%m-%d)/" \
+		CHANGELOG.md > ${TMP_CHANGELOG}
+	mv --force ${TMP_CHANGELOG} CHANGELOG.md
 	git add CHANGELOG.md pyproject.toml
 	git commit -m "Bump to version v${NEW_VERSION}"
-	git tag -a v${NEW_VERSION} \
-		-m "Release v${NEW_VERSION}"
+	git tag --annotate "v${NEW_VERSION}" \
+		--message "Release v${NEW_VERSION}"
 
 # Less commonly used commands
 

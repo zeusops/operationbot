@@ -5,6 +5,10 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Changed
+
+- Update to template v1.4.1a3
+
 ## v0.42.2 - 2024-01-10
 
 ### Changed
