@@ -2,6 +2,7 @@ import logging
 from typing import Dict, List, Union, cast
 
 from discord import Emoji, Message, NotFound, TextChannel
+from discord.abc import Messageable
 from discord.embeds import Embed
 from discord.errors import Forbidden, HTTPException
 
@@ -219,3 +220,35 @@ async def syncMessages(events: Dict[int, Event], bot: OperationBot):
 #             if found >= len(events):
 #                 print("Found all messages")
 #                 break
+
+
+async def archive_single_event(
+    event: Event, target: Messageable, bot: OperationBot
+) -> None:
+    """Archive a single event."""
+    # Archive event and export
+    EventDatabase.archiveEvent(event)
+    try:
+        eventMessage = await getEventMessage(event, bot)
+    except MessageNotFound:
+        await target.send(f"Internal error: event {event} without a message found")
+    else:
+        await eventMessage.delete()
+
+    # Create new message
+    await createEventMessage(event, bot.eventarchivechannel)
+
+
+async def archive_past_events(
+    bot: OperationBot, target: Messageable | None = None
+) -> list[Event]:
+    """Archive all past events."""
+    if target is None:
+        target = bot.commandchannel
+
+    archived = EventDatabase.archive_past_events()
+
+    for event in archived:
+        await archive_single_event(event, target, bot)
+
+    return archived

@@ -184,6 +184,24 @@ class EventDatabase:
             cls.events[event.id] = event
 
     @classmethod
+    def archive_past_events(cls) -> list[Event]:
+        """Move events with the date in the past to the archive
+
+        Returns a list of the archived events
+        """
+        archived = []
+
+        for event in cls.events.values():
+            if event.date < datetime.now():
+                archived.append(event)
+        # Archiving in a separate loop to prevent modifying cls.events while
+        # looping over it
+        for event in archived:
+            cls.archiveEvent(event)
+
+        return archived
+
+    @classmethod
     def toJson(cls, archive=False):
         # TODO: rename to saveDatabase
         events = cls.events if not archive else cls.eventsArchive

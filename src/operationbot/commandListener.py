@@ -915,19 +915,20 @@ class CommandListener(Cog):
 
         Example: archive 1
         """
-        # Archive event and export
-        EventDatabase.archiveEvent(event)
-        try:
-            eventMessage = await msgFnc.getEventMessage(event, self.bot)
-        except MessageNotFound:
-            await ctx.send(f"Internal error: event {event} without a message found")
-        else:
-            await eventMessage.delete()
-
-        # Create new message
-        await msgFnc.createEventMessage(event, self.bot.eventarchivechannel)
-
+        await msgFnc.archive_single_event(event, ctx, self.bot)
         await ctx.send(f"Event {event} archived")
+
+    @command(aliases=["ap"])
+    async def archivepast(self, ctx: Context):
+        """Archive all past events.
+
+        Example: archivepast
+        """
+        archived = await msgFnc.archive_past_events(self.bot, target=ctx)
+        if len(archived) == 0:
+            await ctx.send("No events to archive")
+        else:
+            await ctx.send(f"{len(archived)} events archived")
 
     async def _delete(self, event: Event, archived=False):
         # TODO: Move to a more appropriate location

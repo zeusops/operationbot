@@ -5,6 +5,10 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Added
+
+- !archivepast command to archive all past events
+
 ### Changed
 
 - Update to template v1.4.1a3
