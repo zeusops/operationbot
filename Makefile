@@ -20,7 +20,7 @@ lint:  # Use all linters on all files (not just staged for commit)
 
 .PHONY: test
 test:
-	poetry run pytest
+	poetry run pytest ${TESTARGS}
 
 .PHONY: docs
 docs:
