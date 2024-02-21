@@ -39,6 +39,24 @@ def test_archive_past():
     assert db.events.get(1) == event_coming
 
 
+def test_archive_past_delta():
+    _init_db()
+
+    date_past = datetime.now() - timedelta(hours=1)
+    date_coming = datetime.now() + timedelta(hours=3)
+    event_past = db.createEvent(date_past, platoon_size="empty")
+    event_coming = db.createEvent(date_coming, platoon_size="empty")
+
+    assert len(db.events) == 2
+    assert db.events.get(0) == event_past
+    assert len(db.eventsArchive) == 0
+    archived = db.archive_past_events(timedelta(hours=2))
+    assert len(archived) == 0
+    assert len(db.eventsArchive) == 0
+    assert db.events.get(0) == event_past
+    assert db.events.get(1) == event_coming
+
+
 def test_default():
     date = datetime(2020, 1, 1, 12, 0, 0)
     event = Event(date, (), platoon_size="empty")

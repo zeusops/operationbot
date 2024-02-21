@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any, Dict, Optional, Tuple
 
 from discord import Emoji
@@ -184,7 +184,7 @@ class EventDatabase:
             cls.events[event.id] = event
 
     @classmethod
-    def archive_past_events(cls) -> list[Event]:
+    def archive_past_events(cls, delta: timedelta = timedelta()) -> list[Event]:
         """Move events with the date in the past to the archive
 
         Returns a list of the archived events
@@ -192,7 +192,7 @@ class EventDatabase:
         archived = []
 
         for event in cls.events.values():
-            if event.date < datetime.now():
+            if datetime.now() - event.date > delta:
                 archived.append(event)
         # Archiving in a separate loop to prevent modifying cls.events while
         # looping over it
