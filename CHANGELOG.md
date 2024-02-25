@@ -5,6 +5,8 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+## v0.43.0 - 2024-02-25
+
 ### Added
 
 - !archivepast command to archive all past events
