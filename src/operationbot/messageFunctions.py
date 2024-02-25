@@ -251,4 +251,9 @@ async def archive_past_events(
     for event in archived:
         await archive_single_event(event, target, bot)
 
+    if archived:
+        msg = f"{len(archived)} events archived"
+        await target.send(msg)
+        logging.info(msg)
+
     return archived

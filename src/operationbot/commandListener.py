@@ -925,10 +925,8 @@ class CommandListener(Cog):
         Example: archivepast
         """
         archived = await msgFnc.archive_past_events(self.bot, target=ctx)
-        if len(archived) == 0:
+        if not archived:
             await ctx.send("No events to archive")
-        else:
-            await ctx.send(f"{len(archived)} events archived")
 
     async def _delete(self, event: Event, archived=False):
         # TODO: Move to a more appropriate location
