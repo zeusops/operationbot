@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 from operationbot import secret
 
-VERSION = 12
+VERSION = 13
 # PURGE_ON_CONNECT = False
 _test_channel = 530411066585382912
 if secret.DEBUG:
@@ -222,3 +222,7 @@ DLC_TERRAINS = {
     "Tanoa": "APEX",
     "Livonia": "Contact",
 }
+
+ARCHIVE_CHECK_DELAY = 60
+ARCHIVE_AUTOMATICALLY = True
+ARCHIVE_AFTER_TIME = timedelta(hours=2)

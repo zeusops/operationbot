@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 from typing import Dict, List, Union, cast
 
 from discord import Emoji, Message, NotFound, TextChannel
@@ -240,13 +241,15 @@ async def archive_single_event(
 
 
 async def archive_past_events(
-    bot: OperationBot, target: Messageable | None = None
+    bot: OperationBot,
+    target: Messageable | None = None,
+    delta: timedelta = timedelta(),
 ) -> list[Event]:
     """Archive all past events."""
     if target is None:
         target = bot.commandchannel
 
-    archived = EventDatabase.archive_past_events()
+    archived = EventDatabase.archive_past_events(delta)
 
     for event in archived:
         await archive_single_event(event, target, bot)

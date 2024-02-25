@@ -8,6 +8,7 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 ### Added
 
 - !archivepast command to archive all past events
+- Automatically archive past events after a configured time
 
 ### Changed
 
