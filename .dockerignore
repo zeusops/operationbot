@@ -8,6 +8,8 @@
 
 # Avoid arbitrary git changes invalidating docker context
 .git
+# Ignore secret
+src/operationbot/secret.py
 
 ################################################################################
 # Global ignore list, common in BOTH .dockerignore, and .gitignore
