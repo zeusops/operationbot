@@ -163,10 +163,13 @@ class REPL(commands.Cog):
             try:
                 if fmt is not None:
                     if len(fmt) > 2000:
-                        await ctx.send("Content too big to be printed.")
+                        await ctx.send(
+                            "Content too big to be displayed completely, "
+                            "check the log for the full output."
+                        )
                         print(fmt)
-                    else:
-                        await ctx.send(fmt)
+                        fmt = f"{fmt[:1990]} [...]"
+                    await ctx.send(fmt)
             except discord.Forbidden:
                 pass
             except discord.HTTPException as e:

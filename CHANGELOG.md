@@ -8,6 +8,8 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 ### Fixed
 
 - `archive_past_events` task runs only once if the bot reconnects
+- Messages longer than 2000 messages are now truncated instead of just being
+  printed in the log
 
 ## v0.43.0 - 2024-02-25
 
