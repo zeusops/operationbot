@@ -1,5 +1,6 @@
 import calendar
 import importlib
+import logging
 import sys
 import traceback
 from datetime import date, datetime, time, timedelta
@@ -1145,42 +1146,41 @@ class CommandListener(Cog):
     @Cog.listener()
     @staticmethod
     async def on_command_error(ctx: Context, error: Exception):
-        # pylint: disable=no-else-return
         if isinstance(error, MissingRequiredArgument):
             await ctx.send(f"Missing argument. See: `{CMD}help {ctx.command}`")
             return
-        elif isinstance(error, BadArgument):
+        if isinstance(error, BadArgument):
             await ctx.send(f"Invalid argument: {error}. See: `{CMD}help {ctx.command}`")
             return
-        elif isinstance(error, CommandInvokeError):
+        if isinstance(error, CommandInvokeError):
             if isinstance(error.original, UnexpectedRole):
                 await ctx.send(
                     f"Malformed data: {error.original}. "
                     f"See: `{CMD}help {ctx.command}`"
                 )
                 return
-            elif isinstance(error.original, RoleError):
+            if isinstance(error.original, RoleError):
                 await ctx.send(
                     f"An error occured: ```{error.original}```\n"
                     f"Message: `{ctx.message.clean_content}`"
                 )
                 return
-            else:
-                error = error.original
-        print(
+            error = error.original
+
+        logging.error(
             "".join(traceback.format_exception(type(error), error, error.__traceback__))
         )
         trace = "".join(
             traceback.format_exception(type(error), error, error.__traceback__, 2)
         )
 
-        messages = ctx.message.clean_content.split("\n")
-        print(f"{messages=}")
-        if len(messages) > 1:
+        lines = ctx.message.clean_content.split("\n")
+        logging.error(f"{lines=}")
+        if len(lines) > 1:
             # Show only first line of the message
-            message = f"{messages[0]} [...]"
+            message = f"{lines[0]} [...]"
         else:
-            message = messages[0]
+            message = lines[0]
         msg = (
             f"Unexpected error occured: ```{error}```\n"
             f"Message: `{message}`\n\n```py\n{trace}```"
