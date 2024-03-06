@@ -1,5 +1,6 @@
 """A bot module that implements a custom help command and extra features."""
 
+import asyncio
 import logging
 import sys
 import traceback
@@ -65,6 +66,7 @@ class OperationBot(Bot):
         self.signoff_notify_user: User
         self.awaiting_reply = False
         self.processing = True
+        self.archive_task: asyncio.Task | None = None
 
         if help_command is None:
             self.help_command = AliasHelpCommand()

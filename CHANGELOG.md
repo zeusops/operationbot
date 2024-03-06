@@ -5,6 +5,10 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Fixed
+
+- `archive_past_events` task runs only once if the bot reconnects
+
 ## v0.43.0 - 2024-02-25
 
 ### Added

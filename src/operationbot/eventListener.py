@@ -1,4 +1,5 @@
 import importlib
+import logging
 from datetime import datetime, timedelta
 from typing import Optional, Union, cast
 
@@ -42,7 +43,14 @@ class EventListener(Cog):
         print(msg)
         await commandchannel.send(msg)
         await self.bot.change_presence(activity=Game(name=cfg.GAME))
-        self.bot.loop.create_task(tasks.archive_past_events(self.bot))
+        if not self.bot.archive_task:
+            self.bot.archive_task = self.bot.loop.create_task(
+                tasks.archive_past_events(self.bot)
+            )
+        else:
+            logging.info(
+                "The archive_past_events task is already running, not starting again"
+            )
         print("Logged in as", self.bot.user.name, self.bot.user.id)
         self.bot.processing = False
 
