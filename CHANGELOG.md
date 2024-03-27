@@ -5,6 +5,8 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+## v0.45.0 - 2024-03-27
+
 ### Added
 
 - Automatic build pipeline using Github Actions
