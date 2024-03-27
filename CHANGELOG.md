@@ -5,6 +5,13 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Added
+
+- Automatic build pipeline using Github Actions
+
+  Reads docker repo from variables. Defaults to
+  `GITHUB_ACTOR/GITHUB_REPOSITORY` if variables aren't set
+
 ## v0.44.0 - 2024-03-06
 
 ### Fixed
