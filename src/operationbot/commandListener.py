@@ -21,7 +21,7 @@ from discord.ext.commands.errors import (
 from operationbot import config as cfg
 from operationbot import messageFunctions as msgFnc
 from operationbot.bot import OperationBot
-from operationbot.command_helpers import show_event, update_event
+from operationbot.command_helpers import set_dlc, show_event, update_event
 from operationbot.converters import (
     ArgArchivedEvent,
     ArgDate,
@@ -795,7 +795,23 @@ class CommandListener(Cog):
 
         Example: clearmods 1
         """
-        await self._set_mods(ctx, event)
+        await self._set_mods(ctx, event, "")
+
+    @command(aliases=["sdlc"])
+    async def setdlc(self, ctx: Context, event: ArgEvent, *, dlc: UnquotedStr):
+        """Set event DLC.
+
+        Example: setdlc 1 APEX
+        """
+        await set_dlc(ctx, event, self.bot, dlc)
+
+    @command(aliases=["cdlc"])
+    async def cleardlc(self, ctx: Context, event: ArgEvent):
+        """Set event DLC.
+
+        Example: cleardlc 1
+        """
+        await set_dlc(ctx, event, self.bot)
 
     async def _set_quick(
         self,

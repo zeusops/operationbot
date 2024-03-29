@@ -64,3 +64,21 @@ async def show_event(ctx: Context, event: Event, bot: OperationBot):
     await msgFnc.createEventMessage(
         event, cast(TextChannel, ctx.channel), update_id=False
     )
+
+
+async def set_dlc(ctx: Context, event: Event, bot: OperationBot, dlc: str = ""):
+    """Set a DLC for an event
+
+    Args:
+        ctx (Context): Command context
+        event (Event): Event to modify
+        bot (OperationBot): Main bot instance
+        dlc (str, optional): DLC to set. Defaults to "".
+    """
+    event.dlc = dlc
+    await update_event(event, bot)
+    if dlc:
+        await ctx.send(f"DLC ```\n{event.dlc}\n``` set for operation {event}")
+        await show_event(ctx, event, bot)
+    else:
+        await ctx.send(f"DLC cleared from operation {event}")
