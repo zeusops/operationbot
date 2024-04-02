@@ -123,15 +123,15 @@ class OperationBot(Bot):
         trace = traceback.format_exc(2)
         _, error, _ = sys.exc_info()
 
-        ctx = self.commandchannel
+        channel = self.commandchannel
         msg = (
             f"Unexpected error occured in {event_method}: ```{error}```\n"
             f"```py\n{trace}```"
         )
         if len(msg) >= 2000:
-            await ctx.send(
+            await channel.send(
                 "bot.on_error: Received error message that's over 2000 "
                 "characters, check the log for the full error."
             )
             msg = f"{msg[:1990]} [...]```"
-        await ctx.send(msg)
+        await channel.send(msg)
