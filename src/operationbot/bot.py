@@ -130,8 +130,8 @@ class OperationBot(Bot):
         )
         if len(msg) >= 2000:
             await ctx.send(
-                "Received error message that's over 2000 characters, check "
-                "the log for the full error."
+                "bot.on_error: Received error message that's over 2000 "
+                "characters, check the log for the full error."
             )
             logging.error("Message:", ctx.message.clean_content)
             msg = f"{msg[:1990]} [...]```"
