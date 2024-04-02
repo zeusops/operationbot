@@ -1174,7 +1174,13 @@ class CommandListener(Cog):
             traceback.format_exception(type(error), error, error.__traceback__, 2)
         )
 
-        lines = ctx.message.clean_content.split("\n")
+        if hasattr(ctx, "message"):
+            lines = ctx.message.clean_content.split("\n")
+            clean_content = ctx.message.clean_content
+        else:
+            lines = "No associated message"
+            clean_content = lines
+
         logging.error(f"{lines=}")
         if len(lines) > 1:
             # Show only first line of the message
@@ -1190,7 +1196,7 @@ class CommandListener(Cog):
                 "Received error message that's over 2000 characters, check "
                 "the log for the full error."
             )
-            logging.error("Message:", ctx.message.clean_content)
+            logging.error("Message:", clean_content)
             msg = f"{msg[:1990]} [...]```"
         await ctx.send(msg)
 
