@@ -5,6 +5,12 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Fixed
+
+- Use a placeholder message if a command error doesn't include one. This
+  should fix some of the incorrect warnings about messages with >2000
+  characters when trying to edit old events.
+
 ## v0.45.0 - 2024-03-27
 
 ### Added
