@@ -117,8 +117,8 @@ class OperationBot(Bot):
             await self.close()
             sys.exit()
 
-    async def on_error(self, event_method, *args, **kwargs):
-        print(f"Error in {event_method=}")
+    async def on_error(self, event_method: str, *args, **kwargs):
+        logging.error(f"Error in {event_method=}")
         traceback.print_exc()
         trace = traceback.format_exc(2)
         _, error, _ = sys.exc_info()
