@@ -5,6 +5,8 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+## v0.45.1 - 2024-04-02
+
 ### Fixed
 
 - Use a placeholder message if a command error doesn't include one. This
