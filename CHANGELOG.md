@@ -5,6 +5,12 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Fixed
+
+- Do not try to read non-existent message in `on_error`. The error handler does
+  not actually receive a full context, this was a result of a confusingly named
+  variable.
+
 ## v0.45.1 - 2024-04-02
 
 ### Fixed
