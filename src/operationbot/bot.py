@@ -117,22 +117,21 @@ class OperationBot(Bot):
             await self.close()
             sys.exit()
 
-    async def on_error(self, event_method, *args, **kwargs):
-        print(f"Error in {event_method=}")
+    async def on_error(self, event_method: str, *args, **kwargs):
+        logging.error(f"Error in {event_method=}")
         traceback.print_exc()
         trace = traceback.format_exc(2)
         _, error, _ = sys.exc_info()
 
-        ctx = self.commandchannel
+        channel = self.commandchannel
         msg = (
             f"Unexpected error occured in {event_method}: ```{error}```\n"
             f"```py\n{trace}```"
         )
         if len(msg) >= 2000:
-            await ctx.send(
-                "Received error message that's over 2000 characters, check "
-                "the log for the full error."
+            await channel.send(
+                "bot.on_error: Received error message that's over 2000 "
+                "characters, check the log for the full error."
             )
-            logging.error("Message:", ctx.message.clean_content)
             msg = f"{msg[:1990]} [...]```"
-        await ctx.send(msg)
+        await channel.send(msg)

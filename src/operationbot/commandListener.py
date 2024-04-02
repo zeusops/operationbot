@@ -1193,8 +1193,8 @@ class CommandListener(Cog):
         )
         if len(msg) >= 2000:
             await ctx.send(
-                "Received error message that's over 2000 characters, check "
-                "the log for the full error."
+                "commandListener: Received error message that's over 2000 "
+                "characters, check the log for the full error."
             )
             logging.error("Message:", clean_content)
             msg = f"{msg[:1990]} [...]```"
