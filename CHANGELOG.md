@@ -7,8 +7,6 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## v0.46.0 - 2024-04-02
 
-## v0.45.2 - 2024-04-02
-
 ### Fixed
 
 - Do not try to read non-existent message in `on_error`. The error handler does
