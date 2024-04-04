@@ -5,6 +5,11 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Added
+
+- !setdlc (!sdlc) command for manually setting a DLC
+- !cleardlc (!cdlc) command for clearing a manually set DLC
+
 ## v0.46.0 - 2024-04-02
 
 ### Fixed

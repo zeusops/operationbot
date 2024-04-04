@@ -52,7 +52,7 @@ class Event:
     ):
         self._title: str | None = None
         self.date = date
-        self._terrain = TERRAIN
+        self.terrain = TERRAIN
         self.faction = FACTION
         self.description = DESCRIPTION
         self.port = cfg.PORT_DEFAULT
@@ -62,7 +62,7 @@ class Event:
         self.id = eventID
         self.sideop = sideop
         self.attendees: list[User | discord.abc.User] = []
-        self.dlc: str | None = None
+        self._dlc: str = ""
         self.embed_hash = ""
 
         if platoon_size is None:
@@ -409,16 +409,16 @@ class Event:
         self.date = self.date.replace(hour=time.hour, minute=time.minute)
 
     @property
-    def terrain(self) -> str:
-        return self._terrain
+    def dlc(self) -> str:
+        if self._dlc:
+            return self._dlc
+        if self.terrain in cfg.DLC_TERRAINS:
+            return cfg.DLC_TERRAINS[self.terrain]
+        return ""
 
-    @terrain.setter
-    def terrain(self, terrain):
-        if terrain in cfg.DLC_TERRAINS:
-            self.dlc = cfg.DLC_TERRAINS[terrain]
-        else:
-            self.dlc = None
-        self._terrain = terrain
+    @dlc.setter
+    def dlc(self, dlc):
+        self._dlc = dlc
 
     # Get emojis for normal roles
     def _getNormalEmojis(self, guildEmojis: tuple[Emoji, ...]) -> dict[str, Emoji]:
@@ -585,6 +585,7 @@ class Event:
         data["faction"] = self.faction
         data["port"] = self.port
         data["mods"] = self.mods
+        data["dlc"] = self._dlc
         if not brief_output:
             data["messageID"] = self.messageID
             data["platoon_size"] = self.platoon_size
@@ -603,6 +604,7 @@ class Event:
         self.port = int(data.get("port", cfg.PORT_DEFAULT))
         self.description = str(data.get("description", DESCRIPTION))
         self.mods = str(data.get("mods", MODS))
+        self.dlc = data.get("dlc", "")
         if not manual_load:
             self.messageID = int(data.get("messageID", 0))
             self.platoon_size = str(data.get("platoon_size", PLATOON_SIZE))

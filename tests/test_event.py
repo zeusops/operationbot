@@ -12,7 +12,7 @@ def _timestamp(date: datetime) -> int:
 
 def test_default():
     date = datetime(2020, 1, 1, 12, 0, 0)
-    event = Event(date, (), platoon_size="empty")
+    event = Event(date, guildEmojis=(), platoon_size="empty")
 
     assert event.date == date
     assert event.time == time(hour=date.hour, minute=date.minute)
@@ -40,7 +40,7 @@ def test_default():
 
 def test_dlc():
     date = datetime(2020, 1, 1, 12, 0, 0)
-    event = Event(date, (), platoon_size="empty")
+    event = Event(date, guildEmojis=(), platoon_size="empty")
 
     event.terrain = "Tanoa"
     assert event.terrain == "Tanoa"
@@ -57,6 +57,15 @@ def test_dlc():
         f"The **{event.dlc} DLC** is required to join this event"
     )
     event.terrain = "Stratis"
-    assert event.dlc is None
+    assert event.dlc == ""
     event.dlc = "GlobMob"
     assert event.dlc == "GlobMob"
+
+
+def test_manual_dlc():
+    date = datetime(2020, 1, 1, 12, 0, 0)
+    event = Event(date, guildEmojis=(), platoon_size="empty")
+    event.dlc = "APEX"
+    event.terrain = "Stratis"
+    assert event.dlc == "APEX"
+    assert event.terrain == "Stratis"
