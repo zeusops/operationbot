@@ -5,6 +5,8 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+## v0.47.0 - 2024-04-04
+
 ### Added
 
 - !setdlc (!sdlc) command for manually setting a DLC

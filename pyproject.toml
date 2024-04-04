@@ -3,7 +3,7 @@ requires-python = ">=3.10,<=3.13"
 
 [tool.poetry]
 name = "operationbot"
-version = "0.46.0"
+version = "0.47.0"
 description = "Operations bot for the Zeusops discord"
 authors = ["Sami Laine <sami.v.laine@gmail.com>"]
 readme = "README.md"
