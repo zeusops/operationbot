@@ -678,7 +678,7 @@ class CommandListener(Cog):
     async def setterrain(self, ctx: Context, event: ArgEvent, *, terrain: UnquotedStr):
         """Set event terrain.
 
-        Example: settime 1 Takistan
+        Example: setterrain 1 Takistan
         """
         # Change terrain, update event, export
         event.terrain = terrain
