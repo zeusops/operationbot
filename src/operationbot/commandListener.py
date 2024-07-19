@@ -21,7 +21,7 @@ from discord.ext.commands.errors import (
 from operationbot import config as cfg
 from operationbot import messageFunctions as msgFnc
 from operationbot.bot import OperationBot
-from operationbot.command_helpers import set_dlc, show_event, update_event
+from operationbot.command_helpers import set_dlc, set_overhaul, show_event, update_event
 from operationbot.converters import (
     ArgArchivedEvent,
     ArgDate,
@@ -812,6 +812,24 @@ class CommandListener(Cog):
         Example: cleardlc 1
         """
         await set_dlc(ctx, event, self.bot)
+
+    @command(aliases=["sovh"])
+    async def setoverhaul(
+        self, ctx: Context, event: ArgEvent, *, overhaul: UnquotedStr
+    ):
+        """Set event overhaul.
+
+        Example: setoverhaul 1 Vietnam
+        """
+        await set_overhaul(ctx, event, self.bot, overhaul)
+
+    @command(aliases=["covh"])
+    async def clearoverhaul(self, ctx: Context, event: ArgEvent):
+        """Set event overhaul.
+
+        Example: clearoverhaul 1
+        """
+        await set_overhaul(ctx, event, self.bot)
 
     async def _set_quick(
         self,

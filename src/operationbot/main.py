@@ -9,7 +9,7 @@ from operationbot import secret as s
 from operationbot.bot import OperationBot
 from operationbot.secret import COMMAND_CHAR, TOKEN
 
-CONFIG_VERSION = 13
+CONFIG_VERSION = 14
 SECRET_VERSION = 1
 if cfg.VERSION != CONFIG_VERSION:
     raise ValueError(

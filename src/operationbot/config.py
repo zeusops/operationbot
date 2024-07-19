@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 from operationbot import secret
 
-VERSION = 13
+VERSION = 14
 # PURGE_ON_CONNECT = False
 _test_channel = 530411066585382912
 if secret.DEBUG:
@@ -216,6 +216,7 @@ EMBED_COLOR = {
     "WW2": 0x808080,
     "DLC": 0x00FF00,
     "DLC_SIDEOP": 0x00FFFF,
+    "OVERHAUL": 0xE700FF,
 }
 
 DLC_TERRAINS = {
@@ -226,3 +227,5 @@ DLC_TERRAINS = {
 ARCHIVE_CHECK_DELAY = 60
 ARCHIVE_AUTOMATICALLY = True
 ARCHIVE_AFTER_TIME = timedelta(hours=2)
+
+OVERHAUL_MODS = "https://zeusops.com/overhaul"

@@ -8,7 +8,7 @@ from discord import Embed, Emoji
 
 from operationbot import config as cfg
 from operationbot.additional_role_group import AdditionalRoleGroup
-from operationbot.config import EMBED_COLOR
+from operationbot.config import EMBED_COLOR, OVERHAUL_MODS
 from operationbot.errors import RoleError, RoleGroupNotFound, RoleNotFound, RoleTaken
 from operationbot.role import Role
 from operationbot.roleGroup import RoleGroup
@@ -63,6 +63,7 @@ class Event:
         self.sideop = sideop
         self.attendees: list[User | discord.abc.User] = []
         self._dlc: str = ""
+        self.overhaul = ""
         self.embed_hash = ""
 
         if platoon_size is None:
@@ -89,6 +90,8 @@ class Event:
 
     @property
     def color(self) -> int:
+        if self.overhaul:
+            return EMBED_COLOR["OVERHAUL"]
         if self.dlc and self.sideop:
             return EMBED_COLOR["DLC_SIDEOP"]
         if self.dlc:
@@ -103,6 +106,8 @@ class Event:
             # It an explicit title is set, return that
             return self._title
         # Otherwise, use dynamic title
+        if self.overhaul:
+            return f"{self.overhaul} Overhaul {TITLE}"
         if self.dlc and self.sideop:
             return f"{self.dlc} {SIDEOP_TITLE}"
         if self.dlc:
@@ -434,6 +439,8 @@ class Event:
     def mods(self) -> str:
         if self._mods:
             return self._mods
+        if self.overhaul:
+            return OVERHAUL_MODS
         return MODS
 
     @mods.setter
@@ -606,6 +613,7 @@ class Event:
         data["port"] = self.port
         data["mods"] = self._mods
         data["dlc"] = self._dlc
+        data["overhaul"] = self.overhaul
         if not brief_output:
             data["messageID"] = self.messageID
             data["platoon_size"] = self.platoon_size
@@ -625,6 +633,7 @@ class Event:
         self._description = str(data.get("description", ""))
         self._mods = str(data.get("mods", ""))
         self.dlc = data.get("dlc", "")
+        self.overhaul = data.get("overhaul", "")
         if not manual_load:
             self.messageID = int(data.get("messageID", 0))
             self.platoon_size = str(data.get("platoon_size", PLATOON_SIZE))

@@ -14,6 +14,11 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 - Allow setting description dynamically
 - Allow setting mods dynamically
 
+### Added
+
+- !setoverhaul (sovh) command for marking an event as a mod overhaul
+- !clearoverhaul (covh) command for clearing overhaul status
+
 ## v0.47.0 - 2024-04-04
 
 ### Added

@@ -82,3 +82,23 @@ async def set_dlc(ctx: Context, event: Event, bot: OperationBot, dlc: str = ""):
         await show_event(ctx, event, bot)
     else:
         await ctx.send(f"DLC cleared from operation {event}")
+
+
+async def set_overhaul(
+    ctx: Context, event: Event, bot: OperationBot, overhaul: str = ""
+):
+    """Set an overhaul for an event
+
+    Args:
+        ctx (Context): Command context
+        event (Event): Event to modify
+        bot (OperationBot): Main bot instance
+        overhaul (str, optional): overhaul to set. Defaults to "".
+    """
+    event.overhaul = overhaul
+    await update_event(event, bot)
+    if overhaul:
+        await ctx.send(f"overhaul ```\n{event.overhaul}\n``` set for operation {event}")
+        await show_event(ctx, event, bot)
+    else:
+        await ctx.send(f"overhaul cleared from operation {event}")
