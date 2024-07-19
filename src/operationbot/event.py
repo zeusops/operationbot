@@ -56,7 +56,7 @@ class Event:
         self.faction = FACTION
         self._description = ""
         self.port = cfg.PORT_DEFAULT
-        self.mods = MODS
+        self._mods = ""
         self.roleGroups: dict[str, RoleGroup] = {}
         self.messageID = 0
         self.id = eventID
@@ -430,6 +430,16 @@ class Event:
     def description(self, description):
         self._description = description
 
+    @property
+    def mods(self) -> str:
+        if self._mods:
+            return self._mods
+        return MODS
+
+    @mods.setter
+    def mods(self, mods):
+        self._mods = mods
+
     # Get emojis for normal roles
     def _getNormalEmojis(self, guildEmojis: tuple[Emoji, ...]) -> dict[str, Emoji]:
         normalEmojis = {}
@@ -594,7 +604,7 @@ class Event:
         data["terrain"] = self.terrain
         data["faction"] = self.faction
         data["port"] = self.port
-        data["mods"] = self.mods
+        data["mods"] = self._mods
         data["dlc"] = self._dlc
         if not brief_output:
             data["messageID"] = self.messageID
@@ -613,7 +623,7 @@ class Event:
         self.faction = str(data.get("faction", FACTION))
         self.port = int(data.get("port", cfg.PORT_DEFAULT))
         self._description = str(data.get("description", ""))
-        self.mods = str(data.get("mods", MODS))
+        self._mods = str(data.get("mods", ""))
         self.dlc = data.get("dlc", "")
         if not manual_load:
             self.messageID = int(data.get("messageID", 0))

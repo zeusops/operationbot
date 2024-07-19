@@ -12,6 +12,7 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 ### Changed
 
 - Allow setting description dynamically
+- Allow setting mods dynamically
 
 ## v0.47.0 - 2024-04-04
 
