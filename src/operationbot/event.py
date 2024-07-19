@@ -54,7 +54,7 @@ class Event:
         self.date = date
         self.terrain = TERRAIN
         self.faction = FACTION
-        self.description = DESCRIPTION
+        self._description = ""
         self.port = cfg.PORT_DEFAULT
         self.mods = MODS
         self.roleGroups: dict[str, RoleGroup] = {}
@@ -420,6 +420,16 @@ class Event:
     def dlc(self, dlc):
         self._dlc = dlc
 
+    @property
+    def description(self) -> str:
+        if self._description:
+            return self._description
+        return DESCRIPTION
+
+    @description.setter
+    def description(self, description):
+        self._description = description
+
     # Get emojis for normal roles
     def _getNormalEmojis(self, guildEmojis: tuple[Emoji, ...]) -> dict[str, Emoji]:
         normalEmojis = {}
@@ -579,7 +589,7 @@ class Event:
         data: dict[str, Any] = {}
         data["title"] = self._title
         data["date"] = self.date.strftime("%Y-%m-%d")
-        data["description"] = self.description
+        data["description"] = self._description
         data["time"] = self.date.strftime("%H:%M")
         data["terrain"] = self.terrain
         data["faction"] = self.faction
@@ -602,7 +612,7 @@ class Event:
         self.terrain = data.get("terrain", TERRAIN)
         self.faction = str(data.get("faction", FACTION))
         self.port = int(data.get("port", cfg.PORT_DEFAULT))
-        self.description = str(data.get("description", DESCRIPTION))
+        self._description = str(data.get("description", ""))
         self.mods = str(data.get("mods", MODS))
         self.dlc = data.get("dlc", "")
         if not manual_load:

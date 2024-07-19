@@ -9,6 +9,10 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 - !setterrain docs no longer mention the wrong command (!settime)
 
+### Changed
+
+- Allow setting description dynamically
+
 ## v0.47.0 - 2024-04-04
 
 ### Added
