@@ -5,6 +5,8 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+## v0.48.0 - 2024-07-19
+
 ### Fixed
 
 - !setterrain docs no longer mention the wrong command (!settime)
