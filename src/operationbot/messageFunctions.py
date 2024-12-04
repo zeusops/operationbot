@@ -28,6 +28,16 @@ async def getEventMessage(event: Event, bot: OperationBot, archived=False) -> Me
         ) from e
 
 
+async def update_event_message(bot: OperationBot, event: Event):
+    """Update event embed and reactions."""
+    try:
+        message = await getEventMessage(event, bot)
+    except MessageNotFound as e:
+        raise MessageNotFound(f"sortEventMessages: {e}") from e
+    await updateMessageEmbed(message, event)
+    await updateReactions(event, message=message)
+
+
 async def sortEventMessages(bot: OperationBot):
     """Sort event messages according to the event database.
 
@@ -40,12 +50,7 @@ async def sortEventMessages(bot: OperationBot):
 
     event: Event
     for event in EventDatabase.events.values():
-        try:
-            message = await getEventMessage(event, bot)
-        except MessageNotFound as e:
-            raise MessageNotFound(f"sortEventMessages: {e}") from e
-        await updateMessageEmbed(message, event)
-        await updateReactions(event, message=message)
+        await update_event_message(bot, event)
     EventDatabase.toJson()
 
 
@@ -249,14 +254,36 @@ async def archive_past_events(
     if target is None:
         target = bot.commandchannel
 
-    archived = EventDatabase.archive_past_events(delta)
+    events = EventDatabase.archive_past_events(delta)
 
-    for event in archived:
+    for event in events:
         await archive_single_event(event, target, bot)
 
-    if archived:
-        msg = f"{len(archived)} events archived"
+    if events:
+        msg = f"{len(events)} events archived"
         await target.send(msg)
         logging.info(msg)
 
-    return archived
+    return events
+
+
+async def cancel_empty_events(
+    bot: OperationBot,
+    target: Messageable | None = None,
+    threshold: timedelta = timedelta(),
+) -> list[Event]:
+    """Cancel empty events."""
+    if target is None:
+        target = bot.commandchannel
+
+    events = EventDatabase.cancel_empty_events(threshold)
+
+    for event in events:
+        await update_event_message(bot, event)
+
+    if events:
+        msg = f"{len(events)} events cancelled"
+        await target.send(msg)
+        logging.info(msg)
+
+    return events
