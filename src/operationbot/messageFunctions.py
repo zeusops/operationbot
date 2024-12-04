@@ -1,19 +1,20 @@
 import logging
 from datetime import timedelta
-from typing import Dict, List, Union, cast
+from typing import TYPE_CHECKING, Dict, List, Union, cast
 
 from discord import Emoji, Message, NotFound, TextChannel
 from discord.abc import Messageable
 from discord.embeds import Embed
 from discord.errors import Forbidden, HTTPException
 
-from operationbot.bot import OperationBot
+if TYPE_CHECKING:
+    from operationbot.bot import OperationBot
 from operationbot.errors import EventUpdateFailed, MessageNotFound, RoleError
 from operationbot.event import Event
 from operationbot.eventDatabase import EventDatabase
 
 
-async def getEventMessage(event: Event, bot: OperationBot, archived=False) -> Message:
+async def getEventMessage(event: Event, bot: "OperationBot", archived=False) -> Message:
     """Get a message related to an event."""
     if archived:
         channel = bot.eventarchivechannel
@@ -28,7 +29,7 @@ async def getEventMessage(event: Event, bot: OperationBot, archived=False) -> Me
         ) from e
 
 
-async def update_event_message(bot: OperationBot, event: Event):
+async def update_event_message(bot: "OperationBot", event: Event):
     """Update event embed and reactions."""
     try:
         message = await getEventMessage(event, bot)
@@ -38,7 +39,7 @@ async def update_event_message(bot: OperationBot, event: Event):
     await updateReactions(event, message=message)
 
 
-async def sortEventMessages(bot: OperationBot):
+async def sortEventMessages(bot: "OperationBot"):
     """Sort event messages according to the event database.
 
     Saves the database to disk after sorting.
@@ -177,7 +178,7 @@ def messageEventId(message: Message) -> int:
     return int(cast(str, footer.text).split(" ")[-1])
 
 
-async def syncMessages(events: Dict[int, Event], bot: OperationBot):
+async def syncMessages(events: Dict[int, Event], bot: "OperationBot"):
     """Sync event messages with the event database.
 
     Saves the database to disk after syncing.
@@ -229,7 +230,7 @@ async def syncMessages(events: Dict[int, Event], bot: OperationBot):
 
 
 async def archive_single_event(
-    event: Event, target: Messageable, bot: OperationBot
+    event: Event, target: Messageable, bot: "OperationBot"
 ) -> None:
     """Archive a single event."""
     # Archive event and export
@@ -246,7 +247,7 @@ async def archive_single_event(
 
 
 async def archive_past_events(
-    bot: OperationBot,
+    bot: "OperationBot",
     target: Messageable | None = None,
     delta: timedelta = timedelta(),
 ) -> list[Event]:
@@ -268,7 +269,7 @@ async def archive_past_events(
 
 
 async def cancel_empty_events(
-    bot: OperationBot,
+    bot: "OperationBot",
     target: Messageable | None = None,
     threshold: timedelta = timedelta(),
 ) -> list[Event]:

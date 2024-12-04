@@ -203,6 +203,7 @@ class EventDatabase:
         archived = []
 
         for event in cls.events.values():
+            # TODO: check timezones
             if datetime.now() - event.date > delta:
                 archived.append(event)
         # Archiving in a separate loop to prevent modifying cls.events while
@@ -221,12 +222,16 @@ class EventDatabase:
 
         Returns a list of the cancelled events
         """
-        events = []
+        events: list[Event] = []
 
+        now = datetime.now(cfg.TIME_ZONE)
         for event in cls.events.values():
-            if event.date - datetime.now() < threshold:
-                if event.is_empty():
-                    events.append(event)
+            if (
+                event.date.astimezone(cfg.TIME_ZONE) - now < threshold
+                and event.is_empty()
+            ):
+                events.append(event)
+
         # Using a separate loop to prevent modifying cls.events while looping
         # over it
         for event in events:
