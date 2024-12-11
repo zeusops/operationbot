@@ -3,7 +3,7 @@ DOCKER_REGISTRY=
 APP_VERSION=$(shell poetry version --short)
 
 .PHONY: all
-all: install lint test docs build install-hooks
+all: install lint test build install-hooks
 
 .PHONY: install
 install:
