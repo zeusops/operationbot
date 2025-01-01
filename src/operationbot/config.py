@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 from operationbot import secret
 
-VERSION = 14
+VERSION = 15
 # PURGE_ON_CONNECT = False
 _test_channel = 530411066585382912
 if secret.DEBUG:
@@ -229,3 +229,5 @@ ARCHIVE_AUTOMATICALLY = True
 ARCHIVE_AFTER_TIME = timedelta(hours=2)
 
 OVERHAUL_MODS = "https://zeusops.com/overhaul"
+
+MULTICREATE_WEEKEND = [5, 6, 7]

@@ -380,11 +380,10 @@ class CommandListener(Cog):
         delta = end - start
         days: list[date] = []
         past_days: list[date] = []
-        weekend = [5, 6, 7]
         day: date
         for i in range(delta.days + 1):
             day = start + timedelta(days=i)
-            if day.isoweekday() in weekend:
+            if day.isoweekday() in cfg.MULTICREATE_WEEKEND:
                 if day < date.today() and not force:
                     past_days.append(day)
                 else:

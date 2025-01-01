@@ -5,6 +5,10 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Changed
+
+- Make !multicreate dates configurable
+
 ## v0.48.0 - 2024-07-19
 
 ### Fixed
