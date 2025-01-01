@@ -8,6 +8,7 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 ### Changed
 
 - Make !multicreate dates configurable
+- Limit !multicreate to Sat/Sun only by default
 
 ## v0.48.0 - 2024-07-19
 

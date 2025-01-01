@@ -230,4 +230,4 @@ ARCHIVE_AFTER_TIME = timedelta(hours=2)
 
 OVERHAUL_MODS = "https://zeusops.com/overhaul"
 
-MULTICREATE_WEEKEND = [5, 6, 7]
+MULTICREATE_WEEKEND = [6, 7]
