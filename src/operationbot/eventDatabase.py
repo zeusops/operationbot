@@ -31,7 +31,12 @@ class EventDatabase:
 
     @classmethod
     def createEvent(
-        cls, event_date: datetime, eventID: int = -1, sideop=False, platoon_size=None
+        cls,
+        event_date: datetime,
+        eventID: int = -1,
+        sideop=False,
+        platoon_size=None,
+        reforger=False,
     ) -> Event:
         """Create a new event and store it.
 
@@ -52,6 +57,7 @@ class EventDatabase:
             importing=importing,
             sideop=sideop,
             platoon_size=platoon_size,
+            reforger=reforger,
         )
 
         # Store event

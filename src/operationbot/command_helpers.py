@@ -102,3 +102,20 @@ async def set_overhaul(
         await show_event(ctx, event, bot)
     else:
         await ctx.send(f"overhaul cleared from operation {event}")
+
+
+async def set_reforger(ctx: Context, event: Event, bot: OperationBot, reforger: bool):
+    """Set or unset Reforger mode or an event
+
+    Args:
+        ctx (Context): Command context
+        event (Event): Event to modify
+        bot (OperationBot): Main bot instance
+        reforger (bool): Whether to set Reforger mode
+    """
+    event.reforger = reforger
+    await update_event(event, bot)
+    await ctx.send(
+        f"Reforger {'enabled' if event.reforger else 'disabled'} for operation {event}"
+    )
+    await show_event(ctx, event, bot)

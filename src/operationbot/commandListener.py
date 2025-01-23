@@ -21,7 +21,13 @@ from discord.ext.commands.errors import (
 from operationbot import config as cfg
 from operationbot import messageFunctions as msgFnc
 from operationbot.bot import OperationBot
-from operationbot.command_helpers import set_dlc, set_overhaul, show_event, update_event
+from operationbot.command_helpers import (
+    set_dlc,
+    set_overhaul,
+    set_reforger,
+    show_event,
+    update_event,
+)
 from operationbot.converters import (
     ArgArchivedEvent,
     ArgDate,
@@ -171,6 +177,7 @@ class CommandListener(Cog):
         platoon_size=None,
         force=False,
         silent=False,
+        reforger=False,
     ) -> Event:
         # TODO: Check for duplicate event dates?
         if _date < datetime.today() and not force:
@@ -181,7 +188,7 @@ class CommandListener(Cog):
 
         # Create event and sort events, export
         event: Event = EventDatabase.createEvent(
-            _date, sideop=sideop, platoon_size=platoon_size
+            _date, sideop=sideop, platoon_size=platoon_size, reforger=reforger
         )
         await msgFnc.createEventMessage(event, self.bot.eventchannel)
         if not batch:
@@ -225,6 +232,41 @@ class CommandListener(Cog):
         """
         await self._create_event(ctx, _datetime, sideop=True, force=force)
 
+    @command(aliases=["cr"])
+    async def createreforger(
+        self, ctx: Context, _datetime: ArgDateTime, force=False, platoon_size=None
+    ):
+        """
+        Create a new Arma Reforger event.
+
+        Use the `force` argument to create past events.
+
+        The platoon_size argument can be used to override the platoon size. Valid values: 1PLT, 2PLT
+
+        Example: createreforger 2019-01-01
+                 createreforger 2019-01-01 force
+                 createreforger 2019-01-01 force 2PLT
+        """  # NOQA
+
+        await self._create_event(
+            ctx, _datetime, platoon_size=platoon_size, force=force, reforger=True
+        )
+
+    @command(aliases=["crs"])
+    async def createreforgerside(
+        self, ctx: Context, _datetime: ArgDateTime, force=False
+    ):
+        """Create a new side op event.
+
+        Use the `force` argument to create past events.
+
+        Example: createreforgerside 2019-01-01
+                 createreforgerside 2019-01-01 force
+        """
+        await self._create_event(
+            ctx, _datetime, sideop=True, force=force, reforger=True
+        )
+
     @command(aliases=["cs2"])
     async def createside2(self, ctx: Context, _datetime: ArgDateTime, force=False):
         """Create a new WW2 side op event.
@@ -249,6 +291,7 @@ class CommandListener(Cog):
         sideop=False,
         platoon_size: str | None = None,
         quiet=False,
+        reforger=False,
     ):
         if _time is not None:
             _datetime = _datetime.replace(
@@ -260,6 +303,7 @@ class CommandListener(Cog):
             _datetime,
             sideop=sideop,
             platoon_size=platoon_size,
+            reforger=reforger,
             force=(_time is not None),
             batch=True,
             silent=True,
@@ -320,6 +364,54 @@ class CommandListener(Cog):
         """  # NOQA
         await self._create_quick(
             ctx, _datetime, terrain, faction, zeus, _time, sideop=True
+        )
+
+    @command(aliases=["crq"])
+    async def createreforgerquick(
+        self,
+        ctx: Context,
+        _datetime: ArgDateTime,
+        terrain: str,
+        faction: str,
+        zeus: Optional[ArgMember] = None,
+        _time: Optional[ArgTime] = None,
+    ):
+        """
+        Create and pre-fill a Reforger main op event.
+
+        Define the event time to force creation of past events.
+
+        Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:30
+
+        Example: createreforgerquick 2019-01-01 Altis USMC Stroker
+                 createreforgerquick 2019-01-01 Altis USMC Stroker 17:30
+        """  # NOQA
+        await self._create_quick(
+            ctx, _datetime, terrain, faction, zeus, _time, sideop=False, reforger=True
+        )
+
+    @command(aliases=["crsq"])
+    async def createreforgersidequick(
+        self,
+        ctx: Context,
+        _datetime: ArgDateTime,
+        terrain: str,
+        faction: str,
+        zeus: Optional[ArgMember] = None,
+        _time: Optional[ArgTime] = None,
+    ):
+        """
+        Create and pre-fill a Reforger side op event.
+
+        Define the event time to force creation of past events.
+
+        Accepted formats for the optional `time` argument: HH:MM and HHMM. Default time: 18:30
+
+        Example: createreforgersidequick 2019-01-01 Altis USMC Stroker
+                 createreforgersidequick 2019-01-01 Altis USMC Stroker 17:30
+        """  # NOQA
+        await self._create_quick(
+            ctx, _datetime, terrain, faction, zeus, _time, sideop=True, reforger=True
         )
 
     @command(aliases=["csq2"])
@@ -829,6 +921,15 @@ class CommandListener(Cog):
         Example: clearoverhaul 1
         """
         await set_overhaul(ctx, event, self.bot)
+
+    @command(aliases=["sr"])
+    async def setreforger(self, ctx: Context, event: ArgEvent, reforger: bool):
+        """Set or unset Reforger mode for event.
+
+        Example: setreforger 1 true
+                 setreforger 1 false
+        """
+        await set_reforger(ctx, event, self.bot, reforger)
 
     async def _set_quick(
         self,
