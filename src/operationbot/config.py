@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 from operationbot import secret
 
-VERSION = 15
+VERSION = 16
 # PURGE_ON_CONNECT = False
 _test_channel = 530411066585382912
 if secret.DEBUG:
@@ -217,6 +217,10 @@ EMBED_COLOR = {
     "DLC": 0x00FF00,
     "DLC_SIDEOP": 0x00FFFF,
     "OVERHAUL": 0xE700FF,
+    "REFORGER": 0xCB9648,
+    "REFORGER_SIDEOP": 0x99CB48,
+    "REFORGER_DLC": 0x00FF00,
+    "REFORGER_DLC_SIDEOP": 0x00FFFF,
 }
 
 DLC_TERRAINS = {

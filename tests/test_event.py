@@ -69,3 +69,36 @@ def test_manual_dlc():
     event.terrain = "Stratis"
     assert event.dlc == "APEX"
     assert event.terrain == "Stratis"
+
+
+def test_reforger():
+    date = datetime(2020, 1, 1, 12, 0, 0)
+    event = Event(date, guildEmojis=(), platoon_size="empty", reforger=True)
+
+    assert event.title == "Reforger Operation"
+
+    embed = cast(Embed, event.createEmbed(cache=False))
+    assert "**Arma Reforger** is required to join this event" in embed.description
+
+    event.reforger = False
+    embed = cast(Embed, event.createEmbed(cache=False))
+    assert "**Arma Reforger** is required to join this event" not in embed.description
+
+
+def test_reforger_side():
+    date = datetime(2020, 1, 1, 12, 0, 0)
+    event = Event(
+        date, guildEmojis=(), platoon_size="empty", reforger=True, sideop=True
+    )
+
+    assert event.title == "Reforger Side Operation"
+
+
+def test_reforger_side_dlc():
+    date = datetime(2020, 1, 1, 12, 0, 0)
+    event = Event(
+        date, guildEmojis=(), platoon_size="empty", reforger=True, sideop=True
+    )
+    event.dlc = "DLC 1"
+
+    assert event.title == "DLC 1 Reforger Side Operation"

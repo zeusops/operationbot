@@ -15,6 +15,7 @@ from operationbot.roleGroup import RoleGroup
 from operationbot.secret import PLATOON_SIZE
 
 TITLE = "Operation"
+REFORGER = "Reforger"
 SIDEOP_TITLE = "Side Operation"
 TERRAIN = "unknown"
 FACTION = "unknown"
@@ -49,6 +50,7 @@ class Event:
         importing=False,
         sideop=False,
         platoon_size=None,
+        reforger=False,
     ):
         self._title: str | None = None
         self.date = date
@@ -61,6 +63,7 @@ class Event:
         self.messageID = 0
         self.id = eventID
         self.sideop = sideop
+        self.reforger = reforger
         self.attendees: list[User | discord.abc.User] = []
         self._dlc: str = ""
         self.overhaul = ""
@@ -92,12 +95,20 @@ class Event:
     def color(self) -> int:
         if self.overhaul:
             return EMBED_COLOR["OVERHAUL"]
+        if self.reforger and self.dlc and self.sideop:
+            return EMBED_COLOR["REFORGER_DLC_SIDEOP"]
+        if self.reforger and self.dlc:
+            return EMBED_COLOR["REFORGER_DLC"]
+        if self.reforger and self.sideop:
+            return EMBED_COLOR["REFORGER_SIDEOP"]
         if self.dlc and self.sideop:
             return EMBED_COLOR["DLC_SIDEOP"]
         if self.dlc:
             return EMBED_COLOR["DLC"]
         if self.sideop:
             return EMBED_COLOR["SIDEOP"]
+        if self.reforger:
+            return EMBED_COLOR["REFORGER"]
         return EMBED_COLOR["DEFAULT"]
 
     @property
@@ -108,12 +119,20 @@ class Event:
         # Otherwise, use dynamic title
         if self.overhaul:
             return f"{self.overhaul} Overhaul {TITLE}"
+        if self.reforger and self.dlc and self.sideop:
+            return f"{self.dlc} {REFORGER} {SIDEOP_TITLE}"
+        if self.reforger and self.dlc:
+            return f"{self.dlc} {REFORGER}"
+        if self.reforger and self.sideop:
+            return f"{REFORGER} {SIDEOP_TITLE}"
         if self.dlc and self.sideop:
             return f"{self.dlc} {SIDEOP_TITLE}"
         if self.dlc:
             return f"{self.dlc} {TITLE}"
         if self.sideop:
             return SIDEOP_TITLE
+        if self.reforger:
+            return f"{REFORGER} {TITLE}"
         return TITLE
 
     @title.setter
@@ -280,6 +299,11 @@ class Event:
         server_port = (
             f"\nServer port: **{self.port}**" if self.port != cfg.PORT_DEFAULT else ""
         )
+        reforger_note = (
+            "\n\n**Arma Reforger** is required to join this event"
+            if self.reforger
+            else ""
+        )
         dlc_note = (
             f"\n\nThe **{self.dlc} DLC** is required to join this event"
             if self.dlc
@@ -297,6 +321,7 @@ class Event:
             f"Local time: {local_time} ({relative_time})\n"
             f"Terrain: {self.terrain} - Faction: {self.faction}"
             f"{server_port}"
+            f"{reforger_note}"
             f"{dlc_note}"
             f"{event_description}"
             f"{mods}"
@@ -618,6 +643,7 @@ class Event:
             data["messageID"] = self.messageID
             data["platoon_size"] = self.platoon_size
             data["sideop"] = self.sideop
+            data["reforger"] = self.reforger
             data["attendees"] = attendees_data
             data["embed_hash"] = self.embed_hash
         data["roleGroups"] = roleGroupsData
@@ -638,6 +664,7 @@ class Event:
             self.messageID = int(data.get("messageID", 0))
             self.platoon_size = str(data.get("platoon_size", PLATOON_SIZE))
             self.sideop = bool(data.get("sideop", False))
+            self.reforger = bool(data.get("reforger", False))
             self.embed_hash = data.get("embed_hash", "")
             attendees_data = data.get("attendees", {})
             for userID, name in attendees_data.items():
