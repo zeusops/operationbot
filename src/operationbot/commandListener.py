@@ -898,7 +898,7 @@ class CommandListener(Cog):
 
     @command(aliases=["cdlc"])
     async def cleardlc(self, ctx: Context, event: ArgEvent):
-        """Set event DLC.
+        """Clear event DLC.
 
         Example: cleardlc 1
         """
@@ -916,7 +916,7 @@ class CommandListener(Cog):
 
     @command(aliases=["covh"])
     async def clearoverhaul(self, ctx: Context, event: ArgEvent):
-        """Set event overhaul.
+        """Clear event overhaul.
 
         Example: clearoverhaul 1
         """
