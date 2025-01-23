@@ -5,6 +5,8 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+## v0.49.0 - 2025-01-23
+
 ## v0.48.1 - 2025-01-01
 
 ### Changed
