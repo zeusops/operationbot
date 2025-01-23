@@ -99,9 +99,10 @@ DEFAULT_GROUPS: Dict[str, List[str]] = {
     "1PLT": [
         "Company",
         "1st Platoon",
-        "Dummy",
+        "Dummy1",
         "Alpha",
         "Bravo",
+        "Dummy2",
     ],
     "2PLT": [
         "Battalion",

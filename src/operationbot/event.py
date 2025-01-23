@@ -338,13 +338,13 @@ class Event:
                 hash_string += (
                     f"{hash_string}{group.name} {str(group)} " f"{group.isInline}\n"
                 )
-            elif group.name == "Dummy":
+            elif group.name.startswith("Dummy"):
                 eventEmbed.add_field(
                     name="\N{ZERO WIDTH SPACE}",
                     value="\N{ZERO WIDTH SPACE}",
                     inline=group.isInline,
                 )
-                hash_string += f"{hash_string}Dummy\n"
+                hash_string += f"{hash_string}{group.name}\n"
 
         if self.sideop or cfg.ALWAYS_DISPLAY_ATTENDANCE:
             attendees = f"Attendees: {len(self.attendees)}\n\n"
