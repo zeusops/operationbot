@@ -2,6 +2,7 @@ from datetime import datetime, time, timezone
 from typing import cast
 
 from discord import Embed
+
 from operationbot import config as cfg
 from operationbot.event import Event
 

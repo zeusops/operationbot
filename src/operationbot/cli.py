@@ -1,4 +1,5 @@
 """Command line entrypoint for operationbot"""
+
 import argparse
 import sys
 from typing import Optional

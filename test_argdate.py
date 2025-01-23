@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 from discord.ext.commands import BadArgument
+
 from operationbot.converters import ArgDate
 
 
