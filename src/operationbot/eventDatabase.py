@@ -227,7 +227,8 @@ class EventDatabase:
         now = datetime.now(cfg.TIME_ZONE)
         for event in cls.events.values():
             if (
-                event.date.astimezone(cfg.TIME_ZONE) - now < threshold
+                not event.cancelled
+                and event.date.astimezone(cfg.TIME_ZONE) - now < threshold
                 and event.is_empty()
             ):
                 events.append(event)

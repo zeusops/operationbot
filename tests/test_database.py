@@ -121,7 +121,8 @@ def test_cancel_empty():
     assert len(db.events) == 4
     assert len(db.eventsArchive) == 0
     events = db.cancel_empty_events(timedelta(hours=2))
-    # print(events)
-    assert events[0].cancelled
     assert len(events) == 1
+    assert events[0].cancelled
     assert len(db.events) == 4
+    events = db.cancel_empty_events(timedelta(hours=2))
+    assert len(events) == 0
