@@ -5,6 +5,8 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+## v0.50.1 - 2025-02-01
+
 ### Fixed
 
 - Do not cancel already cancelled events

@@ -10,7 +10,7 @@ authors = [
 dynamic = [ "version", "dependencies" ]
 
 [tool.poetry]
-version = "0.50.0"
+version = "0.50.1"
 
 [tool.poetry.scripts]
 operationbot = "operationbot.cli:cli"
