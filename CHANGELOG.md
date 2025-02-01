@@ -5,7 +5,15 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Added
+
+- Automatic cancellation of empty events
+
 ## v0.49.0 - 2025-01-23
+
+### Added
+
+- Support for Reforger events
 
 ## v0.48.1 - 2025-01-01
 
