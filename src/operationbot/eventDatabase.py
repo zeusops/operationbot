@@ -80,6 +80,11 @@ class EventDatabase:
         cls.toJson(archive=True)
 
     @classmethod
+    def cancel_event(cls, event: Event):
+        """Cancel event."""
+        event.cancelled = True
+
+    @classmethod
     def removeEvent(cls, eventID: int, archived=False) -> Optional[Event]:
         """Remove event.
 
@@ -198,6 +203,7 @@ class EventDatabase:
         archived = []
 
         for event in cls.events.values():
+            # TODO: check timezones
             if datetime.now() - event.date > delta:
                 archived.append(event)
         # Archiving in a separate loop to prevent modifying cls.events while
@@ -206,6 +212,34 @@ class EventDatabase:
             cls.archiveEvent(event)
 
         return archived
+
+    @classmethod
+    def cancel_empty_events(
+        cls,
+        threshold: timedelta = timedelta(),
+    ) -> list[Event]:
+        """Cancel (archive) empty events a certain time before the event time.
+
+        Returns a list of the cancelled events
+        """
+        events: list[Event] = []
+
+        now = datetime.now(cfg.TIME_ZONE)
+        for event in cls.events.values():
+            if (
+                event.date.astimezone(cfg.TIME_ZONE) - now < threshold
+                and event.is_empty()
+            ):
+                events.append(event)
+
+        # Using a separate loop to prevent modifying cls.events while looping
+        # over it
+        for event in events:
+            cls.cancel_event(event)
+
+        cls.toJson(archive=False)
+
+        return events
 
     @classmethod
     def toJson(cls, archive=False):

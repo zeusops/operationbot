@@ -103,3 +103,11 @@ def test_reforger_side_dlc():
     event.dlc = "DLC 1"
 
     assert event.title == "DLC 1 Reforger Side Operation"
+
+
+def test_cancel():
+    date = datetime(2020, 1, 1, 12, 0, 0)
+    event = Event(date, guildEmojis=(), platoon_size="empty")
+    event.cancelled = True
+
+    assert event.title == "Cancelled Operation"

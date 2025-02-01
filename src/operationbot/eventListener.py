@@ -1,5 +1,4 @@
 import importlib
-import logging
 from datetime import datetime, timedelta
 from typing import Optional, Union, cast
 
@@ -10,7 +9,6 @@ from discord.user import User
 
 from operationbot import config as cfg
 from operationbot import messageFunctions as msgFnc
-from operationbot import tasks
 from operationbot.bot import OperationBot
 from operationbot.errors import EventNotFound, RoleNotFound, RoleTaken, UnknownEmoji
 from operationbot.event import Event
@@ -43,14 +41,7 @@ class EventListener(Cog):
         print(msg)
         await commandchannel.send(msg)
         await self.bot.change_presence(activity=Game(name=cfg.GAME))
-        if not self.bot.archive_task:
-            self.bot.archive_task = self.bot.loop.create_task(
-                tasks.archive_past_events(self.bot)
-            )
-        else:
-            logging.info(
-                "The archive_past_events task is already running, not starting again"
-            )
+        self.bot.start_tasks()
         print("Logged in as", self.bot.user.name, self.bot.user.id)
         self.bot.processing = False
 

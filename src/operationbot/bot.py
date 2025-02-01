@@ -1,9 +1,9 @@
 """A bot module that implements a custom help command and extra features."""
 
-import asyncio
 import logging
 import sys
 import traceback
+from asyncio import Task
 
 import discord
 from discord import TextChannel, User
@@ -11,6 +11,7 @@ from discord.ext.commands import Bot, DefaultHelpCommand
 from discord.guild import Guild
 
 from operationbot import config as cfg
+from operationbot import tasks
 from operationbot.eventDatabase import EventDatabase
 from operationbot.secret import ADMIN, SIGNOFF_NOTIFY_USER
 
@@ -66,7 +67,7 @@ class OperationBot(Bot):
         self.signoff_notify_user: User
         self.awaiting_reply = False
         self.processing = True
-        self.archive_task: asyncio.Task | None = None
+        self.tasks: dict["str", Task] = {}
 
         if help_command is None:
             self.help_command = AliasHelpCommand()
@@ -82,6 +83,13 @@ class OperationBot(Bot):
         self.owner_id = ADMIN
         self.owner = self._get_user(self.owner_id)
         self.signoff_notify_user = self._get_user(SIGNOFF_NOTIFY_USER)
+
+    def start_tasks(self) -> None:
+        for name, task in tasks.ALL_TASKS.items():
+            if name not in self.tasks:
+                self.tasks[name] = self.loop.create_task(task(self))
+            else:
+                logging.info(f"The {name} task is already running, not starting again")
 
     def _get_user(self, user_id: int) -> User:
         user = self.get_user(user_id)

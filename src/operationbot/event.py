@@ -68,6 +68,7 @@ class Event:
         self._dlc: str = ""
         self.overhaul = ""
         self.embed_hash = ""
+        self.cancelled = False
 
         if platoon_size is None:
             if sideop:
@@ -93,6 +94,8 @@ class Event:
 
     @property
     def color(self) -> int:
+        if self.cancelled:
+            return EMBED_COLOR["CANCELLED"]
         if self.overhaul:
             return EMBED_COLOR["OVERHAUL"]
         if self.reforger and self.dlc and self.sideop:
@@ -117,6 +120,8 @@ class Event:
             # It an explicit title is set, return that
             return self._title
         # Otherwise, use dynamic title
+        if self.cancelled:
+            return f"Cancelled {TITLE}"
         if self.overhaul:
             return f"{self.overhaul} Overhaul {TITLE}"
         if self.reforger and self.dlc and self.sideop:
@@ -484,6 +489,9 @@ class Event:
 
     def getReactions(self) -> list[str | Emoji]:
         """Return reactions of all roles and extra reactions"""
+        if self.cancelled:
+            return []
+
         reactions = []
 
         for roleGroup in self.roleGroups.values():
@@ -573,6 +581,7 @@ class Event:
                     old_role = self.undoSignup(user)
                     role.userID = user.id
                     role.userName = user.display_name
+                    self.cancelled = False
                     return old_role, old_user
         # Probably shouldn't ever reach this
         raise RoleNotFound(f"Could not find role: {roleToSet}")
@@ -598,6 +607,12 @@ class Event:
                     return role
         # TODO: raise RoleNotFound instead of returning None?
         return None
+
+    def is_empty(self) -> bool:
+        role = self.findRoleWithName("ZEUS")
+        if not role:
+            return False
+        return role.userID is None
 
     def has_attendee(self, user: discord.abc.User) -> bool:
         """Check if the given user has been marked as attending."""
@@ -646,6 +661,7 @@ class Event:
             data["reforger"] = self.reforger
             data["attendees"] = attendees_data
             data["embed_hash"] = self.embed_hash
+            data["cancelled"] = self.cancelled
         data["roleGroups"] = roleGroupsData
         return data
 
@@ -666,6 +682,7 @@ class Event:
             self.sideop = bool(data.get("sideop", False))
             self.reforger = bool(data.get("reforger", False))
             self.embed_hash = data.get("embed_hash", "")
+            self.cancelled = data.get("cancelled", False)
             attendees_data = data.get("attendees", {})
             for userID, name in attendees_data.items():
                 self.attendees.append(User(int(userID), name))
