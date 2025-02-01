@@ -74,7 +74,7 @@ release:
 # Generate/update the poetry.lock file
 .PHONY: lock
 lock:
-	poetry lock --no-update
+	poetry lock
 
 # Update dependencies (within pyproject.toml specs)
 # Update the lock-file at the same time

@@ -35,10 +35,11 @@ jobs:
       - name: Run image
         uses: abatilo/actions-poetry@v2
         with:
-          poetry-version: "1.6.1"
+          poetry-version: "2.0.1"
+          poetry-plugins: "poetry-plugin-export>=1.8"
       - name: Export requirements.txt
         run: |
-          poetry lock --no-update
+          poetry lock
           poetry export --format=requirements.txt >> requirements.txt
 
       - name: Log in to Docker Hub

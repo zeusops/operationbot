@@ -22,6 +22,9 @@ python = ">=3.11,<=3.13"
 # Yaml parser
 pyyaml = "*"
 
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
+
 
 # Note: Linters not defined in this file but .pre-commit-config.yaml, which
 # installs/manages each tool in its own isolated virtualenv
