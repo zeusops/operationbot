@@ -5,6 +5,8 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+## v0.52.0 - 2025-04-01
+
 ### Changed
 
 - Less verbose output when using `!multicreate`.
