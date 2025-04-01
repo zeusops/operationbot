@@ -5,6 +5,10 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+### Changed
+
+- `!multicreate` now creates Reforger events.
+
 ## v0.50.1 - 2025-02-01
 
 ### Fixed

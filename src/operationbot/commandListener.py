@@ -523,7 +523,7 @@ class CommandListener(Cog):
                 if reply == "ok":
                     await ctx.send("Creating events")
                     for day in with_time:
-                        await self._create_event(ctx, day, batch=True)
+                        await self._create_event(ctx, day, batch=True, reforger=True)
                     await msgFnc.sortEventMessages(self.bot)
                     await ctx.send("Done creating events")
                     self.bot.awaiting_reply = False
