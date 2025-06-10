@@ -368,7 +368,12 @@ class Event:
                 hash_string += f"{hash_string}{group.name}\n"
 
         if self.sideop or cfg.ALWAYS_DISPLAY_ATTENDANCE:
-            attendees = f"Attendees: {len(self.attendees)}\n\n"
+            if self.attendees:
+                attendee_names = [user.display_name for user in self.attendees]
+                name_string = "\n- " + "\n- ".join(attendee_names)
+            else:
+                name_string = ""
+            attendees = f"Other attendees: {len(self.attendees)}{name_string}\n\n"
         else:
             attendees = ""
         footer_text = f"{attendees}Event ID: {str(self.id)}"

@@ -4,7 +4,7 @@ from typing import cast
 from discord import Embed
 
 from operationbot import config as cfg
-from operationbot.event import Event
+from operationbot.event import Event, User
 
 
 def _timestamp(date: datetime) -> int:
@@ -113,3 +113,19 @@ def test_cancel():
     event.cancelled = True
 
     assert event.title == "Cancelled Operation"
+
+
+def test_footer():
+    date = datetime(2020, 1, 1, 12, 0, 0)
+    event = Event(date, guildEmojis=(), platoon_size="empty")
+    user1 = User(1, "User 1")
+    user2 = User(2, "User 2")
+    assert len(event.attendees) == 0
+    embed = cast(Embed, event.createEmbed(cache=False))
+    assert embed.footer.text == "Other attendees: 0\n\nEvent ID: 0"
+
+    event.add_attendee(user1)
+    event.add_attendee(user2)
+    assert len(event.attendees) == 2
+    embed = cast(Embed, event.createEmbed(cache=False))
+    assert embed.footer.text == "Other attendees: 2\n- User 1\n- User 2\n\nEvent ID: 0"
