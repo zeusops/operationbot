@@ -9,9 +9,9 @@ Arma 3 operations in the [Zeusops](https://www.zeusops.com) community.
 
 1. Create a new Discord bot at <https://discord.com/developers/applications>
 
-   See [here](https://discordpy.readthedocs.io/en/latest/discord.html) for more
-   detailed instructions. Note that the bot does not have to be marked as
-   public.
+   See [discord.py documentation](https://discordpy.readthedocs.io/en/latest/discord.html)
+   for more detailed instructions. Note that the bot does not have to be marked
+   as public.
 
 2. Copy `secret.py.example` to `src/operationbot/secret.py` and add your bot
    token. Other values can be customised as well but they are not critical for
