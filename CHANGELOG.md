@@ -5,6 +5,8 @@ The project uses semantic versioning (see [SemVer](https://semver.org)).
 
 ## [Unreleased]
 
+## v0.53.0 - 2025-06-10
+
 ### Added
 
 - Event embeds now show the name of attendees who have clicked the attend reaction.
