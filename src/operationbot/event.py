@@ -25,13 +25,29 @@ MODS = ""
 MAX_REACTIONS = 20
 
 
-class User:
+class User(discord.abc.User):
     # This class implements the same signature as the discord.abc.User class,
     # we need to use the 'id' argument here.
     # pylint: disable=redefined-builtin
-    def __init__(self, id: int | None = None, display_name: str | None = None):
+    def __init__(self, id: int, display_name: str | None = None):
         self.id = id
-        self.display_name = display_name
+        self._display_name = display_name
+        self.name = ""
+        self.avatar: str | None = ""
+        self.discriminator = ""
+        self.bot = False
+
+    @property
+    def display_name(self):
+        return self._display_name
+
+    @property
+    def mention(self):
+        return ""
+
+    @property
+    def created_at(self) -> datetime.datetime:
+        return datetime.datetime.now()
 
     def __eq__(self, other: Union["User", discord.abc.User]):  # type: ignore
         # This makes it so that User objects can be compared to
@@ -577,7 +593,7 @@ class Event:
                             f"role {roleToSet.name} is already "
                             "taken"
                         )
-                    old_user = User(role.userID, role.userName)
+                    old_user = User(role.userID or -1, role.userName)
                     old_role = self.undoSignup(user)
                     role.userID = user.id
                     role.userName = user.display_name

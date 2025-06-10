@@ -79,11 +79,13 @@ def test_reforger():
     assert event.title == "Reforger Operation"
 
     embed = cast(Embed, event.createEmbed(cache=False))
-    assert "**Arma Reforger** is required to join this event" in embed.description
+    assert "**Arma Reforger** is required to join this event" in str(embed.description)
 
     event.reforger = False
     embed = cast(Embed, event.createEmbed(cache=False))
-    assert "**Arma Reforger** is required to join this event" not in embed.description
+    assert "**Arma Reforger** is required to join this event" not in str(
+        embed.description
+    )
 
 
 def test_reforger_side():

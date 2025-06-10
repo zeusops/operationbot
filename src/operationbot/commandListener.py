@@ -1269,8 +1269,8 @@ class CommandListener(Cog):
             lines = ctx.message.clean_content.split("\n")
             clean_content = ctx.message.clean_content
         else:
-            lines = "No associated message"
-            clean_content = lines
+            clean_content = "No associated message"
+            lines = [clean_content]
 
         logging.error(f"{lines=}")
         if len(lines) > 1:

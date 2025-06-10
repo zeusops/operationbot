@@ -54,6 +54,8 @@ repos:
     # Uncomment below if mypy requires extra type stub packages
     additional_dependencies:
     - types-PyYAML==6.0.12.2
+    - pytest==7.4.4
+    - git+https://github.com/Gehock/discord.py-stubs.git@1.7.4dev0
 - repo: https://github.com/igorshubovych/markdownlint-cli
   rev: v0.45.0
   hooks:
